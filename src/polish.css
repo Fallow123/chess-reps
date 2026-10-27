@@ -108,3 +108,7 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 #rw .grid.noboard { grid-template-columns: minmax(0, 1fr); }
 #rw .grid.noboard .boardwrap { display: none; }
 #rw .grid.noboard .panel { max-width: 920px; }
+#rw .tomorrow { margin-top: 18px; padding: 16px 18px; border-radius: 14px; background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--rule); }
+#rw .tomorrow h3 { margin: 2px 0 2px; font-size: 19px; }
+#rw .tomorrow .tlist { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+#rw .tomorrow .tlist li { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; opacity: .85; font-size: 14.5px; }
