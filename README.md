@@ -1,8 +1,8 @@
-# Chess Reps
+# Pawnstorm
 
 A personal chess training app that runs entirely in the browser.
 
-- **Today**: a daily plan built from your own chess.com games: puzzles, opening work, endgames, games to play and losses to review, with the reason for each task.
+- **Today**: a daily plan run on lichess, built from your own games: puzzles, opening work, endgames, games to play and losses to review, with the reason for each task.
 - **Build**: your White and Black opening repertoire as a move tree, with Stockfish and the lichess opening explorer beside the board.
 - **Gaps**: replies you have not prepared for, from your own games and from what players at your rating play on lichess, plus an engine check of your own moves.
 - **Drill**: spaced-repetition drills of your repertoire lines.

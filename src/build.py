@@ -50,7 +50,7 @@ piece = rd('piece.js').replace('var PIECE', 'const PIECE')
 app = rd('app.js').replace('/*PIECE*/', piece.strip())
 rwcss = scope(rd('rw.css'), '#rw')
 
-head = '''<title>Chess Reps</title>
+head = '''<title>Pawnstorm</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: one shell, five tabs. The opening tabs put the board left and a notebook panel right; Endgames is the original trainer, untouched. */
@@ -94,7 +94,7 @@ body { color: var(--bone); font-family: var(--serif); font-size: 16px; line-heig
 shell = '''
 <div class="shell">
   <header class="shell-top">
-    <div><h1>Chess Reps</h1><p class="tagline">A plan for today, built from your own games.</p></div>
+    <div><h1>Pawnstorm</h1><p class="tagline">One push a day. Built from your own games.</p></div>
     <div class="grow"></div>
     <div class="sidepick" id="sidepick" role="group" aria-label="Repertoire side">
       <button id="side-w" aria-pressed="true">White</button><button id="side-b" aria-pressed="false">Black</button>

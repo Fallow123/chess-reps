@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Chess Reps</title>
+<title>Pawnstorm</title>
 <style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
@@ -1044,7 +1044,7 @@ body { color: var(--bone); font-family: var(--serif); font-size: 16px; line-heig
 
 <div class="shell">
   <header class="shell-top">
-    <div><h1>Chess Reps</h1><p class="tagline">A plan for today, built from your own games.</p></div>
+    <div><h1>Pawnstorm</h1><p class="tagline">One push a day. Built from your own games.</p></div>
     <div class="grow"></div>
     <div class="sidepick" id="sidepick" role="group" aria-label="Repertoire side">
       <button id="side-w" aria-pressed="true">White</button><button id="side-b" aria-pressed="false">Black</button>
@@ -1902,7 +1902,7 @@ function renderGaps(panel, bar) {
       S.batch = true; render(); const side = S.side;
       const r = await checkRepertoire(side, (i, n) => { const p = $('#rw-check'); if (p) p.textContent = `Checking position ${i} of ${n}…`; });
       S.batch = false; if (r) { S.checks[side] = r; toast(r.length ? `${r.length} questionable move${r.length > 1 ? 's' : ''} found` : 'Every move in your prep holds up'); } render(); } }, ck ? 'Check again' : 'Check my moves') : null));
-  csec.append(h('p', { class: 'ask', id: 'rw-check' }, engineOk() ? 'Stockfish looks at every move you chose and flags the ones that give away more than half a pawn.' : 'Needs the engine, which runs on the hosted version of Chess Reps.'));
+  csec.append(h('p', { class: 'ask', id: 'rw-check' }, engineOk() ? 'Stockfish looks at every move you chose and flags the ones that give away more than half a pawn.' : 'Needs the engine, which runs on the hosted version of Pawnstorm.'));
   if (ck && ck.length) {
     const cl = h('div', { class: 'gaps' });
     for (const m of ck) cl.append(h('div', { class: 'gapi ' + (m.loss >= 150 ? 't-opp' : 't-dev') },
@@ -1956,7 +1956,7 @@ function renderGames(panel, bar) {
   if (S.review) return renderReview(panel, bar);
   const accts = [S.settings.lichessUser && ['lichess', S.settings.lichessUser], S.username && ['chesscom', S.username]].filter(Boolean);
   const top = h('section', { class: 'sec' });
-  if (!accts.length) top.append(h('h3', {}, 'Link your accounts'), h('p', { class: 'ask' }, 'Link lichess and chess.com in Settings and your games come in by themselves, with new ones added each time you open Chess Reps.'),
+  if (!accts.length) top.append(h('h3', {}, 'Link your accounts'), h('p', { class: 'ask' }, 'Link lichess and chess.com in Settings and your games come in by themselves, with new ones added each time you open Pawnstorm.'),
     h('button', { class: 'btn', onclick: () => { S.tab = 'settings'; render(); } }, 'Open Settings'));
   else {
     const rows = h('div', { class: 'accts' });
@@ -2304,7 +2304,7 @@ async function runDayReview(rec) {
 function reviewCard(rec, allDone) {
   const R = rec.review;
   if (!R) return h('section', { class: 'review' }, h('h3', {}, 'Your day in review'),
-    h('p', { class: 'ask' }, allDone ? 'Everything is done. The engine is going through your lost games now.' : 'When every task is ticked, Chess Reps reviews your day: what went well, why any game was lost, which puzzle themes you missed, and what tomorrow should train.'),
+    h('p', { class: 'ask' }, allDone ? 'Everything is done. The engine is going through your lost games now.' : 'When every task is ticked, Pawnstorm reviews your day: what went well, why any game was lost, which puzzle themes you missed, and what tomorrow should train.'),
     S.reviewing ? h('p', { class: 'note', id: 'rw-revprog' }, S.reviewing) : h('button', { class: 'btn quiet tiny', onclick: () => runDayReview(rec) }, allDone ? 'Review my day' : 'Review my day so far'));
   return h('section', { class: 'review' }, h('h3', {}, 'Your day in review'),
     R.good.length ? [h('h2', { class: 'good' }, 'Went well'), h('ul', {}, R.good.map(x => h('li', {}, x)))] : null,
@@ -2508,7 +2508,7 @@ function liveEval() {
 }
 function paintEngine(j) {
   const box = $('#rw-engine'); const bar = $('#rw-evalbar');
-  if (!engineOk()) { if (box) box.replaceChildren(h('h2', {}, 'Engine'), h('p', { class: 'empty' }, 'The engine is not available on this page. It runs on the hosted version of Chess Reps.')); if (bar) bar.hidden = true; return; }
+  if (!engineOk()) { if (box) box.replaceChildren(h('h2', {}, 'Engine'), h('p', { class: 'empty' }, 'The engine is not available on this page. It runs on the hosted version of Pawnstorm.')); if (bar) bar.hidden = true; return; }
   if (!j || !j.lines.length) { if (box && Eng.state === 'loading') box.replaceChildren(h('h2', {}, 'Engine'), h('p', { class: 'empty' }, 'Starting Stockfish…')); return; }
   const top = j.lines[0]; const v = Math.max(-1000, Math.min(1000, evalNum(top)));
   if (bar) { bar.querySelector('i').style.width = (50 + 50 * (2 / (1 + Math.exp(-v / 250)) - 1)) + '%'; bar.querySelector('span').textContent = evalText(top); }
@@ -2791,15 +2791,15 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 function exportData() {
   const out = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('reps:') && !k.startsWith('reps:explorer') && !k.startsWith('reps:review:')) out[k] = localStorage.getItem(k); }
   try { out['endgame-reps-progress'] = localStorage.getItem('endgame-reps-progress'); } catch {}
-  const blob = new Blob([JSON.stringify({ app: 'chess-reps', saved: new Date().toISOString(), data: out })], { type: 'application/json' });
-  const a = h('a', { href: URL.createObjectURL(blob), download: `chess-reps-backup-${ymd(new Date())}.json` }); document.body.append(a); a.click(); a.remove();
+  const blob = new Blob([JSON.stringify({ app: 'pawnstorm', saved: new Date().toISOString(), data: out })], { type: 'application/json' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: `pawnstorm-backup-${ymd(new Date())}.json` }); document.body.append(a); a.click(); a.remove();
 }
 async function importData(file) {
   try {
-    const j = JSON.parse(await file.text()); if (j.app !== 'chess-reps') throw 0;
+    const j = JSON.parse(await file.text()); if (j.app !== 'pawnstorm' && j.app !== 'chess-reps') throw 0;
     for (const [k, v] of Object.entries(j.data)) if (v != null) localStorage.setItem(k, v);
     toast('Backup restored. Reloading…'); setTimeout(() => location.reload(), 800);
-  } catch { toast('That file is not a Chess Reps backup.'); }
+  } catch { toast('That file is not a Pawnstorm backup.'); }
 }
 // ---------- Your chess story ----------
 // Style features come straight from the move text: no engine needed.
@@ -2995,7 +2995,7 @@ async function dailyReview(rec, onProgress) {
       bump(mo.theme, 3, `You lost to ${g.opp} on ${dayName}: ${mo.text}`);
     }
     S.batch = false;
-  } else if (lost.length) out.bad.push(`You lost ${lost.length} game${lost.length > 1 ? 's' : ''}. Open the hosted Chess Reps to have the engine explain why.`);
+  } else if (lost.length) out.bad.push(`You lost ${lost.length} game${lost.length > 1 ? 's' : ''}. Open the hosted Pawnstorm to have the engine explain why.`);
   // Puzzles: which themes you missed.
   const pz = liPuzzlesToday();
   if (pz.length) {
@@ -3057,7 +3057,7 @@ function renderStory() {
   const N = Math.max(1, W + Dn + Ls);
   const CH = ['Chapter one', 'Chapter two', 'Chapter three', 'Chapter four', 'Chapter five', 'Chapter six']; let chi = 0; const chno = () => h('p', { class: 'chno' }, CH[chi++]);
   const scanBtn = (label, cls) => engineOk() ? h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: cls || 'btn', disabled: !!S.batch, onclick: async () => {
-    await deepScan(15, (k, n) => { const e = $('#rw-deep'); if (e) e.textContent = `Engine checking game ${k} of ${n}…`; }); render(); } }, label), h('span', { class: 'note', id: 'rw-deep' })) : h('p', { class: 'note' }, 'The engine scan runs on the hosted version of Chess Reps.');
+    await deepScan(15, (k, n) => { const e = $('#rw-deep'); if (e) e.textContent = `Engine checking game ${k} of ${n}…`; }); render(); } }, label), h('span', { class: 'note', id: 'rw-deep' })) : h('p', { class: 'note' }, 'The engine scan runs on the hosted version of Pawnstorm.');
 
   // The report card
   box.append(h('section', { class: 'report' },

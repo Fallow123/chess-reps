@@ -192,7 +192,7 @@ async function dailyReview(rec, onProgress) {
       bump(mo.theme, 3, `You lost to ${g.opp} on ${dayName}: ${mo.text}`);
     }
     S.batch = false;
-  } else if (lost.length) out.bad.push(`You lost ${lost.length} game${lost.length > 1 ? 's' : ''}. Open the hosted Chess Reps to have the engine explain why.`);
+  } else if (lost.length) out.bad.push(`You lost ${lost.length} game${lost.length > 1 ? 's' : ''}. Open the hosted Pawnstorm to have the engine explain why.`);
   // Puzzles: which themes you missed.
   const pz = liPuzzlesToday();
   if (pz.length) {
@@ -254,7 +254,7 @@ function renderStory() {
   const N = Math.max(1, W + Dn + Ls);
   const CH = ['Chapter one', 'Chapter two', 'Chapter three', 'Chapter four', 'Chapter five', 'Chapter six']; let chi = 0; const chno = () => h('p', { class: 'chno' }, CH[chi++]);
   const scanBtn = (label, cls) => engineOk() ? h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: cls || 'btn', disabled: !!S.batch, onclick: async () => {
-    await deepScan(15, (k, n) => { const e = $('#rw-deep'); if (e) e.textContent = `Engine checking game ${k} of ${n}…`; }); render(); } }, label), h('span', { class: 'note', id: 'rw-deep' })) : h('p', { class: 'note' }, 'The engine scan runs on the hosted version of Chess Reps.');
+    await deepScan(15, (k, n) => { const e = $('#rw-deep'); if (e) e.textContent = `Engine checking game ${k} of ${n}…`; }); render(); } }, label), h('span', { class: 'note', id: 'rw-deep' })) : h('p', { class: 'note' }, 'The engine scan runs on the hosted version of Pawnstorm.');
 
   // The report card
   box.append(h('section', { class: 'report' },

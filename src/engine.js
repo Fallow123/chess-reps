@@ -72,7 +72,7 @@ function liveEval() {
 }
 function paintEngine(j) {
   const box = $('#rw-engine'); const bar = $('#rw-evalbar');
-  if (!engineOk()) { if (box) box.replaceChildren(h('h2', {}, 'Engine'), h('p', { class: 'empty' }, 'The engine is not available on this page. It runs on the hosted version of Chess Reps.')); if (bar) bar.hidden = true; return; }
+  if (!engineOk()) { if (box) box.replaceChildren(h('h2', {}, 'Engine'), h('p', { class: 'empty' }, 'The engine is not available on this page. It runs on the hosted version of Pawnstorm.')); if (bar) bar.hidden = true; return; }
   if (!j || !j.lines.length) { if (box && Eng.state === 'loading') box.replaceChildren(h('h2', {}, 'Engine'), h('p', { class: 'empty' }, 'Starting Stockfish…')); return; }
   const top = j.lines[0]; const v = Math.max(-1000, Math.min(1000, evalNum(top)));
   if (bar) { bar.querySelector('i').style.width = (50 + 50 * (2 / (1 + Math.exp(-v / 250)) - 1)) + '%'; bar.querySelector('span').textContent = evalText(top); }
@@ -355,13 +355,13 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 function exportData() {
   const out = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('reps:') && !k.startsWith('reps:explorer') && !k.startsWith('reps:review:')) out[k] = localStorage.getItem(k); }
   try { out['endgame-reps-progress'] = localStorage.getItem('endgame-reps-progress'); } catch {}
-  const blob = new Blob([JSON.stringify({ app: 'chess-reps', saved: new Date().toISOString(), data: out })], { type: 'application/json' });
-  const a = h('a', { href: URL.createObjectURL(blob), download: `chess-reps-backup-${ymd(new Date())}.json` }); document.body.append(a); a.click(); a.remove();
+  const blob = new Blob([JSON.stringify({ app: 'pawnstorm', saved: new Date().toISOString(), data: out })], { type: 'application/json' });
+  const a = h('a', { href: URL.createObjectURL(blob), download: `pawnstorm-backup-${ymd(new Date())}.json` }); document.body.append(a); a.click(); a.remove();
 }
 async function importData(file) {
   try {
-    const j = JSON.parse(await file.text()); if (j.app !== 'chess-reps') throw 0;
+    const j = JSON.parse(await file.text()); if (j.app !== 'pawnstorm' && j.app !== 'chess-reps') throw 0;
     for (const [k, v] of Object.entries(j.data)) if (v != null) localStorage.setItem(k, v);
     toast('Backup restored. Reloading…'); setTimeout(() => location.reload(), 800);
-  } catch { toast('That file is not a Chess Reps backup.'); }
+  } catch { toast('That file is not a Pawnstorm backup.'); }
 }

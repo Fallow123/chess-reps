@@ -283,7 +283,7 @@ function renderGaps(panel, bar) {
       S.batch = true; render(); const side = S.side;
       const r = await checkRepertoire(side, (i, n) => { const p = $('#rw-check'); if (p) p.textContent = `Checking position ${i} of ${n}…`; });
       S.batch = false; if (r) { S.checks[side] = r; toast(r.length ? `${r.length} questionable move${r.length > 1 ? 's' : ''} found` : 'Every move in your prep holds up'); } render(); } }, ck ? 'Check again' : 'Check my moves') : null));
-  csec.append(h('p', { class: 'ask', id: 'rw-check' }, engineOk() ? 'Stockfish looks at every move you chose and flags the ones that give away more than half a pawn.' : 'Needs the engine, which runs on the hosted version of Chess Reps.'));
+  csec.append(h('p', { class: 'ask', id: 'rw-check' }, engineOk() ? 'Stockfish looks at every move you chose and flags the ones that give away more than half a pawn.' : 'Needs the engine, which runs on the hosted version of Pawnstorm.'));
   if (ck && ck.length) {
     const cl = h('div', { class: 'gaps' });
     for (const m of ck) cl.append(h('div', { class: 'gapi ' + (m.loss >= 150 ? 't-opp' : 't-dev') },
@@ -337,7 +337,7 @@ function renderGames(panel, bar) {
   if (S.review) return renderReview(panel, bar);
   const accts = [S.settings.lichessUser && ['lichess', S.settings.lichessUser], S.username && ['chesscom', S.username]].filter(Boolean);
   const top = h('section', { class: 'sec' });
-  if (!accts.length) top.append(h('h3', {}, 'Link your accounts'), h('p', { class: 'ask' }, 'Link lichess and chess.com in Settings and your games come in by themselves, with new ones added each time you open Chess Reps.'),
+  if (!accts.length) top.append(h('h3', {}, 'Link your accounts'), h('p', { class: 'ask' }, 'Link lichess and chess.com in Settings and your games come in by themselves, with new ones added each time you open Pawnstorm.'),
     h('button', { class: 'btn', onclick: () => { S.tab = 'settings'; render(); } }, 'Open Settings'));
   else {
     const rows = h('div', { class: 'accts' });
@@ -685,7 +685,7 @@ async function runDayReview(rec) {
 function reviewCard(rec, allDone) {
   const R = rec.review;
   if (!R) return h('section', { class: 'review' }, h('h3', {}, 'Your day in review'),
-    h('p', { class: 'ask' }, allDone ? 'Everything is done. The engine is going through your lost games now.' : 'When every task is ticked, Chess Reps reviews your day: what went well, why any game was lost, which puzzle themes you missed, and what tomorrow should train.'),
+    h('p', { class: 'ask' }, allDone ? 'Everything is done. The engine is going through your lost games now.' : 'When every task is ticked, Pawnstorm reviews your day: what went well, why any game was lost, which puzzle themes you missed, and what tomorrow should train.'),
     S.reviewing ? h('p', { class: 'note', id: 'rw-revprog' }, S.reviewing) : h('button', { class: 'btn quiet tiny', onclick: () => runDayReview(rec) }, allDone ? 'Review my day' : 'Review my day so far'));
   return h('section', { class: 'review' }, h('h3', {}, 'Your day in review'),
     R.good.length ? [h('h2', { class: 'good' }, 'Went well'), h('ul', {}, R.good.map(x => h('li', {}, x)))] : null,
