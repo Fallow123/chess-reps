@@ -26,7 +26,7 @@ function computeProfile(games) {
   const playable = Object.entries(classes).filter(([k]) => k !== 'other' && k !== 'daily');
   const main = (playable.length ? playable : Object.entries(classes)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)[0][0];
 
-  const pool = recent.length >= 15 ? recent : all.slice(-60);
+  const pool = all;
   const losses = pool.filter(g => g.score === 0);
   const L = {
     n: losses.length,

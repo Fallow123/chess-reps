@@ -1194,6 +1194,11 @@ function timeClass(tc) {
   const [b, i] = tc.split('+').map(Number); const est = (b || 0) + 40 * (i || 0);
   return est < 180 ? 'bullet' : est < 600 ? 'blitz' : 'rapid';
 }
+// lichess names the speed in the Event header, with its own cut-offs.
+function lichessClass(ev) {
+  const m = /\b(ultrabullet|bullet|blitz|rapid|classical|correspondence)\b/i.exec(ev || ''); if (!m) return null;
+  return ({ ultrabullet: 'bullet', classical: 'rapid', correspondence: 'daily' })[m[1].toLowerCase()] || m[1].toLowerCase();
+}
 // How the game ended, from chess.com's Termination header.
 function endKind(t) {
   t = (t || '').toLowerCase();
@@ -1231,7 +1236,7 @@ function importPgn(text, me, maxPly = 40) {
     out.push({ id, me: color, opp: (color === 'w' ? h.Black : h.White) || '?',
       oppElo: +(color === 'w' ? h.BlackElo : h.WhiteElo) || null, myElo: +(color === 'w' ? h.WhiteElo : h.BlackElo) || null,
       date: (h.UTCDate || h.Date || '').replace(/\./g, '-'), time: h.UTCTime || h.StartTime || '',
-      tc: h.TimeControl || '', cls: timeClass(h.TimeControl), end, plies: g.plies, src: url.includes('lichess.org') ? 'lichess' : 'chesscom',
+      tc: h.TimeControl || '', cls: lichessClass(h.Event) || timeClass(h.TimeControl), end, plies: g.plies, src: url.includes('lichess.org') ? 'lichess' : 'chesscom',
       opening: openingName(h), score, url, moves: g.moves.join(' '), full: g.toks.length > g.moves.length ? g.toks.join(' ') : undefined });
   }
   return { me, games: out };
@@ -1380,7 +1385,7 @@ function computeProfile(games) {
   const playable = Object.entries(classes).filter(([k]) => k !== 'other' && k !== 'daily');
   const main = (playable.length ? playable : Object.entries(classes)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)[0][0];
 
-  const pool = recent.length >= 15 ? recent : all.slice(-60);
+  const pool = all;
   const losses = pool.filter(g => g.score === 0);
   const L = {
     n: losses.length,
@@ -1698,7 +1703,14 @@ const lineId = l => hashStr(S.side + ':' + l.join(' '));
 const depthTarget = () => tierFor(D.profile && D.profile.elo).depth;
 // Ratings differ between sites, so the profile reads the main site's games when there are enough.
 const srcOf = g => g.src || (g.url && g.url.includes('lichess.org') ? 'lichess' : 'chesscom');
-function myGames() { const site = onLichess() ? 'lichess' : 'chesscom'; const m = S.games.filter(g => srcOf(g) === site); return m.length >= 20 ? m : S.games; }
+// One sample everywhere: your last 100 games on one site. Ratings are never mixed across sites.
+const SAMPLE = 100;
+function mySite() {
+  const want = onLichess() ? 'lichess' : 'chesscom', other = want === 'lichess' ? 'chesscom' : 'lichess';
+  const n = s => S.games.filter(g => srcOf(g) === s).length;
+  return n(want) >= 20 || n(other) < 20 ? want : other;
+}
+function myGames() { const site = mySite(); return S.games.filter(g => srcOf(g) === site).sort((a, b) => gameTime(a) - gameTime(b)).slice(-SAMPLE); }
 function refresh() {
   const rep = S.rep[S.side];
   D.idx = gameIndex(S.games, S.side);
@@ -1707,8 +1719,8 @@ function refresh() {
   D.lines = allLines(rep);
   const now = Date.now();
   D.due = D.lines.filter(l => { const c = S.cards[lineId(l)]; return !c || c.due <= now; });
-  if (D.pKey !== S.games.length + String(onLichess())) {
-    D.pKey = S.games.length + String(onLichess()); const mg = myGames(); D.profile = computeProfile(mg);
+  if (D.pKey !== S.games.length + mySite()) {
+    D.pKey = S.games.length + mySite(); const mg = myGames(); D.profile = computeProfile(mg);
     D.recentLosses = mg.filter(g => g.score === 0).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 5);
   }
   D.gapsBoth = { w: analyzeGaps(S.rep.w, S.games, 'w', depthTarget()), b: analyzeGaps(S.rep.b, S.games, 'b', depthTarget()) };
@@ -2400,7 +2412,7 @@ function renderToday() {
     }
     if (onLichess() && S.li.puzzle) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.li.puzzle)), h('span'), h('span', { class: 'note' }, S.li.storm ? `lichess puzzles · Storm best ${S.li.storm}` : 'lichess puzzles')));
     else if (S.stats && S.stats.tactics) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.stats.tactics)), h('span'), h('span', { class: 'note' }, 'tactics rating')));
-    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} games. Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
+    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} ${mySite() === 'lichess' ? 'lichess' : 'chess.com'} games. Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
     const wl = h('ul', { class: 'list weak' });
     const NAMES = { time: 'The clock', tactics: 'Tactics', endgames: 'Endgames', openings: 'Openings', tilt: 'Playing on tilt' };
     for (const w of D.weak) wl.append(h('li', { class: 'item' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'wname' }, NAMES[w.key]), h('div', { class: 'meta' }, w.text)), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(100 * w.score)}%` }))));
@@ -2727,12 +2739,13 @@ const liHeaders = () => S.settings.lichessToken ? { Authorization: 'Bearer ' + S
 async function syncLichess(user) {
   const u = encodeURIComponent(user);
   const mine = S.games.filter(g => g.src === 'lichess'); const last = mine.length ? Math.max(...mine.map(gameTime)) : 0;
-  const since = last ? last + 1000 : Date.now() - 90 * 864e5;
-  const r = await fetch(`https://lichess.org/api/games/user/${u}?since=${since}&max=500&opening=true&clocks=false&evals=false`, { headers: Object.assign({ Accept: 'application/x-chess-pgn' }, liHeaders()) });
+  // First sync takes your last 200 games, however old; later ones only what is new.
+  const inc = last && S.li && S.li.backfilled;
+  const r = await fetch(`https://lichess.org/api/games/user/${u}?${inc ? 'since=' + (last + 1000) + '&max=500' : 'max=200'}&opening=true&clocks=false&evals=false`, { headers: Object.assign({ Accept: 'application/x-chess-pgn' }, liHeaders()) });
   if (r.status === 404) throw new Error('nouser');
   if (!r.ok) throw new Error('http');
   const pgn = await r.text();
-  const L = S.li = S.li || {};
+  const L = S.li = S.li || {}; L.backfilled = true;
   try {
     const j = await (await fetch(`https://lichess.org/api/user/${u}`)).json(); const pf = j.perfs || {};
     L.puzzle = pf.puzzle && pf.puzzle.rating; L.storm = pf.storm && pf.storm.score;
@@ -3038,7 +3051,7 @@ function renderStory() {
   const upset = pool.filter(g => g.score === 1 && g.oppElo && g.myElo).sort((a, b) => (b.oppElo - b.myElo) - (a.oppElo - a.myElo))[0];
   let best = 0, run = 0; for (const g of games.slice().sort((a, b) => gameTime(a) - gameTime(b))) { run = g.score === 1 ? run + 1 : 0; best = Math.max(best, run); }
 
-  const site = onLichess() ? 'lichess' : 'chess.com';
+  const site = mySite() === 'lichess' ? 'lichess' : 'chess.com';
   const R = mistakeKinds(storedReviews().filter(r => pool.includes(r.g)));
   const W = pool.filter(g => g.score === 1).length, Dn = pool.filter(g => g.score === 0.5).length, Ls = pool.filter(g => g.score === 0).length;
   const N = Math.max(1, W + Dn + Ls);
@@ -3049,7 +3062,7 @@ function renderStory() {
   // The report card
   box.append(h('section', { class: 'report' },
     h('p', { class: 'eyebrow' }, 'Your chess report'),
-    h('h3', { class: 'rname' }, onLichess() ? S.settings.lichessUser : who),
+    h('h3', { class: 'rname' }, mySite() === 'lichess' ? S.settings.lichessUser : who),
     h('p', { class: 'rsub' }, `${site} · ${main}${now ? ' ' + now : ''}`),
     h('p', { class: 'chip' }, 'You play like ', h('b', {}, M.first.name)),
     h('div', { class: 'rstats' },

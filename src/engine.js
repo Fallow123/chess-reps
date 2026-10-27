@@ -303,12 +303,13 @@ const liHeaders = () => S.settings.lichessToken ? { Authorization: 'Bearer ' + S
 async function syncLichess(user) {
   const u = encodeURIComponent(user);
   const mine = S.games.filter(g => g.src === 'lichess'); const last = mine.length ? Math.max(...mine.map(gameTime)) : 0;
-  const since = last ? last + 1000 : Date.now() - 90 * 864e5;
-  const r = await fetch(`https://lichess.org/api/games/user/${u}?since=${since}&max=500&opening=true&clocks=false&evals=false`, { headers: Object.assign({ Accept: 'application/x-chess-pgn' }, liHeaders()) });
+  // First sync takes your last 200 games, however old; later ones only what is new.
+  const inc = last && S.li && S.li.backfilled;
+  const r = await fetch(`https://lichess.org/api/games/user/${u}?${inc ? 'since=' + (last + 1000) + '&max=500' : 'max=200'}&opening=true&clocks=false&evals=false`, { headers: Object.assign({ Accept: 'application/x-chess-pgn' }, liHeaders()) });
   if (r.status === 404) throw new Error('nouser');
   if (!r.ok) throw new Error('http');
   const pgn = await r.text();
-  const L = S.li = S.li || {};
+  const L = S.li = S.li || {}; L.backfilled = true;
   try {
     const j = await (await fetch(`https://lichess.org/api/user/${u}`)).json(); const pf = j.perfs || {};
     L.puzzle = pf.puzzle && pf.puzzle.rating; L.storm = pf.storm && pf.storm.score;

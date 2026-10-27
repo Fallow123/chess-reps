@@ -39,6 +39,11 @@ function timeClass(tc) {
   const [b, i] = tc.split('+').map(Number); const est = (b || 0) + 40 * (i || 0);
   return est < 180 ? 'bullet' : est < 600 ? 'blitz' : 'rapid';
 }
+// lichess names the speed in the Event header, with its own cut-offs.
+function lichessClass(ev) {
+  const m = /\b(ultrabullet|bullet|blitz|rapid|classical|correspondence)\b/i.exec(ev || ''); if (!m) return null;
+  return ({ ultrabullet: 'bullet', classical: 'rapid', correspondence: 'daily' })[m[1].toLowerCase()] || m[1].toLowerCase();
+}
 // How the game ended, from chess.com's Termination header.
 function endKind(t) {
   t = (t || '').toLowerCase();
@@ -76,7 +81,7 @@ function importPgn(text, me, maxPly = 40) {
     out.push({ id, me: color, opp: (color === 'w' ? h.Black : h.White) || '?',
       oppElo: +(color === 'w' ? h.BlackElo : h.WhiteElo) || null, myElo: +(color === 'w' ? h.WhiteElo : h.BlackElo) || null,
       date: (h.UTCDate || h.Date || '').replace(/\./g, '-'), time: h.UTCTime || h.StartTime || '',
-      tc: h.TimeControl || '', cls: timeClass(h.TimeControl), end, plies: g.plies, src: url.includes('lichess.org') ? 'lichess' : 'chesscom',
+      tc: h.TimeControl || '', cls: lichessClass(h.Event) || timeClass(h.TimeControl), end, plies: g.plies, src: url.includes('lichess.org') ? 'lichess' : 'chesscom',
       opening: openingName(h), score, url, moves: g.moves.join(' '), full: g.toks.length > g.moves.length ? g.toks.join(' ') : undefined });
   }
   return { me, games: out };

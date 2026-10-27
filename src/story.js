@@ -248,7 +248,7 @@ function renderStory() {
   const upset = pool.filter(g => g.score === 1 && g.oppElo && g.myElo).sort((a, b) => (b.oppElo - b.myElo) - (a.oppElo - a.myElo))[0];
   let best = 0, run = 0; for (const g of games.slice().sort((a, b) => gameTime(a) - gameTime(b))) { run = g.score === 1 ? run + 1 : 0; best = Math.max(best, run); }
 
-  const site = onLichess() ? 'lichess' : 'chess.com';
+  const site = mySite() === 'lichess' ? 'lichess' : 'chess.com';
   const R = mistakeKinds(storedReviews().filter(r => pool.includes(r.g)));
   const W = pool.filter(g => g.score === 1).length, Dn = pool.filter(g => g.score === 0.5).length, Ls = pool.filter(g => g.score === 0).length;
   const N = Math.max(1, W + Dn + Ls);
@@ -259,7 +259,7 @@ function renderStory() {
   // The report card
   box.append(h('section', { class: 'report' },
     h('p', { class: 'eyebrow' }, 'Your chess report'),
-    h('h3', { class: 'rname' }, onLichess() ? S.settings.lichessUser : who),
+    h('h3', { class: 'rname' }, mySite() === 'lichess' ? S.settings.lichessUser : who),
     h('p', { class: 'rsub' }, `${site} · ${main}${now ? ' ' + now : ''}`),
     h('p', { class: 'chip' }, 'You play like ', h('b', {}, M.first.name)),
     h('div', { class: 'rstats' },
