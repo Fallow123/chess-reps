@@ -1,0 +1,2744 @@
+<div id="app">
+  <header class="top">
+    <h1>Endgame reps</h1>
+    <p class="tagline">Positions with a known truth. Every move gets a verdict.</p>
+  </header>
+
+  <div class="layout">
+    <div class="sidecol">
+      <div class="levels" id="levels"></div>
+      <div class="levels" id="repsbox"></div>
+      <nav class="chapters" id="chapters"></nav>
+      <nav class="runs" id="runs"></nav>
+    </div>
+
+    <main class="stage">
+      <div class="runbar" id="runbar" hidden>
+        <span class="runname" id="runname"></span>
+        <span class="runcount" id="runcount"></span>
+        <button class="btn quiet tiny" id="btnQuit">Leave run</button>
+      </div>
+
+      <div class="boardwrap" id="boardwrap">
+        <div class="board" id="board"></div>
+        <div class="stamp" id="stamp"></div>
+        <div class="veil" id="veil"><span id="veiltext">Finding a position</span></div>
+      </div>
+
+      <div class="statusbar" id="statusbar">
+        <p class="prompt" id="prompt">Pick a chapter to begin.</p>
+        <p class="verdict" id="verdict"></p>
+      </div>
+
+      <div class="controls" id="controls">
+        <button id="btnNew" class="btn">New position</button>
+        <button id="btnHint" class="btn quiet">Hint</button>
+        <button id="btnBack" class="btn quiet" hidden>Take it back</button>
+      </div>
+
+      <div class="study" id="study" hidden>
+        <p class="qtitle" id="qtitle"></p>
+        <p class="qask" id="qask"></p>
+        <div class="opts" id="opts"></div>
+        <div class="why" id="why" hidden>
+          <p id="whytext"></p>
+          <button class="btn" id="btnNextQ">Next</button>
+          <button class="btn quiet" id="btnPlayPlan" hidden>Play the plan</button>
+        </div>
+      </div>
+
+      <div class="line" id="linepanel" hidden>
+        <p class="lname" id="lname"></p>
+        <p class="lsetup" id="lsetup"></p>
+        <p class="lprompt" id="lprompt"></p>
+        <p class="lnote" id="lnote"></p>
+        <div class="lbtns">
+          <button class="btn quiet" id="btnLineHint">Show the move</button>
+          <button class="btn" id="btnLineNext" hidden>Next line</button>
+        </div>
+      </div>
+
+      <div class="summary" id="summary" hidden>
+        <h2 id="sumtitle"></h2>
+        <ol class="sumlist" id="sumlist"></ol>
+        <p class="sumtime" id="sumtime"></p>
+        <button class="btn" id="btnDone">Back to the ladder</button>
+      </div>
+    </main>
+
+    <aside class="sheet">
+      <h2>Score sheet</h2>
+      <ol class="moves" id="moves"></ol>
+      <p class="empty" id="sheetEmpty">Your moves appear here as you play.</p>
+    </aside>
+  </div>
+
+  <div class="promo" id="promo" hidden>
+    <div class="promobox">
+      <p>Promote to</p>
+      <div class="promorow" id="promorow"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #app {
+    --walnut: #000000;      /* page */
+    --panel: #141414;       /* raised surfaces */
+    --panel-2: #1E1E1E;     /* board frame */
+    --maple: #EDEAE2;       /* light squares */
+    --dark-sq: #3E6B4C;     /* dark squares, tournament green */
+    --bone: #F4F3F0;        /* body text */
+    --dim: #8C8C86;         /* secondary text */
+    --sage: #56C878;        /* correct, best move */
+    --amber: #FF8A1F;       /* every interaction accent */
+    --rust: #E5484D;        /* blunders */
+    --rule: #2B2B2B;        /* hairlines */
+
+    /* One source of truth for board geometry. --sq subtracts the 7px frame on
+       each side so a square is exactly what a piece has to fit inside. */
+    --piece-w: #FFFFFF;     /* white piece fill */
+    --piece-w-edge: #111111;
+    --piece-b: #141414;     /* black piece fill */
+    --piece-b-edge: #F0EDE6;
+
+    --board: min(88vw, 580px);
+
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    background: var(--walnut);
+    color: var(--bone);
+    padding: 28px 22px 40px;
+    min-height: 100%;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+  #app *, #app *::before, #app *::after { box-sizing: border-box; }
+  #app [hidden] { display: none !important; }
+
+  .top { max-width: 1260px; margin: 0 auto 26px; }
+  .top h1 {
+    font-size: 34px; font-weight: 600; margin: 0 0 5px;
+    letter-spacing: 0.005em;
+  }
+  .tagline { margin: 0; color: var(--dim); font-size: 16.5px; font-style: italic; }
+
+  .layout {
+    max-width: 1260px; margin: 0 auto;
+    display: grid; gap: 26px;
+    grid-template-columns: 264px minmax(0, 1fr) 264px;
+    align-items: start;
+  }
+
+  /* ---- chapters ---- */
+  .chapters { display: flex; flex-direction: column; gap: 1px; }
+  .grouphead {
+    font-size: 15px; font-weight: 600; color: var(--amber);
+    margin: 22px 0 7px 14px; font-style: italic;
+  }
+  .grouphead:first-child { margin-top: 0; }
+  .chapter {
+    display: block; width: 100%; text-align: left;
+    background: none; border: 0; border-left: 2px solid var(--rule);
+    padding: 11px 16px; cursor: pointer; color: var(--bone);
+    font: inherit; transition: background .15s, border-color .15s;
+  }
+  .chapter:hover:not(.locked) { background: var(--panel); }
+  .chapter.on { border-left-color: var(--amber); background: var(--panel); }
+  .chapter.locked { cursor: default; color: var(--dim); opacity: .55; }
+  .chapter .num { font-size: 13px; color: var(--dim); }
+  .chapter .name { font-size: 17.5px; margin: 1px 0 2px; }
+  .chapter .meta { font-size: 13.5px; color: var(--dim); line-height: 1.45; }
+  .chapter.locked .meta { font-style: italic; }
+  .chapter:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+  .tally { color: var(--sage); }
+
+  /* ---- difficulty ---- */
+  .levels { margin-bottom: 24px; }
+  .levelrow { display: flex; gap: 4px; padding: 0 16px; }
+  .lvl {
+    flex: 1; font: inherit; font-size: 16px; padding: 8px 0; cursor: pointer;
+    background: var(--panel); color: var(--dim); border: 0;
+    border-bottom: 2px solid var(--rule); transition: color .15s, background .15s;
+  }
+  .lvl:hover:not(.on) { color: var(--bone); background: var(--panel-2); }
+  .lvl:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+  .lvl.on { background: var(--amber); color: #000; border-bottom-color: var(--amber); }
+  .lvlname { font-size: 13.5px; color: var(--dim); margin: 9px 16px 0; line-height: 1.5; }
+  .lvlname strong { color: var(--bone); font-weight: 600; }
+
+  .unlockall {
+    margin: 14px 16px 0; padding: 7px 0; width: calc(100% - 32px);
+    font: inherit; font-size: 13.5px; font-style: italic; cursor: pointer;
+    background: none; color: var(--dim); border: 0;
+    box-shadow: inset 0 0 0 1px var(--rule); transition: color .15s;
+  }
+  .unlockall:hover { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+  .unlockall:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  /* ---- runs ---- */
+  .sidecol { display: flex; flex-direction: column; }
+  .runs { display: flex; flex-direction: column; gap: 1px; margin-bottom: 22px; }
+  .run {
+    display: block; width: 100%; text-align: left;
+    background: var(--panel); border: 0; border-left: 2px solid var(--rule);
+    padding: 12px 16px; cursor: pointer; color: var(--bone); font: inherit;
+    transition: border-color .15s, background .15s;
+  }
+  .run:hover { border-left-color: var(--amber); background: var(--panel-2); }
+  .run:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+  .run .name { font-size: 17.5px; margin-bottom: 2px; }
+  .run .meta { font-size: 13.5px; color: var(--dim); line-height: 1.45; }
+
+  .runbar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    width: var(--board); margin-bottom: 12px;
+    border-bottom: 1px solid var(--rule); padding-bottom: 8px;
+  }
+  .runname { font-size: 15px; }
+  .runcount { font-size: 13px; color: var(--dim); margin-left: auto; }
+  .btn.tiny { font-size: 12.5px; padding: 4px 10px; }
+
+  /* ---- study ---- */
+  .study { width: var(--board); margin-top: 16px; }
+  .qtitle { margin: 0 0 2px; font-size: 17px; }
+  .qask { margin: 0 0 12px; font-size: 15px; color: var(--dim); font-style: italic; }
+  .opts { display: flex; flex-direction: column; gap: 6px; }
+  .opt {
+    text-align: left; font: inherit; font-size: 14.5px; padding: 10px 13px;
+    background: var(--panel); color: var(--bone); border: 0;
+    border-left: 2px solid var(--rule); cursor: pointer; transition: border-color .15s;
+  }
+  .opt:hover:not(:disabled) { border-left-color: var(--amber); }
+  .opt:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+  .opt:disabled { cursor: default; }
+  .opt.right { border-left-color: var(--sage); color: var(--sage); }
+  .opt.wrong { border-left-color: var(--rust); color: var(--rust); }
+  .why { margin-top: 14px; border-top: 1px solid var(--rule); padding-top: 12px; }
+  .why p { margin: 0 0 12px; font-size: 15px; line-height: 1.6; }
+
+  /* ---- guided lines ---- */
+  .line { width: var(--board); margin-top: 16px; }
+  .lname { margin: 0 0 2px; font-size: 17px; }
+  .lsetup { margin: 0 0 10px; font-size: 14px; color: var(--dim); font-style: italic;
+            line-height: 1.55; }
+  .lprompt { margin: 0 0 6px; font-size: 15.5px; }
+  .lnote { margin: 0 0 12px; font-size: 14.5px; line-height: 1.6; min-height: 46px;
+           color: var(--bone); }
+  .lnote.miss { color: var(--amber); }
+  .lnote.payoff { color: var(--sage); }
+  .lbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ---- summary ---- */
+  .summary { width: var(--board); }
+  .summary h2 { font-size: 20px; font-weight: 600; margin: 0 0 14px; }
+  .sumlist { list-style: none; margin: 0 0 14px; padding: 0; }
+  .sumlist li {
+    display: grid; grid-template-columns: 1fr auto; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 15px;
+  }
+  .sumtime { color: var(--dim); font-size: 14px; margin: 0 0 16px; }
+  .dimmed { color: var(--dim); font-size: 13px; }
+
+  /* ---- board ---- */
+  .stage { display: flex; flex-direction: column; align-items: center; }
+  .boardwrap { position: relative; width: var(--board); }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    aspect-ratio: 1; width: 100%;
+    border: 7px solid var(--panel-2);
+    box-shadow: 0 0 0 1px var(--rule), 0 12px 40px rgba(0,0,0,.8);
+  }
+  .sq {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    cursor: default; user-select: none;
+    min-width: 0; min-height: 0; overflow: hidden;
+  }
+  .sq.light { background: var(--maple); }
+  .sq.dark  { background: var(--dark-sq); }
+  .sq.pickable { cursor: pointer; }
+  .sq.sel::after {
+    content: ""; position: absolute; inset: 0;
+    box-shadow: inset 0 0 0 4px var(--amber);
+  }
+  .sq.target::before {
+    content: ""; position: absolute; width: 26%; aspect-ratio: 1;
+    border-radius: 50%; background: rgba(255,138,31,.72);
+  }
+  .sq.target.occupied::before {
+    width: 100%; border-radius: 0; background: none;
+    box-shadow: inset 0 0 0 5px rgba(255,138,31,.72);
+  }
+  .sq.from, .sq.to { background-image: linear-gradient(rgba(255,138,31,.30), rgba(255,138,31,.30)); }
+  /* Drawn pieces, so size and centring no longer depend on a font's metrics. */
+  .piece { width: 88%; height: 88%; pointer-events: none; }
+  .piece svg { display: block; width: 100%; height: 100%; }
+  .piece g {
+    stroke-width: 5; stroke-linejoin: round;
+    /* Stroke behind fill, so the outline haloes thin features instead of eating them. */
+    paint-order: stroke fill;
+  }
+  .piece.w g { fill: var(--piece-w); stroke: var(--piece-w-edge); }
+  .piece.b g { fill: var(--piece-b); stroke: var(--piece-b-edge); }
+  .piece .detail { stroke: none; }
+  .piece.w .detail { fill: #111; opacity: .30; }
+  .piece.b .detail { fill: #F0EDE6; opacity: .40; }
+  .coord {
+    position: absolute; font-size: 10px; opacity: .75;
+    bottom: 2px; right: 3px;
+  }
+  .sq.light .coord { color: #6F6C64; }
+  .sq.dark  .coord { color: #A6C9B2; }
+
+  .stamp {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--board) * 0.33); font-weight: 700; pointer-events: none; opacity: 0;
+  }
+  .stamp.go { animation: mark 1.15s ease-out forwards; }
+  @keyframes mark {
+    0%   { opacity: 0; transform: scale(.55) rotate(-13deg); }
+    18%  { opacity: .95; transform: scale(1.06) rotate(-7deg); }
+    30%  { transform: scale(1) rotate(-7deg); }
+    70%  { opacity: .9; }
+    100% { opacity: 0; transform: scale(1) rotate(-7deg); }
+  }
+  .stamp.best { color: var(--sage); }
+  .stamp.slow { color: var(--amber); }
+  .stamp.bad  { color: var(--rust); }
+
+  .veil {
+    position: absolute; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,.88); color: var(--dim); font-style: italic;
+  }
+  .veil.on { display: flex; }
+
+  /* ---- status ---- */
+  .statusbar { width: var(--board); margin-top: 16px; min-height: 96px; }
+  .prompt { margin: 0 0 5px; font-size: 18px; }
+  .verdict { margin: 0; font-size: 16px; color: var(--dim); min-height: 24px; line-height: 1.55; }
+  .verdict.best { color: var(--sage); }
+  .verdict.slow { color: var(--amber); }
+  .verdict.bad  { color: var(--rust); }
+  .verdict.tip  { color: var(--bone); font-style: italic; line-height: 1.55; }
+  .verdict.gone { color: var(--dim); }
+  .verdict.done { color: var(--sage); font-size: 16px; }
+
+  .controls { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+  .btn {
+    font: inherit; font-size: 16px; padding: 10px 20px; cursor: pointer;
+    background: var(--amber); color: #000; border: 0; transition: filter .15s;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.quiet { background: none; color: var(--dim); box-shadow: inset 0 0 0 1px var(--rule); }
+  .btn.quiet:hover { color: var(--bone); }
+  .btn:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
+  .btn[disabled] { opacity: .4; cursor: default; filter: none; }
+
+  /* ---- score sheet ---- */
+  .sheet h2 { font-size: 15px; font-weight: 600; color: var(--dim); margin: 0 0 12px; }
+  .moves { list-style: none; margin: 0; padding: 0; font-size: 16.5px; }
+  .moves li {
+    display: grid; grid-template-columns: 26px 1fr 1fr; gap: 6px;
+    padding: 3px 0; border-bottom: 1px solid var(--rule);
+    font-variant-numeric: tabular-nums;
+  }
+  .moves .no { color: var(--dim); font-size: 14.5px; }
+  .ann { font-weight: 700; }
+  .ann.best { color: var(--sage); }
+  .ann.slow { color: var(--amber); }
+  .ann.bad  { color: var(--rust); }
+  .ann.gone { color: var(--dim); }
+  .empty { color: var(--dim); font-size: 14.5px; font-style: italic; margin: 0; }
+
+  /* ---- promotion ---- */
+  .promo { position: fixed; inset: 0; background: rgba(0,0,0,.8); display: flex;
+           align-items: center; justify-content: center; z-index: 20; }
+  .promobox { background: var(--panel); padding: 20px 24px; text-align: center; }
+  .promobox p { margin: 0 0 12px; font-size: 15px; }
+  .promorow { display: flex; gap: 6px; }
+  .promorow button {
+    width: 62px; height: 62px; cursor: pointer; padding: 4px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--maple); border: 0;
+  }
+  .promorow button:hover { filter: brightness(1.06); }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0,1fr); }
+    .stage { order: 1; }
+    .sidecol { order: 2; }
+    .sheet { order: 3; }
+    .top { text-align: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stamp.go { animation: none; opacity: .9; }
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  var FILES = "abcdefgh";
+  /* ---------- pieces ----------
+     An original set drawn in a 100x100 box, all sitting on a common plinth.
+     Heights differ on purpose: king tallest, pawn shortest, as in a real set.
+     Unicode chess glyphs were sized inconsistently across fonts, which is why
+     these are drawn rather than typed.                                       */
+  var PIECE = {
+    k:  // king
+      "<path d=\"M46 6 h8 v8 h8 v7 h-8 v9 h-8 v-9 h-8 v-7 h8 z\"/>" +
+      "<path d=\"M50 28 c-12 0 -20 6 -20 14 c0 5 3 9 7 12 h26 c4 -3 7 -7 7 -12 c0 -8 -8 -14 -20 -14 z\"/>" +
+      "<path d=\"M28 54 h44 v8 h-44 z\"/>" +
+      "<path d=\"M32 62 h36 c1 8 5 14 10 16 h-56 c5 -2 9 -8 10 -16 z\"/>" +
+      "<path d=\"M22 88 h56 v-7 q0 -4 -5 -5 h-46 q-5 1 -5 5 z\"/>",
+    q:  // queen
+      "<path d=\"M22 29 L28 52 L35 24 L42 50 L50 20 L58 50 L65 24 L72 52 L78 29 L74 62 L26 62 Z\"/>" +
+      "<circle cx=\"22\" cy=\"29\" r=\"5\"/>" +
+      "<circle cx=\"35\" cy=\"24\" r=\"5\"/>" +
+      "<circle cx=\"50\" cy=\"20\" r=\"5.5\"/>" +
+      "<circle cx=\"65\" cy=\"24\" r=\"5\"/>" +
+      "<circle cx=\"78\" cy=\"29\" r=\"5\"/>" +
+      "<path d=\"M28 62 h44 c1 8 3 13 6 16 h-56 c3 -3 5 -8 6 -16 z\"/>" +
+      "<path d=\"M22 88 h56 v-7 q0 -4 -5 -5 h-46 q-5 1 -5 5 z\"/>",
+    r:  // rook
+      "<path d=\"M25 22 h11 v9 h9 v-9 h10 v9 h9 v-9 h11 v22 h-50 z\"/>" +
+      "<path d=\"M31 46 h38 l-3 26 h-32 z\"/>" +
+      "<path d=\"M26 74 h48 v7 h-48 z\"/>" +
+      "<path d=\"M22 88 h56 v-7 q0 -4 -5 -5 h-46 q-5 1 -5 5 z\"/>",
+    b:  // bishop
+      "<circle cx=\"50\" cy=\"22\" r=\"4.5\"/>" +
+      "<path d=\"M50 27 c-11 6 -17 15 -17 23 c0 6 4 11 9 13 h16 c5 -2 9 -7 9 -13 c0 -8 -6 -18 -17 -24 z\"/>" +
+      "<path d=\"M43 55 l14 -21 l5 3 l-14 21 z\" class=\"detail\"/>" +
+      "<path d=\"M34 63 h32 c1 7 4 13 8 18 h-48 c4 -5 7 -11 8 -18 z\"/>" +
+      "<path d=\"M22 88 h56 v-7 q0 -4 -5 -5 h-46 q-5 1 -5 5 z\"/>",
+    n:  // knight
+      "<path d=\"M60 16 l8 12 c8 10 10 24 10 53 h-42 c0 -16 4 -26 12 -34 l-10 4 c-6 2 -11 -1 -12 -6 c-1 -6 3 -10 8 -14 l14 -10 l4 -9 z\"/>" +
+      "<circle cx=\"57\" cy=\"34\" r=\"3.5\" class=\"detail\"/>" +
+      "<path d=\"M33 40 l9 -3 l-2 6 z\" class=\"detail\"/>" +
+      "<path d=\"M22 88 h56 v-7 q0 -4 -5 -5 h-46 q-5 1 -5 5 z\"/>",
+    p:  // pawn
+      "<circle cx=\"50\" cy=\"36\" r=\"12\"/>" +
+      "<path d=\"M40 48 h20 l-3 6 c6 9 9 18 10 27 h-34 c1 -9 4 -18 10 -27 z\"/>" +
+      "<path d=\"M22 88 h56 v-7 q0 -4 -5 -5 h-46 q-5 1 -5 5 z\"/>",
+  };
+
+  /* ---------- board helpers (index 0 = a8, 63 = h1) ---------- */
+  function sqName(i) { return FILES[i % 8] + (8 - (i >> 3)); }
+  function sqIndex(s) { return FILES.indexOf(s[0]) + (8 - parseInt(s[1], 10)) * 8; }
+  function adjacent(a, b) {
+    return Math.abs((a >> 3) - (b >> 3)) <= 1 && Math.abs((a % 8) - (b % 8)) <= 1;
+  }
+
+  function toFen(board, stm) {
+    var rows = [];
+    for (var r = 0; r < 8; r++) {
+      var row = "", gap = 0;
+      for (var f = 0; f < 8; f++) {
+        var p = board[r * 8 + f];
+        if (p) { if (gap) { row += gap; gap = 0; } row += p; } else { gap++; }
+      }
+      if (gap) row += gap;
+      rows.push(row);
+    }
+    return rows.join("/") + " " + stm + " - - 0 1";
+  }
+
+  function applyUci(board, stm, uci) {
+    var from = sqIndex(uci.slice(0, 2)), to = sqIndex(uci.slice(2, 4));
+    var nb = board.slice();
+    var piece = nb[from];
+    if (uci.length > 4) piece = stm === "w" ? uci[4].toUpperCase() : uci[4].toLowerCase();
+    nb[to] = piece; nb[from] = null;
+    return nb;
+  }
+
+  function clearPath(board, from, to) {
+    var sr = Math.sign((to >> 3) - (from >> 3)), sf = Math.sign((to % 8) - (from % 8));
+    var r = (from >> 3) + sr, f = (from % 8) + sf;
+    while (r !== (to >> 3) || f !== (to % 8)) {
+      if (board[r * 8 + f]) return false;
+      r += sr; f += sf;
+    }
+    return true;
+  }
+
+  function attacks(board, from, target) {
+    var p = board[from];
+    if (!p) return false;
+    var t = p.toLowerCase(), white = p === p.toUpperCase();
+    var dr = (target >> 3) - (from >> 3), df = (target % 8) - (from % 8);
+    if (t === "k") return Math.abs(dr) <= 1 && Math.abs(df) <= 1 && (dr || df);
+    if (t === "n") return (Math.abs(dr) === 1 && Math.abs(df) === 2) ||
+                          (Math.abs(dr) === 2 && Math.abs(df) === 1);
+    if (t === "p") return dr === (white ? -1 : 1) && Math.abs(df) === 1;
+    if ((t === "r" || t === "q") && (dr === 0 || df === 0)) return clearPath(board, from, target);
+    if ((t === "b" || t === "q") && Math.abs(dr) === Math.abs(df) && dr !== 0) return clearPath(board, from, target);
+    return false;
+  }
+
+  function inCheck(board, color) {
+    var king = color === "w" ? "K" : "k", ks = board.indexOf(king);
+    if (ks < 0) return false;
+    for (var i = 0; i < 64; i++) {
+      var p = board[i];
+      if (!p) continue;
+      var isWhite = p === p.toUpperCase();
+      if (isWhite === (color === "w")) continue;
+      if (attacks(board, i, ks)) return true;
+    }
+    return false;
+  }
+
+  /* ---------- tablebase ---------- */
+  var HOSTS = [
+    "https://tablebase.lichess.ovh/standard?fen=",
+    "https://tablebase.lichess.org/standard?fen="
+  ];
+  var host = 0;
+  var cache = new Map();
+
+  function rawProbe(fen, h) {
+    return fetch(HOSTS[h] + encodeURIComponent(fen)).then(function (r) {
+      if (!r.ok) throw new Error("tablebase " + r.status);
+      return r.json();
+    });
+  }
+
+  function probe(fen) {
+    if (cache.has(fen)) return Promise.resolve(cache.get(fen));
+    return rawProbe(fen, host).catch(function (e) {
+      // A real HTTP status means the host is fine; don't retry elsewhere.
+      if (String(e.message).indexOf("tablebase ") === 0) throw e;
+      var alt = host === 0 ? 1 : 0;
+      return rawProbe(fen, alt).then(function (j) { host = alt; return j; });
+    }).then(function (j) { cache.set(fen, j); return j; });
+  }
+
+  function norm(c) {
+    if (c === "cursed-win") return "win";
+    if (c === "blessed-loss") return "loss";
+    return c;
+  }
+  function flip(c) { return c === "win" ? "loss" : c === "loss" ? "win" : c; }
+  function rank(c) { return c === "win" ? 2 : c === "draw" ? 1 : 0; }
+  // A move's listed category describes the position after, from the opponent's seat.
+  function outcomeForMover(mv) { return flip(norm(mv.category)); }
+
+  /* ---------- placement helpers ---------- */
+  function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function range(a, b) { var r = []; for (var i = a; i <= b; i++) r.push(i); return r; }
+  var ALL = range(0, 63);
+  function sqOf(file, rank) {
+    if (file < 0 || file > 7 || rank < 1 || rank > 8) return null;
+    return file + (8 - rank) * 8;
+  }
+  function cheb(a, b) {
+    return Math.max(Math.abs((a >> 3) - (b >> 3)), Math.abs((a % 8) - (b % 8)));
+  }
+  function farFrom(sq, d) { return ALL.filter(function (i) { return cheb(i, sq) >= d; }); }
+  function nearTo(sq, d) { return ALL.filter(function (i) { return cheb(i, sq) <= d && i !== sq; }); }
+
+  // Build a board from [piece, square] pairs. Any null or repeated square voids it.
+  function build(list) {
+    var b = new Array(64).fill(null), seen = {};
+    for (var i = 0; i < list.length; i++) {
+      var sq = list[i][1];
+      if (sq === null || sq === undefined || seen[sq]) return null;
+      seen[sq] = 1; b[sq] = list[i][0];
+    }
+    return b;
+  }
+
+  // Drop the men on the board at random. Pawns stay off the first and last ranks.
+  function scatter(men) {
+    return function () {
+      var list = [], used = {};
+      for (var i = 0; i < men.length; i++) {
+        var p = men[i];
+        var pool = p.toLowerCase() === "p" ? range(8, 55) : ALL;
+        var sq, guard = 0;
+        do { sq = rnd(pool); guard++; } while (used[sq] && guard < 300);
+        used[sq] = 1; list.push([p, sq]);
+      }
+      return build(list);
+    };
+  }
+
+  /* ---------- difficulty ----------
+     A chapter says what a position must be; the level says how hard to make it.
+     The sharpest lever is how many moves preserve the result: a win with six
+     good moves is a different exercise from one with a single saving move.
+     The defence stays tablebase-perfect at every level, because a weak opponent
+     would let the wrong method succeed, which defeats the purpose.           */
+  var LEVELS = [
+    { n: 1, name: "Introduction", win: [0.00, 0.35], drawHolds: 6, winHolds: 99,
+      takeback: true,  hints: true,
+      blurb: "Short wins with plenty of good moves. Mistakes can be taken back." },
+    { n: 2, name: "Easy", win: [0.15, 0.55], drawHolds: 4, winHolds: 14,
+      takeback: true,  hints: true,
+      blurb: "Deeper, with a little less margin for error." },
+    { n: 3, name: "Standard", win: [0.30, 0.75], drawHolds: 3, winHolds: 9,
+      takeback: true,  hints: true,
+      blurb: "Full-length technique and a normal amount of rope." },
+    { n: 4, name: "Sharp", win: [0.55, 0.90], drawHolds: 2, winHolds: 5,
+      takeback: false, hints: true,
+      blurb: "Long, narrow, and no take-backs once you go wrong." },
+    { n: 5, name: "Only moves", win: [0.70, 1.00], drawHolds: 1, winHolds: 3,
+      takeback: false, hints: false,
+      blurb: "Barely any move holds these. No hints, no second chances." }
+  ];
+
+  function currentLevel() {
+    for (var i = 0; i < LEVELS.length; i++) if (LEVELS[i].n === S.level) return LEVELS[i];
+    return LEVELS[2];
+  }
+
+  // relax widens the window when nothing that strict exists in this material.
+  function acceptFor(ch, lv, relax) {
+    var pad = relax * 0.20, slack = relax * 3;
+    return function (d, board) {
+      if (norm(d.category) !== ch.want) return false;
+      if (!d.moves || !d.moves.length) return false;
+
+      if (ch.depth && d.dtm != null) {
+        var lo = ch.depth[0], span = ch.depth[1] - ch.depth[0];
+        var a = lo + Math.max(0, lv.win[0] - pad) * span;
+        var b = lo + Math.min(1, lv.win[1] + pad) * span;
+        var dtm = Math.abs(d.dtm);
+        if (dtm < a || dtm > b) return false;
+      }
+
+      // A win-count cap is only meaningful where most moves DON'T win. In a basic
+      // mate nearly every move keeps the win, so capping it there rejects every
+      // position and the search starves. Those chapters get depth as their lever.
+      var cap = ch.want === "draw" ? lv.drawHolds : (ch.sharp ? lv.winHolds : null);
+      if (cap !== null && movesThatHold(d) > cap + slack) return false;
+
+      // A draw chapter must not offer the pawn for free.
+      if (ch.safe) {
+        var guarded = board.indexOf(ch.safe);
+        for (var i = 0; i < d.moves.length; i++) {
+          if (sqIndex(d.moves[i].uci.slice(2, 4)) === guarded) return false;
+        }
+      }
+      return true;
+    };
+  }
+
+  /* ---------- the curriculum ---------- */
+  var CHAPTERS = [
+    {
+      group: "Basic mates",
+      id: "queenmate", title: "The queen mate", material: "King and queen against king",
+      prompt: "White to play. Mate without stalemating.",
+      advice: "Shrink the box. Keep the queen a knight's move from his king and walk your own king up. " +
+              "Never take his last square unless it is mate.",
+      place: scatter(["K", "Q", "k"]), stm: "w", user: "w", goal: "mate",
+      want: "win", depth: [9, 19], needed: 2
+    },
+    {
+      group: "Basic mates",
+      id: "rookmate", title: "The rook mate", material: "King and rook against king",
+      prompt: "White to play. Drive the king to the edge.",
+      advice: "Cut the king off along a rank or file, then bring your own king up to support the rook. " +
+              "The box only shrinks when your king is close enough to guard the cutting square.",
+      place: scatter(["K", "R", "k"]), stm: "w", user: "w", goal: "mate",
+      want: "win", depth: [13, 31], needed: 2
+    },
+    {
+      group: "Basic mates",
+      id: "twobishops", title: "Two bishops", material: "King and two bishops against king",
+      prompt: "White to play. Squeeze the king into a corner.",
+      advice: "Two bishops on adjacent diagonals build a wall he cannot cross. Push the wall forward " +
+              "with the king right behind it and herd him to any corner.",
+      place: function () {
+        var light = ALL.filter(function (i) { return (((i >> 3) + (i % 8)) % 2) === 0; });
+        var dark = ALL.filter(function (i) { return (((i >> 3) + (i % 8)) % 2) === 1; });
+        return build([["K", rnd(ALL)], ["B", rnd(light)], ["B", rnd(dark)], ["k", rnd(ALL)]]);
+      },
+      stm: "w", user: "w", goal: "mate", want: "win", depth: [15, 37], needed: 2
+    },
+
+    {
+      group: "King and pawn",
+      id: "square", title: "The square of the pawn", material: "King against king and pawn",
+      prompt: "Black to play. Get inside the square and catch it.",
+      advice: "Draw the square from the pawn to the queening square. If your king can step inside it " +
+              "on this move, the pawn never gets home.",
+      place: function () {
+        var f = Math.floor(Math.random() * 8);
+        var r = 4 + Math.floor(Math.random() * 3);
+        var pawn = sqOf(f, r), queens = sqOf(f, 8), need = 8 - r;
+        // Put the black king right on the rim of the square, where it's a real decision.
+        var rim = ALL.filter(function (i) {
+          var d = cheb(i, queens);
+          return d >= need - 1 && d <= need + 1;
+        });
+        return build([["P", pawn], ["K", rnd(farFrom(pawn, 4))], ["k", rnd(rim)]]);
+      },
+      stm: "b", user: "b", goal: "draw", want: "draw", safe: "P", needed: 2
+    },
+    {
+      group: "King and pawn",
+      id: "opposition", title: "The opposition", material: "King and pawn against king",
+      prompt: "White to play. The kings are facing off \u2014 win the argument.",
+      advice: "Kings on the same file with one square between them: whoever is NOT to move holds " +
+              "the opposition and the other has to give way. Since it is your move, you cannot " +
+              "take it by stepping up to him \u2014 look for the move that makes him step aside first.",
+      place: function () {
+        var f = 1 + Math.floor(Math.random() * 6);
+        var r = 2 + Math.floor(Math.random() * 3);
+        var pawn = sqOf(f, r);
+        var kf = f + rnd([-1, 0, 1]);
+        var wr = r + rnd([0, 1]);
+        var wk = sqOf(kf, wr);
+        var bk = sqOf(kf, wr + rnd([2, 4]));             // facing on the same file
+        return build([["P", pawn], ["K", wk], ["k", bk]]);
+      },
+      stm: "w", user: "w", goal: "promote",
+      want: "win", sharp: true, depth: [17, 48], needed: 2
+    },
+    {
+      group: "King and pawn",
+      id: "keysquares", title: "Key squares", material: "King and pawn against king",
+      prompt: "White to play. Get the king to a square that wins.",
+      advice: "Forget the pawn for a moment. With a pawn on the second to fourth rank, the three " +
+              "squares two ranks in front of it are the key squares: reach any one of them with " +
+              "your king and the pawn queens whoever is to move. Walk the king, not the pawn.",
+      place: function () {
+        var f = 1 + Math.floor(Math.random() * 6);       // b- to g-file, rook pawns differ
+        var r = 2 + Math.floor(Math.random() * 3);       // pawn on the 2nd to 4th
+        var pawn = sqOf(f, r);
+        // The three key squares, two ranks ahead. Starting on one would give the
+        // game away, so the king has to be near its pawn but not already there.
+        var keys = [sqOf(f - 1, r + 2), sqOf(f, r + 2), sqOf(f + 1, r + 2)];
+        var wk = rnd(ALL.filter(function (i) {
+          return i !== pawn && cheb(i, pawn) <= 2 && keys.indexOf(i) < 0;
+        }));
+        // The defender must actually be defending: in front of the pawn, on or
+        // beside its file, and close enough to contest the key squares.
+        var bk = rnd(ALL.filter(function (i) {
+          return (8 - (i >> 3)) > r &&
+                 Math.abs((i % 8) - f) <= 2 &&
+                 cheb(i, pawn) <= 4;
+        }));
+        return build([["P", pawn], ["K", wk], ["k", bk]]);
+      },
+      stm: "w", user: "w", goal: "promote",
+      want: "win", sharp: true, depth: [21, 55], needed: 2
+    },
+    {
+      group: "King and pawn",
+      id: "pawnwin", title: "Queening the pawn", material: "King and pawn against king",
+      prompt: "White to play. Take the opposition and promote.",
+      advice: "The king leads and the pawn follows. Get your king in front of the pawn and take the " +
+              "opposition — pushing the pawn too early usually throws the win away.",
+      place: scatter(["K", "P", "k"]), stm: "w", user: "w", goal: "promote",
+      want: "win", sharp: true, depth: [19, 60], needed: 3
+    },
+    {
+      group: "King and pawn",
+      id: "distant", title: "Distant opposition", material: "King against king and pawn",
+      prompt: "Black to play. The kings are far apart. Hold the draw anyway.",
+      advice: "Opposition works at range. With the kings on the same file and an even number of " +
+              "squares between them it is up for grabs; step so that an odd number remains and " +
+              "the obligation to move passes back to White. Counting squares is the whole skill.",
+      place: function () {
+        var f = 1 + Math.floor(Math.random() * 6);
+        var r = 2 + Math.floor(Math.random() * 2);       // pawn still low
+        var pawn = sqOf(f, r);
+        var kf = Math.floor(Math.random() * 8);
+        var wr = 2 + Math.floor(Math.random() * 2);
+        // Odd rank gap now, so Black has to step to make it even and seize the opposition.
+        var wk = sqOf(kf, wr);
+        var bk = sqOf(kf, wr + rnd([3, 5]));
+        return build([["P", pawn], ["K", wk], ["k", bk]]);
+      },
+      stm: "b", user: "b", goal: "draw",
+      want: "draw", safe: "P", needed: 2
+    },
+    {
+      group: "King and pawn",
+      id: "holddraw", title: "Holding the draw", material: "King against king and pawn",
+      prompt: "Black to play, a pawn down. Hold the draw.",
+      advice: "Stay in front of the pawn. Reaching the queening square, or taking the opposition when " +
+              "he advances, is what holds this.",
+      place: scatter(["K", "P", "k"]), stm: "b", user: "b", goal: "draw",
+      want: "draw", safe: "P", needed: 3
+    },
+    {
+      group: "King and pawn",
+      id: "triangulation", title: "Triangulation",
+      material: "King and pawn against king and pawn",
+      prompt: "White to play. You need to lose a move.",
+      advice: "Everything about this position is right except whose turn it is \u2014 with him to " +
+              "move he must give way, with you to move you must. So give the move back. Walk the " +
+              "king in a triangle, three squares to reach one you could have reached in two, and " +
+              "the same position returns with him on the clock. Stepping toward him does not work.",
+      place: function () {
+        var f = 1 + Math.floor(Math.random() * 6);
+        var r = 3 + Math.floor(Math.random() * 3);
+        var wp = sqOf(f, r), bp = sqOf(f, r + 1);          // pawns locked head to head
+        var wk = rnd(ALL.filter(function (i) { return cheb(i, wp) <= 3; }));
+        var bk = rnd(ALL.filter(function (i) { return cheb(i, bp) <= 3; }));
+        return build([["P", wp], ["p", bp], ["K", wk], ["k", bk]]);
+      },
+      // A tempo problem looks like this: the only moves that win are king moves
+      // that do NOT close the distance. Walking at him throws the win away.
+      extra: function (d, board, relax) {
+        var wins = d.moves.filter(function (m) { return norm(m.category) === "loss"; });
+        if (!wins.length || wins.length > 1 + relax) return false;
+        var bk = board.indexOf("k");
+        return wins.every(function (m) {
+          var from = sqIndex(m.uci.slice(0, 2)), to = sqIndex(m.uci.slice(2, 4));
+          return board[from] === "K" && cheb(to, bk) >= cheb(from, bk);
+        });
+      },
+      stm: "w", user: "w", goal: "stop",
+      want: "win", sharp: true, needed: 2
+    },
+    {
+      group: "King and pawn",
+      id: "corresponding", title: "Corresponding squares",
+      material: "King and pawn against king and pawn",
+      prompt: "White to play. Win his pawn.",
+      advice: "The pawns are locked, so this is purely a king fight, and each square he can " +
+              "stand on has exactly one square that answers it. Do not chase him \u2014 work out " +
+              "which square matches his, go there, and let him run out of useful moves.",
+      place: function () {
+        var f = 1 + Math.floor(Math.random() * 6);
+        var r = 3 + Math.floor(Math.random() * 3);          // white pawn on the 3rd to 5th
+        var wp = sqOf(f, r), bp = sqOf(f, r + 1);           // locked head to head
+        var wk = rnd(ALL.filter(function (i) { return cheb(i, wp) <= 3; }));
+        var bk = rnd(ALL.filter(function (i) { return cheb(i, bp) <= 3; }));
+        return build([["P", wp], ["p", bp], ["K", wk], ["k", bk]]);
+      },
+      stm: "w", user: "w", goal: "stop",
+      want: "win", sharp: true, needed: 2
+    },
+    {
+      group: "King and pawn",
+      id: "seventh", title: "The seventh rank", material: "King and pawn against king",
+      prompt: "White to play. One square to go \u2014 don't stalemate him.",
+      advice: "A pawn on the seventh is not automatically a queen. If his king is boxed into the " +
+              "corner, promoting to a queen can be stalemate on the spot. Check what he has left " +
+              "to move first: sometimes a rook wins where a queen only draws.",
+      place: function () {
+        var f = 1 + Math.floor(Math.random() * 6);
+        var pawn = sqOf(f, 7);
+        var queens = sqOf(f, 8);
+        var wk = rnd(nearTo(pawn, 2));
+        var bk = rnd(ALL.filter(function (i) { return cheb(i, queens) <= 2; }));
+        return build([["P", pawn], ["K", wk], ["k", bk]]);
+      },
+      stm: "w", user: "w", goal: "promote",
+      want: "win", sharp: true, depth: [3, 19], needed: 2
+    },
+    {
+      group: "King and pawn",
+      id: "rookpawn", title: "The rook pawn exception", material: "King against king and rook pawn",
+      prompt: "Black to play. This one draws \u2014 find out why.",
+      advice: "Rook pawns break the usual rules. The defending king draws by sitting in the corner, " +
+              "because the attacking king has no room on the edge to make progress.",
+      place: function () {
+        var pawn = sqOf(rnd([0, 7]), 4 + Math.floor(Math.random() * 3));
+        return build([["P", pawn], ["K", rnd(ALL)], ["k", rnd(ALL)]]);
+      },
+      stm: "b", user: "b", goal: "draw", want: "draw", safe: "P", needed: 2
+    },
+
+    {
+      group: "Stopping a pawn",
+      id: "queenvspawn", title: "Queen against a pawn", material: "King and queen against king and pawn",
+      prompt: "White to play. Win the pawn before it queens.",
+      advice: "Check the king so that he is forced in front of his own pawn. That costs him a tempo, " +
+              "and you spend it walking your king one square closer.",
+      place: function () {
+        var pawn = sqOf(rnd([1, 3, 4, 6]), 2);
+        return build([["p", pawn], ["k", rnd(nearTo(pawn, 2))],
+                      ["Q", rnd(ALL)], ["K", rnd(farFrom(pawn, 4))]]);
+      },
+      stm: "w", user: "w", goal: "stop", want: "win", sharp: true, needed: 2
+    },
+    {
+      group: "Stopping a pawn",
+      id: "rookvspawn", title: "Rook against a pawn", material: "King and rook against king and pawn",
+      prompt: "White to play. Stop the pawn.",
+      advice: "Two ways to stop it: cut his king off from the pawn along a rank, or get your rook " +
+              "behind the pawn on its own file.",
+      place: function () {
+        var pawn = sqOf(Math.floor(Math.random() * 8), 2 + Math.floor(Math.random() * 2));
+        return build([["p", pawn], ["k", rnd(nearTo(pawn, 2))],
+                      ["R", rnd(ALL)], ["K", rnd(farFrom(pawn, 3))]]);
+      },
+      stm: "w", user: "w", goal: "stop", want: "win", sharp: true, needed: 2
+    },
+
+    {
+      group: "Rook endings",
+      id: "philidor", title: "Philidor: the third rank", material: "Rook against rook and pawn",
+      prompt: "Black to play. One defence holds this. Find it.",
+      advice: "Hold the rook on your third rank until his pawn steps to the fifth. The moment it does, " +
+              "drop the rook to the back and check from behind.",
+      place: function () {
+        var f = 2 + Math.floor(Math.random() * 4);            // pawn on the c- to f-file
+        // Rooks on different files and different ranks, so neither is simply en prise.
+        var brf = Math.floor(Math.random() * 8);
+        var wrf = (brf + 3 + Math.floor(Math.random() * 3)) % 8;
+        return build([
+          ["P", sqOf(f, 5)],
+          ["K", sqOf(f + rnd([-1, 0, 1]), 4)],
+          ["k", sqOf(f + rnd([-1, 0, 1]), rnd([7, 8]))],
+          ["r", sqOf(brf, rnd([7, 8]))],
+          ["R", sqOf(wrf, rnd([1, 2, 3]))]
+        ]);
+      },
+      stm: "b", user: "b", goal: "draw", want: "draw", needed: 3
+    },
+    {
+      group: "Rook endings",
+      id: "lucena", title: "Lucena: building the bridge", material: "Rook and pawn against rook",
+      prompt: "White to play. Get the king out and queen it.",
+      advice: "Your king has to escape the queening square, and the checks are what stop him. Put the " +
+              "rook on the fourth rank so it can step across and shield him.",
+      place: function () {
+        var f = 1 + Math.floor(Math.random() * 6);            // pawn on the b- to g-file
+        var side = rnd([1, -1]);                              // which way the black king is cut off
+        var wrf = f + side;                                   // the file doing the cutting
+        var brf = (wrf + 3 + Math.floor(Math.random() * 3) + 8) % 8;
+        return build([
+          ["P", sqOf(f, 7)],
+          ["K", sqOf(f, 8)],
+          ["k", sqOf(f + side * (2 + Math.floor(Math.random() * 2)), rnd([6, 7, 8]))],
+          ["R", sqOf(wrf, rnd([3, 4]))],                       // ready to swing across
+          ["r", sqOf(brf, rnd([1, 2]))]                        // checking from behind
+        ]);
+      },
+      stm: "w", user: "w", goal: "promote", want: "win", sharp: true, needed: 3
+    },
+    {
+      group: "Rook endings",
+      id: "rookpawngeneral", title: "Rook and pawn, in general", material: "Rook and pawn against rook",
+      prompt: "White to play. Convert the extra pawn.",
+      advice: "Rooks belong behind passed pawns, yours and his. Escort the pawn with the king; pushing " +
+              "it alone just gives him a target.",
+      place: function () {
+        var f = Math.floor(Math.random() * 8);
+        var pr = 4 + Math.floor(Math.random() * 3);           // pawn on the 4th to 6th
+        var pawn = sqOf(f, pr);
+        var brf = (f + 3 + Math.floor(Math.random() * 3)) % 8;
+        return build([
+          ["P", pawn],
+          ["R", sqOf(f, 1 + Math.floor(Math.random() * (pr - 1)))],  // behind its own pawn
+          ["r", sqOf(brf, rnd([7, 8]))],
+          ["K", rnd(nearTo(pawn, 2))],                               // escorting it
+          ["k", rnd(ALL)]
+        ]);
+      },
+      stm: "w", user: "w", goal: "promote", want: "win", sharp: true, needed: 3
+    },
+
+    {
+      group: "The hard one",
+      id: "bishopknight", title: "Bishop and knight", material: "King, bishop and knight against king",
+      prompt: "White to play. Drive the king to a corner your bishop covers.",
+      advice: "He must be driven to a corner your bishop controls — the other two corners are safe for " +
+              "him. The knight does the herding while bishop and king cut the escape.",
+      place: scatter(["K", "B", "N", "k"]), stm: "w", user: "w", goal: "mate",
+      want: "win", depth: [25, 55], needed: 1
+    }
+  ];
+
+  var S = {
+    ch: null, board: null, stm: "w", tb: null, sel: null, mode: "drill", gen: 0, level: 3, reps: 5, freeAll: false,
+    history: [], busy: false, over: false, hinted: false, promoted: false,
+    hintLevel: 0, hintsUsed: 0, lostIt: false,
+    lastFrom: null, lastTo: null, snapshot: null,
+    wins: {}
+  };
+  CHAPTERS.forEach(function (c) { S.wins[c.id] = 0; });
+
+  var el = {};
+  ["chapters", "runs", "levels", "repsbox", "board", "boardwrap", "stamp", "veil", "veiltext",
+   "statusbar", "prompt", "verdict", "controls", "moves", "sheetEmpty",
+   "btnNew", "btnHint", "btnBack", "promo", "promorow",
+   "runbar", "runname", "runcount", "btnQuit",
+   "study", "qtitle", "qask", "opts", "why", "whytext", "btnNextQ", "btnPlayPlan",
+   "linepanel", "lname", "lsetup", "lprompt", "lnote", "btnLineHint", "btnLineNext",
+   "summary", "sumtitle", "sumlist", "sumtime", "btnDone"]
+    .forEach(function (k) { el[k] = document.getElementById(k); });
+
+  /* ---------- progress ----------
+     window.storage exists inside Claude's artifact sandbox; a normal browser
+     has localStorage instead. Try each, and shrug if neither is available.   */
+  var PKEY = "endgame-reps-progress";
+
+  function absorb(raw) {
+    if (!raw) return;
+    var data = JSON.parse(raw);
+    if (data && data.wins) {                     // current shape
+      S.wins = Object.assign(S.wins, data.wins);
+      if (data.level) S.level = data.level;
+      if (data.reps !== undefined) S.reps = data.reps;
+      if (data.freeAll) S.freeAll = true;
+    } else {                                     // saved before levels existed
+      S.wins = Object.assign(S.wins, data);
+    }
+  }
+
+  function loadProgress() {
+    if (window.storage) {
+      return window.storage.get(PKEY).then(function (r) {
+        if (r && r.value) absorb(r.value);
+      }).catch(function () {});
+    }
+    try { absorb(window.localStorage.getItem(PKEY)); }
+    catch (e) { /* storage unavailable; nothing will persist */ }
+    return Promise.resolve();
+  }
+
+  function saveProgress() {
+    var blob = JSON.stringify({ wins: S.wins, level: S.level, reps: S.reps,
+                            freeAll: S.freeAll });
+    if (window.storage) { window.storage.set(PKEY, blob).catch(function () {}); return; }
+    try { window.localStorage.setItem(PKEY, blob); } catch (e) {}
+  }
+
+  function setLevel(n) {
+    if (n === S.level) return;
+    S.level = n;
+    saveProgress();
+    renderLevels();
+    if (S.mode === "drill" && S.ch) newPosition();   // reroll at the new difficulty
+  }
+  function unlocked(i) {
+    if (S.freeAll || i === 0) return true;
+    var prev = CHAPTERS[i - 1];
+    return (S.wins[prev.id] || 0) >= prev.needed;
+  }
+
+  /* ---------- position generation ---------- */
+  var PVAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+
+  /* A drill is pointless if the first move just wins a piece. The tablebase
+     calls "Rxd1" a win like any other, so free material has to be filtered
+     out here: neither side may be able to snap something off for nothing. */
+  function quietPosition(board, stm) {
+    var them = stm === "w" ? "b" : "w", i, hit;
+
+    var ours = legalMoves({ b: board, stm: stm, cast: "", ep: -1 });
+    for (i = 0; i < ours.length; i++) {
+      hit = board[ours[i].to];
+      if (!hit) continue;
+      if (PVAL[hit.toLowerCase()] >= 3) return false;                 // a piece hangs
+      if (!squareAttacked(board, ours[i].to, them)) return false;     // a loose pawn
+    }
+
+    var theirs = legalMoves({ b: board, stm: them, cast: "", ep: -1 });
+    for (i = 0; i < theirs.length; i++) {
+      hit = board[theirs[i].to];
+      if (!hit) continue;
+      if (!squareAttacked(board, theirs[i].to, stm)) return false;    // ours hangs to the reply
+    }
+    return true;
+  }
+
+  function legalSetup(board, stm) {
+    if (!board) return false;
+    var wk = board.indexOf("K"), bk = board.indexOf("k");
+    if (wk < 0 || bk < 0 || adjacent(wk, bk)) return false;
+    // Whoever is not to move cannot already be in check.
+    return !inCheck(board, stm === "w" ? "b" : "w");
+  }
+
+  function findPosition(ch, gen) {
+    var tries = 0, relax = 0, lv = currentLevel(), accept = acceptFor(ch, lv, 0);
+    function attempt() {
+      if (gen !== S.gen) throw new Error("superseded");   // don't keep hitting the API
+      if (++tries > 90) throw new Error("no position after 90 tries");
+      if (tries === 20 || tries === 45) {                 // nothing this strict exists here
+        accept = acceptFor(ch, lv, ++relax);
+        veil(true, "Widening the search\u2026");
+      } else if (tries % 15 === 0) {
+        veil(true, "Still searching\u2026");
+      }
+      var board = ch.place();
+      if (!legalSetup(board, ch.stm)) return attempt();
+      if (!quietPosition(board, ch.stm)) return attempt();
+      return probe(toFen(board, ch.stm)).then(function (d) {
+        if (!accept(d, board)) return attempt();
+        return { board: board, data: d };
+      }).catch(function (e) {
+        // A 404 just means an illegal or out-of-table position; try another.
+        if (String(e.message).indexOf("tablebase ") === 0) return attempt();
+        throw e;
+      });
+    }
+    return attempt();
+  }
+
+  /* ---------- flow ---------- */
+  function veil(on, text) {
+    el.veil.classList.toggle("on", !!on);
+    if (text) el.veiltext.textContent = text;
+  }
+
+  function newPosition() {
+    var ch = S.ch;
+    if (!ch) return;
+    var gen = ++S.gen;
+    S.busy = true; S.over = false; S.sel = null; S.hinted = false; S.promoted = false;
+    S.hintLevel = 0; S.hintsUsed = 0; S.lostIt = false;
+    S.history = []; S.lastFrom = S.lastTo = null; S.snapshot = null;
+    el.verdict.textContent = ""; el.verdict.className = "verdict";
+    el.btnBack.hidden = true;
+    el.prompt.textContent = ch.prompt;
+    renderChapters(); renderSheet();
+    veil(true, "Finding a position");
+
+    findPosition(ch, gen).then(function (res) {
+      if (gen !== S.gen) return;                 // the user moved on while we searched
+      S.board = res.board; S.stm = ch.stm; S.tb = res.data;
+      S.busy = false; veil(false); render();
+    }).catch(function (err) {
+      if (gen !== S.gen) return;
+      var net = String(err.message).indexOf("tablebase ") !== 0 &&
+                String(err.message).indexOf("no position") !== 0;
+      veil(true, "No position");
+      if (String(err.message).indexOf("no position") === 0) {
+        el.prompt.textContent = "Couldn't find a position for this chapter.";
+        el.verdict.textContent = "The filter for \u201c" + ch.title +
+          "\u201d is too strict. Press New position to try again.";
+      } else if (net && location.protocol === "file:") {
+        el.prompt.textContent = "Opened as a file, so the browser blocked the lookup.";
+        el.verdict.textContent = "A page loaded from file:// has a null origin and cannot call " +
+          "outside hosts. Run  python -m http.server 8000  in this folder and open " +
+          "http://localhost:8000/ instead.";
+      } else if (net) {
+        el.prompt.textContent = "Could not reach the tablebase.";
+        el.verdict.textContent = "The request never left the browser \u2014 check your " +
+          "connection, DNS, or any extension blocking tablebase.lichess.ovh.";
+      } else {
+        el.prompt.textContent = "The tablebase refused the request.";
+        el.verdict.textContent = err.message + ". Press New position to retry.";
+      }
+      el.verdict.className = "verdict bad";
+      S.busy = false;
+    });
+  }
+
+  function stamp(kind, glyph) {
+    el.stamp.className = "stamp";
+    void el.stamp.offsetWidth;
+    el.stamp.textContent = glyph;
+    el.stamp.className = "stamp go " + kind;
+  }
+
+  // The API orders moves by DTZ, which is not always the fastest mate. For a
+  // trainer, "quickest" should mean distance to mate, so pick that out ourselves.
+  function speed(m) {
+    if (m.dtm != null) return Math.abs(m.dtm);
+    if (m.dtz != null) return Math.abs(m.dtz);
+    return 0;
+  }
+  function fastestOf(moves) {
+    var top = moves[0];
+    var pool = moves.filter(function (m) { return norm(m.category) === norm(top.category); });
+    if (!pool.length) return top;
+    return pool.reduce(function (a, b) { return speed(b) < speed(a) ? b : a; }, pool[0]);
+  }
+
+  function play(mv) {
+    var ch = S.ch, lv = currentLevel();
+    var before = S.stm === ch.user ? norm(S.tb.category) : flip(norm(S.tb.category));
+    var after = outcomeForMover(mv);
+    var best = fastestOf(S.tb.moves);
+    var kind, glyph, note;
+
+    if (before === "loss") {
+      // Nothing left to save. Grading a move here as "best" would be praise for
+      // playing on in a position that was already gone.
+      kind = "gone"; glyph = "";
+      note = "The position was already lost.";
+    } else if (rank(after) < rank(before)) {
+      kind = "bad"; glyph = "\u2049";
+      note = "That throws away the " + (before === "win" ? "win" : "draw") +
+             ". " + best.san + " kept it.";
+    } else if (after === "win" && speed(mv) > speed(best)) {
+      kind = "slow"; glyph = "?!";
+      note = "Still winning, but slow. " + best.san + " was quicker.";
+    } else {
+      kind = "best"; glyph = "!";
+      note = S.hinted ? "Correct." : "Best move.";
+    }
+
+    S.snapshot = { board: S.board.slice(), stm: S.stm, tb: S.tb, len: S.history.length,
+                   from: S.lastFrom, to: S.lastTo };
+
+    // Throwing the result away ends the drill at every level. There is nothing
+    // left to practise; the levels differ only in whether you may take it back.
+    S.lostIt = (kind === "bad");
+
+    el.verdict.textContent = note;
+    el.verdict.className = "verdict " + kind;
+    if (glyph) stamp(kind === "bad" ? "bad" : kind, kind === "bad" ? "??" : glyph);
+    el.btnBack.hidden = (kind === "best") || !lv.takeback;
+
+    commit(mv, kind);
+  }
+
+  function commit(mv, kind) {
+    var gen = S.gen;
+    S.busy = true; S.sel = null;
+    if (mv.uci.length > 4) S.promoted = true;
+    S.lastFrom = sqIndex(mv.uci.slice(0, 2));
+    S.lastTo = sqIndex(mv.uci.slice(2, 4));
+    S.board = applyUci(S.board, S.stm, mv.uci);
+    S.stm = S.stm === "w" ? "b" : "w";
+    S.history.push({ san: mv.san, ann: kind, by: S.ch.user });
+    render(); renderSheet();
+
+    probe(toFen(S.board, S.stm)).then(function (d) {
+      if (gen !== S.gen) return;
+      S.tb = d;
+      if (S.lostIt) { endBlunder(); return; }
+      if (finished(d)) return;
+      setTimeout(function () { if (gen === S.gen) reply(); }, 480);
+    }).catch(function (e) { if (gen === S.gen) fail(e); });
+  }
+
+  // At the top two levels a single bad move ends the drill there and then.
+  // Called the moment the result is thrown away.
+  function endBlunder() {
+    S.lostIt = false; S.over = true; S.busy = false;
+    var lv = currentLevel();
+    el.prompt.textContent = (S.ch.goal === "draw" ? "The draw is gone." : "The win is gone.") +
+      (lv.takeback ? " Take it back, or start a new position."
+                   : " No take-backs at this level.");
+    el.btnBack.hidden = !lv.takeback;
+    render();
+    runRecord(false);
+  }
+
+  /* ---------- how the opponent chooses ----------
+     It is tablebase-perfect on the result and never blunders one away. But
+     "perfect" usually leaves several moves tied, and how that tie is broken
+     is the whole difference between looking sharp and looking aimless.      */
+  function opponentMove(d, board, stm) {
+    var moves = d.moves;
+    var goal = outcomeForMover(moves[0]);          // the best result available to it
+    var pool = moves.filter(function (m) { return outcomeForMover(m) === goal; });
+
+    if (goal === "loss") {
+      // Lost anyway, so drag the mate out as long as possible. This must use
+      // distance to mate; the API orders by DTZ, which is a different thing.
+      var slowest = pool.reduce(function (a, b) { return speed(b) > speed(a) ? b : a; }, pool[0]);
+      pool = pool.filter(function (m) { return speed(m) === speed(slowest); });
+    } else if (goal === "win") {
+      var quickest = pool.reduce(function (a, b) { return speed(b) < speed(a) ? b : a; }, pool[0]);
+      pool = pool.filter(function (m) { return speed(m) === speed(quickest); });
+    } else if (pool.length > 1) {
+      // Every move draws, so the tablebase has no opinion at all. Left to pick at
+      // random it just shuffles. Push the pawn and walk at the enemy king instead,
+      // so the defence actually gets tested.
+      var foeKing = board.indexOf(stm === "w" ? "k" : "K");
+      var top = [], bestScore = -Infinity;
+      pool.forEach(function (m) {
+        var from = sqIndex(m.uci.slice(0, 2)), to = sqIndex(m.uci.slice(2, 4));
+        var piece = board[from] || "";
+        var score = 0;
+        if (piece.toLowerCase() === "p") score += 10;      // progress
+        if (m.zeroing) score += 4;
+        if (foeKing >= 0) score -= cheb(to, foeKing);      // close the distance
+        if (score > bestScore) { bestScore = score; top = [m]; }
+        else if (score === bestScore) top.push(m);
+      });
+      pool = top;
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function reply() {
+    var gen = S.gen, d = S.tb;
+    if (!d.moves || !d.moves.length) { finished(d); return; }
+    var mv = opponentMove(d, S.board, S.stm);
+
+    S.lastFrom = sqIndex(mv.uci.slice(0, 2));
+    S.lastTo = sqIndex(mv.uci.slice(2, 4));
+    S.board = applyUci(S.board, S.stm, mv.uci);
+    S.stm = S.stm === "w" ? "b" : "w";
+    S.history.push({ san: mv.san, ann: null, by: S.ch.user === "w" ? "b" : "w" });
+    render(); renderSheet();
+
+    probe(toFen(S.board, S.stm)).then(function (d2) {
+      if (gen !== S.gen) return;
+      S.tb = d2;
+      if (finished(d2)) return;
+      S.busy = false; S.hinted = false; S.hintLevel = 0;
+      el.btnBack.hidden = true;
+      render();
+    }).catch(function (e) { if (gen === S.gen) fail(e); });
+  }
+
+  // For "stop" chapters: the threat is gone only when the pawn is captured, not
+  // when it promotes. A pawn that queens leaves the board too, so check both.
+  function enemyThreatLeft() {
+    var pawn = S.ch.user === "w" ? "p" : "P";
+    var queen = S.ch.user === "w" ? "q" : "Q";
+    return S.board.indexOf(pawn) !== -1 || S.board.indexOf(queen) !== -1;
+  }
+
+  function finished(d) {
+    var ch = S.ch, msg = null, good = false;
+    var mine = S.stm === ch.user ? norm(d.category) : flip(norm(d.category));
+
+    if (d.checkmate) {
+      good = S.stm !== ch.user;                       // the side to move is the one mated
+      msg = good ? "Mate. Chapter complete." : "You were mated.";
+    } else if (d.stalemate) {
+      good = ch.goal === "draw";
+      msg = good ? "Stalemate. The draw holds." : "Stalemate \u2014 the win is gone.";
+    } else if (d.insufficient_material) {
+      good = ch.goal === "draw" || ch.goal === "stop";
+      msg = good ? "Nothing left to play for. Held." : "No mating material left.";
+    } else if (ch.goal === "promote" && S.promoted) {
+      good = mine === "win";
+      msg = good ? "Queened, and still winning. That's the technique."
+                 : "You queened, but the win had already gone.";
+    } else if (ch.goal === "stop" && !enemyThreatLeft()) {
+      good = mine !== "loss";
+      msg = good ? "Threat gone." : "Pawn stopped, but the position is lost.";
+    } else if (ch.goal === "draw" && S.history.length >= 28) {
+      good = mine !== "loss";
+      msg = good ? "Held. There's nothing left for the other side." : "The position is lost.";
+    }
+
+    if (!msg) return false;
+
+    S.over = true; S.busy = false;
+    el.prompt.textContent = msg;
+    el.verdict.textContent = good ? "Press New position for another." : "Press New position to try again.";
+    el.verdict.className = "verdict " + (good ? "done" : "bad");
+    el.btnBack.hidden = true;
+    if (good) {
+      S.wins[ch.id] = (S.wins[ch.id] || 0) + 1;
+      saveProgress();
+    }
+    renderChapters(); render();
+    runRecord(good);
+    return true;
+  }
+
+  function fail(err) {
+    S.busy = false; S.over = true; S.sel = null;
+    el.verdict.textContent = "Lost contact with the tablebase (" + err.message +
+      "). Press New position to restart this drill.";
+    el.verdict.className = "verdict bad";
+    render();
+  }
+
+  function takeBack() {
+    if (!S.snapshot) return;
+    var s = S.snapshot;
+    S.gen++;                         // kill the opponent reply already queued for this move
+    S.board = s.board; S.stm = s.stm; S.tb = s.tb;
+    S.history = S.history.slice(0, s.len);
+    S.lastFrom = s.from; S.lastTo = s.to;
+    S.snapshot = null; S.busy = false; S.over = false; S.sel = null;
+    S.hintLevel = 0; S.hinted = false;
+    el.btnBack.hidden = true;
+    el.verdict.textContent = "Taken back. Try again.";
+    el.verdict.className = "verdict";
+    render(); renderSheet();
+  }
+
+  // How many moves keep the current result? Move categories are stated from the
+  // opponent's seat, so anything matching the best move's category is equally good.
+  function movesThatHold(tb) {
+    var best = norm(tb.moves[0].category);
+    return tb.moves.filter(function (m) { return norm(m.category) === best; }).length;
+  }
+
+  function adviceFor(ch, tb) {
+    var bits = [ch.advice];
+    var mine = norm(tb.category);
+    var n = movesThatHold(tb);
+
+    if (mine === "win") {
+      bits.push(n === 1
+        ? "Exactly one move keeps the win here."
+        : n + " moves keep the win, though only some are quickest.");
+    } else if (mine === "draw") {
+      bits.push(n === 1
+        ? "Exactly one move holds the draw here."
+        : n + " moves hold the draw here.");
+    }
+
+    // Warn about stalemate only where it would be a disaster, not where it's the goal.
+    if (ch.goal !== "draw" && tb.moves.some(function (m) { return m.stalemate; })) {
+      bits.push("Careful \u2014 one of your moves is stalemate.");
+    }
+    return bits.join(" ");
+  }
+
+  function updateHintButton() {
+    if (!currentLevel().hints) {
+      el.btnHint.textContent = "Hints off"; el.btnHint.disabled = true; return;
+    }
+    if (S.hintLevel >= 2) { el.btnHint.textContent = "Move shown"; el.btnHint.disabled = true; return; }
+    el.btnHint.disabled = S.busy || S.over || !S.tb;
+    el.btnHint.textContent = S.hintLevel === 0 ? "Hint" : "Show the move";
+  }
+
+  function hint() {
+    if (S.mode !== "drill" || !S.tb || !S.tb.moves || !S.tb.moves.length) return;
+    if (S.busy || S.over || S.hintLevel >= 2 || !currentLevel().hints) return;
+
+    S.hintLevel++;
+    if (S.hintLevel === 1) {
+      el.verdict.textContent = adviceFor(S.ch, S.tb);
+      el.verdict.className = "verdict tip";
+    } else {
+      S.hinted = true;                       // only the move itself counts as being told
+      S.hintsUsed++;
+      el.verdict.textContent = "Play " + fastestOf(S.tb.moves).san + ".";
+      el.verdict.className = "verdict slow";
+    }
+    updateHintButton();
+  }
+
+  /* ---------- runs ---------- */
+  var SETS = [
+    { id: "warmup", name: "Morning warm-up", blurb: "The three basic mates",
+      drills: ["queenmate", "rookmate", "twobishops"] },
+    { id: "pawnplay", name: "Pawn play", blurb: "The whole king-and-pawn group",
+      drills: ["square", "keysquares", "opposition", "pawnwin", "distant",
+               "holddraw", "seventh", "rookpawn", "triangulation", "corresponding"] },
+    { id: "pawnwins", name: "Pawn play: winning", blurb: "Key squares, opposition, the seventh",
+      drills: ["keysquares", "opposition", "pawnwin", "seventh"] },
+    { id: "tempo", name: "Tempo and correspondence", blurb: "Locked pawns, king manoeuvring",
+      drills: ["triangulation", "corresponding"] },
+    { id: "pawndraws", name: "Pawn play: holding", blurb: "The square, opposition, rook pawns",
+      drills: ["square", "distant", "holddraw", "rookpawn"] },
+    { id: "stopping", name: "Stopping a runner", blurb: "Queen and rook against a pawn",
+      drills: ["queenvspawn", "rookvspawn"] },
+    { id: "rookschool", name: "Rook school", blurb: "Philidor, Lucena, and the rest",
+      drills: ["philidor", "lucena", "rookpawngeneral"] },
+    { id: "everything", name: "The whole ladder", blurb: "All thirteen, in order",
+      drills: CHAPTERS.map(function (c) { return c.id; }) },
+    { id: "structures", name: "Pawn structures", blurb: "Eight skeletons and their plans",
+      kind: "study" },
+    { id: "minority", name: "The minority attack", blurb: "Three model lines, move by move",
+      kind: "line", lines: ["minority-direct", "minority-a5", "minority-a6"] },
+    { id: "iqp-lines", name: "Playing the isolani", blurb: "Three ways to cash it in",
+      kind: "line", lines: ["iqp-break", "iqp-e5", "iqp-blockade"] },
+    { id: "maroczy-lines", name: "Breaking the bind", blurb: "Three model lines, as Black",
+      kind: "line", lines: ["maroczy-b5", "maroczy-f5", "maroczy-c5"] },
+    { id: "chain-lines", name: "Attacking a pawn chain", blurb: "Base, head, and wing play",
+      kind: "line", lines: ["french-f5", "french-f6", "french-queenside"] }
+  ];
+
+  function chapterById(id) {
+    for (var i = 0; i < CHAPTERS.length; i++) if (CHAPTERS[i].id === id) return CHAPTERS[i];
+    return null;
+  }
+
+  /* ---------- pawn structures ----------
+     No tablebase reaches these, so they are graded on doctrine rather than
+     calculation: name the plan the structure calls for.                      */
+  var STRUCTURES = [
+    {
+      name: "The Carlsbad",
+      from: "Queen's Gambit Declined, Exchange Variation",
+      fen: "8/pp3ppp/2p5/3p4/3P4/4P3/PP3PPP/8",
+      ask: "White to play. Which plan belongs to this structure?",
+      options: [
+        "Push b2-b4-b5, trade on c6, and target the pawn left behind",
+        "Break with e3-e4 to open the centre at once",
+        "Storm the kingside with g2-g4 and h2-h4",
+        "Trade everything and head for a king-and-pawn ending"
+      ],
+      answer: 0,
+      why: "This is the minority attack: two pawns advance against three. After b4-b5 and bxc6, " +
+           "Black recaptures and is left with a backward pawn on c6 and a hole on c5 — " +
+           "targets that last into the endgame. Black doesn't sit still: the standard counter is " +
+           "on the other wing with ...Ne4 and ...f5, so it becomes a race between two plans on " +
+           "opposite sides of the board."
+    },
+    {
+      name: "The isolated queen's pawn",
+      from: "Countless openings — Panov, Tarrasch, Nimzo",
+      fen: "8/pp3ppp/4p3/8/3P4/8/PP3PPP/8",
+      ask: "White owns the isolani on d4. What is White playing for?",
+      options: [
+        "Piece activity and a d4-d5 break, before pieces come off",
+        "A quiet trade into a rook ending",
+        "Blockading d5 with a knight",
+        "A queenside pawn advance with a2-a4 and b2-b4"
+      ],
+      answer: 0,
+      why: "The isolani buys space, the e5 and c5 squares, and two half-open files. All of that is " +
+           "worth something only while pieces are on. So White attacks quickly and aims to free the " +
+           "pawn with d4-d5. Black's plan is the exact mirror: park a knight on d5 to blockade, " +
+           "trade pieces, and reach an endgame where the pawn is just weak. Option three is Black's " +
+           "plan, not White's — which is the point worth remembering."
+    },
+    {
+      name: "Hanging pawns",
+      from: "Queen's Indian and Tartakower structures",
+      fen: "8/pp3ppp/4p3/8/2PP4/8/P4PPP/8",
+      ask: "Black piles up against the c4/d4 pair. What is Black trying to provoke?",
+      options: [
+        "One of them to advance, fixing the other as a weakness",
+        "White to castle queenside",
+        "A trade of light-squared bishops",
+        "White to play f2-f4"
+      ],
+      answer: 0,
+      why: "Hanging pawns are strong side by side — they control four squares in front of them and " +
+           "support pieces on the fifth rank. The weakness only appears when one has to move. " +
+           "Once c4-c5 or d4-d5 is forced, the other pawn is backward on a half-open file and the " +
+           "square in front becomes an outpost. White's job is the reverse: push at a moment when " +
+           "the advance opens lines toward the enemy king rather than creating a target."
+    },
+    {
+      name: "The Maróczy Bind",
+      from: "Accelerated Dragon and Kan Sicilians",
+      fen: "8/pp2pppp/3p4/8/2P1P3/8/PP3PPP/8",
+      ask: "Black is squeezed by the c4/e4 bind. Which freeing plan is standard?",
+      options: [
+        "...b5, prepared patiently, with ...f5 as the alternative",
+        "...e5, hitting the pawn on e4 immediately",
+        "...g5, grabbing kingside space",
+        "...a5-a4-a3, undermining b2"
+      ],
+      answer: 0,
+      why: "The bind's whole purpose is to take d5 and b5 away from Black. Counterplay therefore " +
+           "means levering one of them open, usually ...b5 prepared by ...a6, ...Rc8 and ...Qa5. " +
+           "Trading pieces helps too: with fewer pieces, having less space costs less. " +
+           "The immediate ...e5 is tempting and usually bad — it hands over d5 permanently."
+    },
+    {
+      name: "The locked chain",
+      from: "French Defence, and the King's Indian mirrored",
+      fen: "8/pp3ppp/4p3/2ppP3/3P4/2P5/PP3PPP/8",
+      ask: "The chain runs d4-e5 against d5-e6. Where does each side strike?",
+      options: [
+        "White plays f4-f5 at the base on e6; Black plays ...c5 at the base on d4",
+        "Both sides attack the head of the chain",
+        "White plays h4-h5; Black replies ...a5",
+        "Neither side can break through; it's a fortress"
+      ],
+      answer: 0,
+      why: "Attack the base of a pawn chain, not its head. White's chain rests on d4, Black's on e6, " +
+           "so White pushes f4-f5 and Black pushes ...c5. It usually becomes a race, and whoever " +
+           "lands their break first sets the terms. Black has a second option worth knowing — " +
+           "...f6, striking the head — which works when White's centre isn't solid enough to hold " +
+           "e5 after the trade."
+    },
+    {
+      name: "The Stonewall",
+      from: "Dutch Stonewall, played by Black",
+      fen: "8/pp4pp/2p1p3/3p1p2/2PP4/4P3/PP3PPP/8",
+      ask: "Black has built the wall. What is the asset, and what is the price?",
+      options: [
+        "A permanent knight on e4; a bad light-squared bishop and a hole on e5",
+        "A protected passed pawn; an exposed king",
+        "The bishop pair; a weak queenside",
+        "An open f-file; a backward d-pawn"
+      ],
+      answer: 0,
+      why: "The c6-d5-e6-f5 wall hands Black the e4 square forever and a natural attack with " +
+           "...Bd6 and ...Qe8-h5. The cost is structural and permanent: every pawn sits on a light " +
+           "square, so the light-squared bishop has no diagram to work with, and e5 is a hole White " +
+           "would love to fill. Solving that bishop — usually ...b6 and ...Ba6, or ...Bd7-e8-h5 — " +
+           "is the entire problem of the opening."
+    },
+    {
+      name: "The Benoni",
+      from: "Modern Benoni",
+      fen: "8/pp3ppp/3p4/2pP4/4P3/8/PP3PPP/8",
+      ask: "White holds d5 and e4 against Black's c5 and d6. Where is Black's play?",
+      options: [
+        "The queenside majority with ...b5, plus pressure down the half-open e-file",
+        "A minority attack with ...a5-a4",
+        "Blockading d5 and steering for an endgame",
+        "An immediate ...f5 before finishing development"
+      ],
+      answer: 0,
+      why: "Black concedes space for a three-against-two queenside majority and the half-open " +
+           "e-file. The plan is ...a6 and ...b5, prepared with ...Re8, ...Nbd7 and ...Rb8. " +
+           "White's counter-plan is the central break e4-e5, which is why Black is usually in a " +
+           "hurry — this structure punishes slow play more than almost any other."
+    },
+    {
+      name: "The Boleslavsky hole",
+      from: "Najdorf and Sveshnikov Sicilians",
+      fen: "8/pp3ppp/3p4/4p3/4P3/8/PPP2PPP/8",
+      ask: "Black has played ...e5, conceding the d5 square. Is that a mistake?",
+      options: [
+        "No — it gains time and space, and a hole only hurts if it can be held",
+        "Yes — the hole loses by force",
+        "No — because the d6 pawn is easy to defend",
+        "Yes — Black's dark-squared bishop becomes bad"
+      ],
+      answer: 0,
+      why: "This is the trade at the heart of the Open Sicilian. ...e5 kicks the knight, takes d4 " +
+           "and f4 away from White's pieces, and grips the dark squares, in exchange for a hole on " +
+           "d5 that never goes away. Whether it's good comes down to one question: can White " +
+           "install a piece on d5 and keep it there? If White trades off Black's light-squared " +
+           "bishop and the f6 knight, Black suffers. If Black gets ...b5 or ...d5 in first, the " +
+           "structure is perfectly healthy."
+    }
+  ];
+
+  function fromFen(placement) {
+    var b = new Array(64).fill(null), rows = placement.split(" ")[0].split("/");
+    for (var r = 0; r < 8; r++) {
+      var i = r * 8, row = rows[r];
+      for (var j = 0; j < row.length; j++) {
+        var c = row[j];
+        if (c >= "1" && c <= "8") i += +c; else b[i++] = c;
+      }
+    }
+    return b;
+  }
+
+  /* ---------- full-board move generation ----------
+     Endgame chapters get their legal moves from the tablebase. The guided lines
+     are middlegame positions, so they need the real thing: sliding pieces,
+     knights, castling, en passant, promotion, and pin/check legality.        */
+  var KNIGHT = [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]];
+  var DIAG = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+  var ORTH = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  var STAR = DIAG.concat(ORTH);
+
+  function isWhite(p) { return p === p.toUpperCase(); }
+  function ownedBy(p, stm) { return !!p && isWhite(p) === (stm === "w"); }
+  function onBoard(f, r) { return f >= 0 && f < 8 && r >= 0 && r < 8; }
+
+  function squareAttacked(b, sq, by) {
+    for (var i = 0; i < 64; i++) {
+      var p = b[i];
+      if (!p || isWhite(p) !== (by === "w")) continue;
+      if (attacks(b, i, sq)) return true;
+    }
+    return false;
+  }
+
+  function kingOf(b, stm) { return b.indexOf(stm === "w" ? "K" : "k"); }
+
+  // Parses a full FEN, not just the placement field.
+  function parsePos(fen) {
+    var parts = fen.trim().split(/\s+/);
+    return {
+      b: fromFen(parts[0]),
+      stm: parts[1] || "w",
+      cast: parts[2] === "-" ? "" : (parts[2] || ""),
+      ep: (!parts[3] || parts[3] === "-") ? -1 : sqIndex(parts[3])
+    };
+  }
+
+  function pushPawn(out, from, to, promoRow) {
+    if ((to >> 3) === promoRow) {
+      ["q", "r", "b", "n"].forEach(function (p) { out.push({ from: from, to: to, promo: p }); });
+    } else {
+      out.push({ from: from, to: to, promo: null });
+    }
+  }
+
+  function pseudoMoves(pos) {
+    var b = pos.b, stm = pos.stm, out = [];
+    for (var i = 0; i < 64; i++) {
+      var p = b[i];
+      if (!ownedBy(p, stm)) continue;
+      var t = p.toLowerCase(), f = i % 8, r = i >> 3;
+
+      if (t === "p") {
+        var step = stm === "w" ? -1 : 1;              // row 0 is rank 8
+        var startRow = stm === "w" ? 6 : 1;
+        var promoRow = stm === "w" ? 0 : 7;
+        if (onBoard(f, r + step) && !b[(r + step) * 8 + f]) {
+          pushPawn(out, i, (r + step) * 8 + f, promoRow);
+          if (r === startRow && !b[(r + 2 * step) * 8 + f]) {
+            out.push({ from: i, to: (r + 2 * step) * 8 + f, promo: null });
+          }
+        }
+        [-1, 1].forEach(function (df) {
+          var nf = f + df, nr = r + step;
+          if (!onBoard(nf, nr)) return;
+          var to = nr * 8 + nf, tp = b[to];
+          if ((tp && isWhite(tp) !== (stm === "w")) || to === pos.ep) {
+            pushPawn(out, i, to, promoRow);
+          }
+        });
+
+      } else if (t === "n" || t === "k") {
+        (t === "n" ? KNIGHT : STAR).forEach(function (d) {
+          var nf = f + d[0], nr = r + d[1];
+          if (!onBoard(nf, nr)) return;
+          var to = nr * 8 + nf;
+          if (!ownedBy(b[to], stm)) out.push({ from: i, to: to, promo: null });
+        });
+
+      } else {
+        var dirs = t === "b" ? DIAG : t === "r" ? ORTH : STAR;
+        dirs.forEach(function (d) {
+          var nf = f + d[0], nr = r + d[1];
+          while (onBoard(nf, nr)) {
+            var to = nr * 8 + nf;
+            if (ownedBy(b[to], stm)) break;
+            out.push({ from: i, to: to, promo: null });
+            if (b[to]) break;
+            nf += d[0]; nr += d[1];
+          }
+        });
+      }
+    }
+
+    // Castling: rights, empty path, and the king may not start, cross, or land in check.
+    var home = stm === "w" ? 7 : 0, kingSq = home * 8 + 4;
+    var rights = stm === "w" ? ["K", "Q"] : ["k", "q"];
+    if (b[kingSq] === (stm === "w" ? "K" : "k") && !squareAttacked(b, kingSq, stm === "w" ? "b" : "w")) {
+      if (pos.cast.indexOf(rights[0]) >= 0 && !b[kingSq + 1] && !b[kingSq + 2] &&
+          !squareAttacked(b, kingSq + 1, stm === "w" ? "b" : "w")) {
+        out.push({ from: kingSq, to: kingSq + 2, promo: null, castle: 1 });
+      }
+      if (pos.cast.indexOf(rights[1]) >= 0 && !b[kingSq - 1] && !b[kingSq - 2] && !b[kingSq - 3] &&
+          !squareAttacked(b, kingSq - 1, stm === "w" ? "b" : "w")) {
+        out.push({ from: kingSq, to: kingSq - 2, promo: null, castle: -1 });
+      }
+    }
+    return out;
+  }
+
+  // Applies a move and returns the new position, handling rook shuffles,
+  // en-passant captures, and the rights each move gives up.
+  function makeMove(pos, mv) {
+    var b = pos.b.slice(), piece = b[mv.from], t = piece.toLowerCase();
+    var stm = pos.stm, ep = -1, cast = pos.cast;
+
+    if (t === "p" && mv.to === pos.ep) {                    // en passant
+      b[(mv.from >> 3) * 8 + (mv.to % 8)] = null;
+    }
+    b[mv.to] = mv.promo ? (stm === "w" ? mv.promo.toUpperCase() : mv.promo) : piece;
+    b[mv.from] = null;
+
+    if (mv.castle) {                                        // move the rook too
+      var row = mv.from >> 3;
+      if (mv.castle > 0) { b[row * 8 + 5] = b[row * 8 + 7]; b[row * 8 + 7] = null; }
+      else { b[row * 8 + 3] = b[row * 8 + 0]; b[row * 8 + 0] = null; }
+    }
+    if (t === "p" && Math.abs((mv.to >> 3) - (mv.from >> 3)) === 2) {
+      ep = ((mv.from >> 3) + (mv.to >> 3)) / 2 * 8 + (mv.from % 8);
+    }
+    if (t === "k") cast = cast.replace(stm === "w" ? /[KQ]/g : /[kq]/g, "");
+    [[56, "Q"], [63, "K"], [0, "q"], [7, "k"]].forEach(function (c) {
+      if (mv.from === c[0] || mv.to === c[0]) cast = cast.replace(c[1], "");
+    });
+
+    return { b: b, stm: stm === "w" ? "b" : "w", cast: cast, ep: ep };
+  }
+
+  function legalMoves(pos) {
+    var enemy = pos.stm === "w" ? "b" : "w";
+    return pseudoMoves(pos).filter(function (mv) {
+      var next = makeMove(pos, mv);
+      return !squareAttacked(next.b, kingOf(next.b, pos.stm), enemy);
+    });
+  }
+
+  function moveUci(mv) {
+    return sqName(mv.from) + sqName(mv.to) + (mv.promo || "");
+  }
+
+  /* ---------- guided model lines ----------
+     These are constructed demonstrations of a plan, not transcriptions of
+     specific historical games. Every move is checked against the generator
+     above at load; a line with an illegal move refuses to load rather than
+     teaching something that cannot happen on a board.                        */
+  var LINES = [
+    {
+      id: "minority-direct",
+      structure: "The Carlsbad",
+      title: "Straight down the b-file",
+      setup: "Both sides have finished developing and the dark-squared bishops are off. " +
+             "White starts the minority attack.",
+      fen: "r1bqr1k1/pp1n1ppp/2p2n2/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - - 0 1",
+      moves: [
+        { uci: "a1b1", san: "Rab1",
+          note: "The rook goes behind the pawn that is about to advance. Nothing has happened " +
+                "yet, and that is the point \u2014 the plan is prepared before it is played." },
+        { uci: "d7f8", san: "Nf8" },
+        { uci: "b2b4", san: "b4",
+          note: "Two pawns setting out against three. The pawn is not attacking anything; it is " +
+                "going to b5 to force a trade that leaves Black with a weakness." },
+        { uci: "f8e6", san: "Ne6" },
+        { uci: "a2a4", san: "a4",
+          note: "The second pawn joins. b5 needs support, because after b5 Black would happily " +
+                "meet it with ...c5 or simply capture if the pawn were loose." },
+        { uci: "c8d7", san: "Bd7" },
+        { uci: "b4b5", san: "b5",
+          note: "The break. Black now has three replies and none of them are comfortable: take " +
+                "on b5, push past with ...c5, or allow bxc6." },
+        { uci: "c6b5", san: "cxb5" },
+        { uci: "a4b5", san: "axb5",
+          note: "And there it is. Black's d-pawn has no neighbour on the c- or e-file \u2014 it is " +
+                "isolated, permanently, and c5 in front of it is a hole for a white knight.",
+          last: true }
+      ],
+      payoff: "Black's d5 pawn is isolated and c5 is a hole. The attack is over; the endgame it " +
+              "created lasts the rest of the game."
+    },
+    {
+      id: "minority-a5",
+      structure: "The Carlsbad",
+      title: "When Black stops b4",
+      setup: "Same structure. This time Black sees it coming and plays to prevent the advance.",
+      fen: "r1bqr1k1/pp1n1ppp/2p2n2/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - - 0 1",
+      moves: [
+        { uci: "a1b1", san: "Rab1",
+          note: "The same preparation. Black's most testing answer is to stop b4 outright." },
+        { uci: "a7a5", san: "a5" },
+        { uci: "a2a3", san: "a3",
+          note: "Quiet, and necessary. b4 is coming anyway; it just needs a pawn behind it so " +
+                "that when Black takes, a white pawn recaptures and stays on b4." },
+        { uci: "d7f8", san: "Nf8" },
+        { uci: "b2b4", san: "b4",
+          note: "Now it lands. Black can take, or leave the tension and watch White play b5 " +
+                "next move with even more force." },
+        { uci: "a5b4", san: "axb4" },
+        { uci: "a3b4", san: "axb4",
+          note: "The recapture opens the a-file as a bonus. White has the same two pawns aimed " +
+                "at the same three, and Black has lost the a-pawn that was doing the blocking." },
+        { uci: "f8e6", san: "Ne6" },
+        { uci: "b4b5", san: "b5",
+          note: "The break arrives one move later than in the first line, and rather stronger." },
+        { uci: "c6b5", san: "cxb5" },
+        { uci: "b1b5", san: "Rxb5",
+          note: "The rook recaptures, because the pawn that would have done it is gone. It now " +
+                "stares at b7 down a half-open file, and d5 is isolated. Two targets, one move.",
+          last: true }
+      ],
+      payoff: "d5 is isolated and b7 is backward on a half-open file with a rook in front of it."
+    },
+    {
+      id: "minority-a6",
+      structure: "The Carlsbad",
+      title: "When Black defends the b-file",
+      setup: "Black meets the plan head-on: guard b7, hold up b5, and try to survive the trade.",
+      fen: "r1bqr1k1/pp1n1ppp/2p2n2/3p4/3P4/2NBPN2/PPQ2PPP/R4RK1 w - - 0 1",
+      moves: [
+        { uci: "a1b1", san: "Rab1",
+          note: "As always. Black's rook comes to meet it." },
+        { uci: "a8b8", san: "Rb8" },
+        { uci: "b2b4", san: "b4",
+          note: "Facing rooks on the b-file does not slow this down. The pawn is not trying to " +
+                "win material \u2014 it is trying to change Black's pawn structure." },
+        { uci: "a7a6", san: "a6" },
+        { uci: "a2a4", san: "a4",
+          note: "...a6 holds b5 up for exactly one move. Supporting the break with a4 means " +
+                "Black's extra defender does not matter." },
+        { uci: "d7f8", san: "Nf8" },
+        { uci: "b4b5", san: "b5",
+          note: "Played anyway. Every capture on b5 helps White, which is the whole idea behind " +
+                "putting three pawns into the advance." },
+        { uci: "a6b5", san: "axb5" },
+        { uci: "a4b5", san: "axb5",
+          note: "Black has traded one blocker. There is another capture available, and it is " +
+                "the one that ruins the structure." },
+        { uci: "c6b5", san: "cxb5" },
+        { uci: "b1b5", san: "Rxb5",
+          note: "Both black rooks on the b-file could not save b7, because Black's own pawn on " +
+                "b7 blocks the defence along the file. d5 is isolated and b7 is fixed.",
+          last: true }
+      ],
+      payoff: "The same two weaknesses appear whichever way Black defends: an isolated d5 and a " +
+              "backward b7. That repetition is what makes this a plan rather than a trick."
+    },
+    {
+      id: "iqp-break",
+      structure: "The isolated queen's pawn",
+      title: "Cashing in the isolani",
+      setup: "White's d-pawn is isolated but the pieces are active. That combination has a " +
+             "shelf life, so White plays the break while it still counts.",
+      fen: "r2r2k1/ppq1bppp/2n1pn2/8/3P4/1BN2N2/PPQ2PPP/3RR1K1 w - - 0 1",
+      moves: [
+        { uci: "d4d5", san: "d5",
+          note: "The whole justification for the isolani. It is not a pawn push so much as a " +
+                "trade offer: give up the weakness at the moment it opens lines." },
+        { uci: "e6d5", san: "exd5" },
+        { uci: "c3d5", san: "Nxd5",
+          note: "Recapture with a piece, never the queen. Every trade on d5 removes a defender " +
+                "from around Black's king." },
+        { uci: "f6d5", san: "Nxd5" },
+        { uci: "b3d5", san: "Bxd5",
+          note: "The bishop takes over the square the pawn used to block. Note that Black " +
+                "cannot answer ...Rxd5 \u2014 the rook on d1 is behind it." },
+        { uci: "e7f6", san: "Bf6" },
+        { uci: "d5e4", san: "Be4",
+          note: "Stepping back onto the long diagonal. The weakness is gone, the open lines " +
+                "remain, and Black has nothing to attack.",
+          last: true }
+      ],
+      payoff: "The isolani was traded rather than lost. What is left is an open position where " +
+              "White's pieces are the better ones and there is no weak pawn to nurse."
+    },
+    {
+      id: "iqp-e5",
+      structure: "The isolated queen's pawn",
+      title: "Turning it into a wedge",
+      setup: "The same position. Instead of breaking, White trades on e5 and converts the " +
+             "isolani into a space-gaining pawn.",
+      fen: "r2r2k1/ppq1bppp/2n1pn2/8/3P4/1BN2N2/PPQ2PPP/3RR1K1 w - - 0 1",
+      moves: [
+        { uci: "f3e5", san: "Ne5",
+          note: "The outpost the isolani pays for. It is defended by the d-pawn, which is the " +
+                "one job an isolated pawn does well." },
+        { uci: "c6e5", san: "Nxe5" },
+        { uci: "d4e5", san: "dxe5",
+          note: "And the isolani is no longer isolated \u2014 it is a wedge on e5 taking d6 and " +
+                "f6 away from Black. Same pawn, completely different job." },
+        { uci: "f6d7", san: "Nd7" },
+        { uci: "f2f4", san: "f4",
+          note: "Propping it up. The pawn is only strong while it stays there." },
+        { uci: "d7c5", san: "Nc5" },
+        { uci: "b3c4", san: "Bc4",
+          note: "Sidestepping the knight while keeping the diagonal that points at f7.",
+          last: true }
+      ],
+      payoff: "The isolated pawn became a space advantage. Black has an outpost on c5, but " +
+              "White's e5 wedge cramps the whole kingside."
+    },
+    {
+      id: "iqp-blockade",
+      structure: "The isolated queen's pawn",
+      title: "Trading before the break",
+      setup: "Same position again. Black tries to reach a blockade, and White trades pieces on " +
+             "his own terms first.",
+      fen: "r2r2k1/ppq1bppp/2n1pn2/8/3P4/1BN2N2/PPQ2PPP/3RR1K1 w - - 0 1",
+      moves: [
+        { uci: "f3e5", san: "Ne5",
+          note: "Again the outpost, but this time as a trade offer rather than a wedge plan." },
+        { uci: "f6d7", san: "Nd7" },
+        { uci: "e5d7", san: "Nxd7",
+          note: "Taking first. Black wanted that knight for the d5 blockade, so it goes." },
+        { uci: "d8d7", san: "Rxd7" },
+        { uci: "d4d5", san: "d5",
+          note: "Now the break lands with no knight left to sit in front of it." },
+        { uci: "e6d5", san: "exd5" },
+        { uci: "c3d5", san: "Nxd5",
+          note: "A knight on d5 instead of a pawn. This is the trade the isolani exists to make.",
+          last: true }
+      ],
+      payoff: "Black never got to blockade. The pawn is gone and a knight owns the square it " +
+              "used to occupy \u2014 the best possible outcome for the isolani's owner."
+    },
+
+    {
+      id: "maroczy-b5",
+      structure: "The Mar\u00f3czy Bind",
+      title: "Levering open the b-file",
+      setup: "Black is a little cramped by the c4/e4 bind. You are Black, and the freeing break " +
+             "is ...b5.",
+      fen: "2r3k1/pp2ppbp/3p1np1/q7/2P1P3/2N5/PP2BPPP/2R3K1 b - - 0 1",
+      moves: [
+        { uci: "a7a6", san: "a6",
+          note: "Preparation, not aggression. ...b5 needs a pawn behind it, or the break just " +
+                "loses a pawn to cxb5." },
+        { uci: "b2b3", san: "b3" },
+        { uci: "b7b5", san: "b5",
+          note: "The break. White's c4 pawn is what takes d5 and b5 away from Black, so it is " +
+                "the pawn that has to be challenged." },
+        { uci: "c4b5", san: "cxb5" },
+        { uci: "a6b5", san: "axb5",
+          note: "Recapture toward the centre and the a-file opens as a bonus. The bind is gone " +
+                "the moment the c-pawn leaves c4." },
+        { uci: "c1c2", san: "Rc2" },
+        { uci: "b5b4", san: "b4",
+          note: "Rolling on, and the knight has nowhere good to go.",
+          last: true }
+      ],
+      payoff: "The c4 pawn is gone, so is the bind. Black has open a- and c-files and a " +
+              "queenside majority on the move."
+    },
+    {
+      id: "maroczy-f5",
+      structure: "The Mar\u00f3czy Bind",
+      title: "Going after e4 instead",
+      setup: "Same bind. This time Black plays against the other half of it: the e4 pawn, which " +
+             "needs constant care.",
+      fen: "2r3k1/pp2ppbp/3p1np1/q7/2P1P3/2N5/PP2BPPP/2R3K1 b - - 0 1",
+      moves: [
+        { uci: "f6d7", san: "Nd7",
+          note: "Backwards to go forwards. The knight is heading for c5, and it clears f6 so " +
+                "that ...f5 becomes possible." },
+        { uci: "c1d1", san: "Rd1" },
+        { uci: "d7c5", san: "Nc5",
+          note: "The outpost. From c5 the knight hits e4, which is the pawn holding the bind " +
+                "together on the kingside." },
+        { uci: "f2f3", san: "f3" },
+        { uci: "f7f5", san: "f5",
+          note: "The lever. White has to resolve the tension, and every resolution loosens " +
+                "something." },
+        { uci: "e4f5", san: "exf5" },
+        { uci: "g6f5", san: "gxf5",
+          note: "The e4 pawn is gone. Black's king is a little airier, but the bind no longer " +
+                "exists and the g-file points at White.",
+          last: true }
+      ],
+      payoff: "No c4-e4 bind any more. Black traded a slightly loose king for free pieces and " +
+              "an open g-file."
+    },
+    {
+      id: "maroczy-c5",
+      structure: "The Mar\u00f3czy Bind",
+      title: "When White releases it first",
+      setup: "Same bind, but White pushes c4-c5 to pre-empt the break. Show why that helps Black.",
+      fen: "2r3k1/pp2ppbp/3p1np1/q7/2P1P3/2N5/PP2BPPP/2R3K1 b - - 0 1",
+      moves: [
+        { uci: "a7a6", san: "a6",
+          note: "The same preparation. White now has to decide whether to allow ...b5." },
+        { uci: "c4c5", san: "c5" },
+        { uci: "d6c5", san: "dxc5",
+          note: "Take it. The pawn that left c4 was the bind \u2014 without it, d5 and b5 are " +
+                "Black's squares again." },
+        { uci: "c1d1", san: "Rd1" },
+        { uci: "b7b5", san: "b5",
+          note: "And now the majority rolls with no white pawn left to challenge it." },
+        { uci: "e2f3", san: "Bf3" },
+        { uci: "b5b4", san: "b4",
+          note: "Hitting the knight and gaining more ground. Black went from cramped to " +
+                "pushing in six moves.",
+          last: true }
+      ],
+      payoff: "White resolved the tension himself and handed Black exactly what the bind was " +
+              "meant to prevent: a mobile queenside majority."
+    },
+
+    {
+      id: "french-f5",
+      structure: "The locked chain",
+      title: "Striking at the base",
+      setup: "White's chain runs d4-e5, Black's runs d5-e6. Black's base is e6, so that is where " +
+             "White plays.",
+      fen: "5rk1/ppqb1ppp/2n1p3/2ppP3/3P4/2PB4/PP1NQPPP/5RK1 w - - 0 1",
+      moves: [
+        { uci: "f2f4", san: "f4",
+          note: "The pawn that will do the work. It is not attacking anything yet; it is walking " +
+                "to f5, where it hits the base of Black's chain." },
+        { uci: "c5d4", san: "cxd4" },
+        { uci: "c3d4", san: "cxd4",
+          note: "Recapture toward the centre. Black is doing the same thing on the other side \u2014 " +
+                "attacking the base of White's chain at d4." },
+        { uci: "f8c8", san: "Rc8" },
+        { uci: "f4f5", san: "f5",
+          note: "There it is. Black must take, push past, or watch fxe6 wreck the structure." },
+        { uci: "e6f5", san: "exf5" },
+        { uci: "d3f5", san: "Bxf5",
+          note: "The base is gone, and with it the pawn that was holding d5. Black's centre is " +
+                "now a lone pawn on an open board.",
+          last: true }
+      ],
+      payoff: "Black's e6 pawn has fallen and d5 stands alone. The f-file is open and White's " +
+              "pieces have the squares the chain used to deny them."
+    },
+    {
+      id: "french-f6",
+      structure: "The locked chain",
+      title: "When Black hits the head",
+      setup: "Same chain. Black's other option is ...f6, striking the head of White's chain " +
+             "rather than waiting for f5.",
+      fen: "5rk1/ppqb1ppp/2n1p3/2ppP3/3P4/2PB4/PP1NQPPP/5RK1 w - - 0 1",
+      moves: [
+        { uci: "f2f4", san: "f4",
+          note: "Same first move, and it invites the critical reply." },
+        { uci: "f7f6", san: "f6" },
+        { uci: "e5f6", san: "exf6",
+          note: "Take. Leaving the tension lets Black choose the moment, and ...fxe5 would hand " +
+                "over the centre." },
+        { uci: "f8f6", san: "Rxf6" },
+        { uci: "d2f3", san: "Nf3",
+          note: "Heading for e5, the square Black's own break just handed over. This is what " +
+                "hitting the head of a chain costs.",
+          last: true }
+      ],
+      payoff: "Black freed the position, but e6 is now backward on a half-open file and e5 is " +
+              "a permanent home for a white piece. Hitting the head works only when you can " +
+              "live with what it opens."
+    },
+    {
+      id: "french-queenside",
+      structure: "The locked chain",
+      title: "Ignoring the wing play",
+      setup: "Black goes for the queenside with ...c4 and ...b5. White simply carries on with " +
+             "the plan the structure calls for.",
+      fen: "5rk1/ppqb1ppp/2n1p3/2ppP3/3P4/2PB4/PP1NQPPP/5RK1 w - - 0 1",
+      moves: [
+        { uci: "f2f4", san: "f4",
+          note: "As always in this structure. White's play is on the kingside because that is " +
+                "where the enemy chain's base sits." },
+        { uci: "c5c4", san: "c4" },
+        { uci: "d3c2", san: "Bc2",
+          note: "Step aside and keep the diagonal. The queenside is locked now, which means " +
+                "Black's counterplay there is slow and White's is not." },
+        { uci: "b7b5", san: "b5" },
+        { uci: "f4f5", san: "f5",
+          note: "Straight ahead. In a locked position, whoever's break lands first sets the terms." },
+        { uci: "e6f5", san: "exf5" },
+        { uci: "c2f5", san: "Bxf5",
+          note: "The base has fallen while Black's queenside pawns are still two moves from " +
+                "achieving anything.",
+          last: true }
+      ],
+      payoff: "Same outcome as the first line: e6 gone, d5 weak, f-file open. Wing play does " +
+              "not answer a break in the centre."
+    }
+  ];
+
+  function linesFor(structureName) {
+    return LINES.filter(function (l) { return l.structure === structureName; });
+  }
+
+  /* ---------- guided line play ---------- */
+  var L = null;   // { line, pos, i, wrong, sel }
+
+  function startLines(ids) {
+    RUN = { set: { name: "The minority attack", kind: "line", lines: ids },
+            i: 0, results: [], started: Date.now() };
+    loadLine(0);
+  }
+
+  function loadLine(idx) {
+    var id = RUN.set.lines[idx];
+    var line = LINES.filter(function (x) { return x.id === id; })[0];
+    S.gen++;
+    setMode("line");
+    L = { line: line, pos: parsePos(line.fen), i: 0, wrong: 0 };
+    L.you = L.pos.stm;
+    S.board = L.pos.b; S.ch = null; S.tb = null; S.sel = null;
+    S.lastFrom = S.lastTo = null; S.history = [];
+    renderRunbar();
+    el.lname.textContent = line.title;
+    el.lsetup.textContent = line.setup;
+    el.lnote.textContent = "";
+    el.lnote.className = "lnote";
+    el.btnLineHint.disabled = false;
+    el.btnLineHint.textContent = "Show the move";
+    renderSheet(); render();
+    lineAsk();
+  }
+
+  function lineAsk() {
+    if (!L.line.moves[L.i]) return;
+    el.lprompt.textContent = (L.you === "w" ? "White" : "Black") +
+                             " to play. Find the plan move.";
+  }
+
+  function lineClick(sq) {
+    if (S.mode !== "line" || !L || L.done) return;
+    var legal = legalMoves(L.pos);
+    if (L.sel !== null && L.sel !== undefined) {
+      var picked = legal.filter(function (m) {
+        return m.from === L.sel && m.to === sq;
+      });
+      if (picked.length) { tryLineMove(picked[0]); return; }
+    }
+    L.sel = ownedBy(L.pos.b[sq], L.pos.stm) ? sq : null;
+    render();
+  }
+
+  function tryLineMove(mv) {
+    var want = L.line.moves[L.i];
+    var got = moveUci(mv);
+    // Accept any promotion spelling if the line's move is not a promotion.
+    if (got !== want.uci && got.slice(0, 4) !== want.uci.slice(0, 4)) {
+      L.wrong++;
+      L.sel = null;
+      el.lnote.className = "lnote miss";
+      el.lnote.textContent = L.wrong >= 2
+        ? "Still not it. The plan move is " + want.san + "."
+        : "That is legal, but it is not the plan. Think about which pawn has to move, and why.";
+      render();
+      return;
+    }
+    playLineMove(want, mv);
+  }
+
+  function playLineMove(entry, mv) {
+    L.pos = makeMove(L.pos, mv);
+    S.board = L.pos.b;
+    S.lastFrom = mv.from; S.lastTo = mv.to;
+    S.history.push({ san: entry.san, ann: L.wrong ? "slow" : "best", by: L.you });
+    L.sel = null; L.wrong = 0;
+    el.lnote.className = "lnote";
+    el.lnote.textContent = entry.note || "";
+    L.i++;
+    renderSheet(); render();
+
+    if (entry.last || L.i >= L.line.moves.length) { finishLine(); return; }
+
+    // Black answers with the line's reply.
+    var reply = L.line.moves[L.i];
+    setTimeout(function () {
+      if (S.mode !== "line" || !L) return;
+      var legal = legalMoves(L.pos);
+      var m = legal.filter(function (x) { return moveUci(x) === reply.uci; })[0];
+      if (!m) { el.lprompt.textContent = "This line is broken at " + reply.san + "."; return; }
+      L.pos = makeMove(L.pos, m);
+      S.board = L.pos.b;
+      S.lastFrom = m.from; S.lastTo = m.to;
+      S.history.push({ san: reply.san, ann: null, by: L.you === "w" ? "b" : "w" });
+      L.i++;
+      renderSheet(); render(); lineAsk();
+    }, 620);
+  }
+
+  function finishLine() {
+    L.done = true;
+    el.lprompt.textContent = "Plan complete.";
+    el.lnote.className = "lnote payoff";
+    el.lnote.textContent = L.line.payoff;
+    var clean = S.history.every(function (h) { return h.ann !== "slow"; });
+    RUN.results[RUN.i] = { label: L.line.title, good: clean, tally: null };
+    el.btnLineHint.disabled = true;
+    el.btnLineNext.hidden = false;
+    el.btnLineNext.textContent =
+      (RUN.i + 1 >= RUN.set.lines.length) ? "See how you did" : "Next line";
+    render();
+  }
+
+  function nextLine() {
+    el.btnLineNext.hidden = true;
+    if (RUN.i + 1 >= RUN.set.lines.length) { showSummary(); return; }
+    RUN.i++;
+    loadLine(RUN.i);
+  }
+
+  function lineHint() {
+    if (!L || L.done) return;
+    var want = L.line.moves[L.i];
+    el.lnote.className = "lnote miss";
+    el.lnote.textContent = "Play " + want.san + ".";
+    L.wrong = Math.max(L.wrong, 1);
+    el.btnLineHint.disabled = true;
+  }
+
+  /* ---------- mode switching ---------- */
+  function setMode(m) {
+    S.mode = m;
+    el.boardwrap.hidden = (m === "summary");
+    el.statusbar.hidden = (m !== "drill");
+    el.controls.hidden = (m !== "drill");
+    el.study.hidden = (m !== "study");
+    el.linepanel.hidden = (m !== "line");
+    el.summary.hidden = (m !== "summary");
+  }
+
+  /* ---------- run state ---------- */
+  var RUN = null;
+
+  function startRun(set) {
+    RUN = { set: set, i: 0, results: [], started: Date.now(), order: null };
+    renderRunbar();
+    if (set.kind === "study") { showQuestion(); return; }
+    if (set.kind === "line") { startLines(set.lines); return; }
+    setMode("drill");                      // we may be arriving from a summary or a study run
+    S.ch = chapterById(set.drills[0]);
+    newPosition();
+  }
+
+  function renderRunbar() {
+    if (!RUN) { el.runbar.hidden = true; return; }
+    el.runbar.hidden = false;
+    el.runname.textContent = RUN.set.name;
+    if (RUN.set.endless) {
+      el.runcount.textContent = "position " + (RUN.i + 1);
+      el.btnQuit.textContent = "Finish";
+      return;
+    }
+    var total = RUN.set.kind === "study" ? STRUCTURES.length
+              : RUN.set.kind === "line" ? RUN.set.lines.length
+              : RUN.set.drills.length;
+    el.runcount.textContent = (RUN.i + 1) + " of " + total;
+    el.btnQuit.textContent = "Leave run";
+  }
+
+  function quitRun() {
+    RUN = null; L = null;
+    S.gen++;                               // drop anything the run had in flight
+    el.runbar.hidden = true;
+    setMode("drill");
+    S.ch = null; S.tb = null; S.board = new Array(64).fill(null);
+    S.history = []; S.sel = null; S.lastFrom = S.lastTo = null;
+    S.busy = false; S.over = false;
+    el.prompt.textContent = "Pick a chapter or a run to begin.";
+    el.verdict.textContent = ""; el.verdict.className = "verdict";
+    el.btnBack.hidden = true;
+    veil(false);
+    renderChapters(); renderSheet(); render();
+  }
+
+  // Called by finished() once a drill resolves.
+  function runRecord(good) {
+    if (!RUN || RUN.set.kind === "study" || RUN.set.kind === "line") return;
+    var run = RUN;                         // so a mid-timeout run change can't advance the wrong one
+    var solo = run.set.kind === "solo";
+    var tally = { best: 0, slow: 0, bad: 0, hints: S.hintsUsed };
+    S.history.forEach(function (m) { if (m.ann && tally[m.ann] !== undefined) tally[m.ann]++; });
+    run.results[run.i] = { label: solo ? "Rep " + (run.i + 1) : S.ch.title,
+                           good: good, tally: tally };
+    if (!good) return;                     // stay put; New position retries this one
+
+    if (solo) {
+      if (run.set.reps && run.i + 1 >= run.set.reps) {
+        setTimeout(function () { if (RUN === run) showSummary(); }, 1400);
+        return;
+      }
+      setTimeout(function () {
+        if (RUN !== run) return;
+        run.i++;
+        renderRunbar();
+        newPosition();                     // same chapter, fresh position
+      }, 1400);
+      return;
+    }
+    if (run.i + 1 >= run.set.drills.length) {
+      setTimeout(function () { if (RUN === run) showSummary(); }, 1400);
+      return;
+    }
+    setTimeout(function () {
+      if (RUN !== run) return;
+      run.i++;
+      renderRunbar();
+      S.ch = chapterById(run.set.drills[run.i]);
+      newPosition();
+    }, 1400);
+  }
+
+  /* ---------- study mode ---------- */
+  function showQuestion() {
+    var q = STRUCTURES[RUN.i];
+    S.gen++;                                   // cancel anything the last drill has in flight
+    setMode("study");
+    S.board = fromFen(q.fen);
+    S.ch = null; S.sel = null; S.tb = null;
+    S.lastFrom = S.lastTo = null; S.history = [];
+    render(); renderSheet();
+    renderRunbar();
+
+    el.qtitle.textContent = q.name;
+    el.qask.textContent = q.from + ". " + q.ask;
+    el.why.hidden = true;
+    el.btnPlayPlan.hidden = true;
+    el.opts.innerHTML = "";
+
+    // Shuffle, or the correct answer's position becomes the answer.
+    var order = q.options.map(function (_, i) { return i; });
+    for (var i = order.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = order[i]; order[i] = order[j]; order[j] = t;
+    }
+    RUN.order = order;
+
+    order.forEach(function (orig) {
+      var b = document.createElement("button");
+      b.className = "opt";
+      b.textContent = q.options[orig];
+      b.addEventListener("click", function () { answerQuestion(orig); });
+      el.opts.appendChild(b);
+    });
+  }
+
+  function answerQuestion(picked) {
+    var q = STRUCTURES[RUN.i], order = RUN.order;
+    var buttons = el.opts.querySelectorAll(".opt");
+    for (var slot = 0; slot < buttons.length; slot++) {
+      buttons[slot].disabled = true;
+      var orig = order[slot];
+      if (orig === q.answer) buttons[slot].className = "opt right";
+      else if (orig === picked) buttons[slot].className = "opt wrong";
+    }
+    RUN.results[RUN.i] = { label: q.name, good: picked === q.answer, tally: null };
+    el.whytext.textContent = q.why;
+    el.why.hidden = false;
+    el.btnNextQ.textContent = (RUN.i + 1 >= STRUCTURES.length) ? "See how you did" : "Next";
+
+    var avail = linesFor(q.name);
+    el.btnPlayPlan.hidden = avail.length === 0;
+    if (avail.length) {
+      el.btnPlayPlan.textContent = "Play the plan (" + avail.length + " lines)";
+    }
+  }
+
+  function nextQuestion() {
+    if (RUN.i + 1 >= STRUCTURES.length) return showSummary();
+    RUN.i++;
+    showQuestion();
+  }
+
+  /* ---------- summary ---------- */
+  function showSummary() {
+    if (!RUN) return;
+    setMode("summary");
+    var clean = 0;
+    el.sumtitle.textContent = RUN.set.name;
+    el.sumlist.innerHTML = "";
+    RUN.results.forEach(function (r) {
+      var li = document.createElement("li");
+      var name = document.createElement("span");
+      name.textContent = r.label;
+      var mark = document.createElement("span");
+      if (r.tally) {
+        var bits = [];
+        if (r.tally.best) bits.push('<span class="ann best">!</span>\u00d7' + r.tally.best);
+        if (r.tally.slow) bits.push('<span class="ann slow">?!</span>\u00d7' + r.tally.slow);
+        if (r.tally.bad) bits.push('<span class="ann bad">??</span>\u00d7' + r.tally.bad);
+        if (r.tally.hints) bits.push('<span class="dimmed">' + r.tally.hints + " shown</span>");
+        mark.innerHTML = bits.join("  ") || "\u2014";
+        if (!r.tally.bad && !r.tally.slow && !r.tally.hints) clean++;
+      } else {
+        mark.innerHTML = r.good
+          ? '<span class="ann best">right</span>'
+          : '<span class="ann bad">wrong</span>';
+        if (r.good) clean++;
+      }
+      li.appendChild(name); li.appendChild(mark);
+      el.sumlist.appendChild(li);
+    });
+    var mins = Math.max(1, Math.round((Date.now() - RUN.started) / 60000));
+    var lv = currentLevel();
+    if (RUN.set.solo) el.sumtitle.textContent = RUN.set.name + ", " + RUN.results.length +
+      (RUN.results.length === 1 ? " position" : " positions");
+    el.sumtime.textContent = clean + " of " + RUN.results.length +
+      " clean, in about " + mins + (mins === 1 ? " minute" : " minutes") +
+      (RUN.set.kind === "study" || RUN.set.kind === "line"
+        ? "." : ", at level " + lv.n + " (" + lv.name + ").");
+  }
+
+  /* ---------- interaction ---------- */
+  function isUsers(piece) {
+    if (!piece) return false;
+    return (piece === piece.toUpperCase()) === (S.ch.user === "w");
+  }
+
+  function onSquare(sq) {
+    if (S.mode !== "drill" || !S.ch) return;
+    if (!S.tb || S.busy || S.over || S.stm !== S.ch.user) return;
+    var legal = S.tb.moves || [];
+    if (S.sel !== null) {
+      var matches = legal.filter(function (m) {
+        return sqIndex(m.uci.slice(0, 2)) === S.sel && sqIndex(m.uci.slice(2, 4)) === sq;
+      });
+      if (matches.length === 1) return play(matches[0]);
+      if (matches.length > 1) return askPromotion(matches);
+    }
+    S.sel = isUsers(S.board[sq]) ? sq : null;
+    render();
+  }
+
+  function askPromotion(matches) {
+    el.promorow.innerHTML = "";
+    matches.forEach(function (m) {
+      var letter = m.uci[4] || "q";
+      var b = document.createElement("button");
+      b.title = m.san;
+      b.appendChild(pieceEl(S.ch.user === "w" ? letter.toUpperCase() : letter));
+      b.addEventListener("click", function () { el.promo.hidden = true; play(m); });
+      el.promorow.appendChild(b);
+    });
+    el.promo.hidden = false;
+  }
+
+  /* ---------- rendering ---------- */
+  function pieceEl(p) {
+    var d = document.createElement("div");
+    d.className = "piece " + (p === p.toUpperCase() ? "w" : "b");
+    d.innerHTML = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+                  "<g>" + PIECE[p.toLowerCase()] + "</g></svg>";
+    return d;
+  }
+
+  function render() {
+    var live = S.mode === "drill" && !!S.ch;
+    var online = S.mode === "line" && !!L && !L.done;
+    var flipBoard = (live && S.ch.user === "b") || (online && L.you === "b");
+    var sel = online ? L.sel : S.sel;
+    var targets = [];
+
+    if (live && S.sel !== null) {
+      targets = ((S.tb && S.tb.moves) || [])
+        .filter(function (m) { return sqIndex(m.uci.slice(0, 2)) === S.sel; })
+        .map(function (m) { return sqIndex(m.uci.slice(2, 4)); });
+    } else if (online && sel !== null && sel !== undefined) {
+      targets = legalMoves(L.pos)
+        .filter(function (m) { return m.from === sel; })
+        .map(function (m) { return m.to; });
+    }
+
+    el.board.innerHTML = "";
+    for (var n = 0; n < 64; n++) {
+      var i = flipBoard ? 63 - n : n;
+      var d = document.createElement("div");
+      var light = (((i >> 3) + (i % 8)) % 2) === 0;
+      d.className = "sq " + (light ? "light" : "dark");
+      if (i === S.lastFrom) d.className += " from";
+      if (i === S.lastTo) d.className += " to";
+      if (i === sel) d.className += " sel";
+      if (targets.indexOf(i) !== -1) d.className += " target" + (S.board && S.board[i] ? " occupied" : "");
+
+      var p = S.board ? S.board[i] : null;
+      if (p) {
+        d.appendChild(pieceEl(p));
+        if (live && isUsers(p) && !S.busy && !S.over && S.stm === S.ch.user) d.className += " pickable";
+        if (online && ownedBy(p, L.pos.stm)) d.className += " pickable";
+      }
+      if ((live || online) && targets.indexOf(i) !== -1) d.className += " pickable";
+
+      if (n >= 56 || n % 8 === 7) {
+        var c = document.createElement("span");
+        c.className = "coord";
+        c.textContent = sqName(i);
+        d.appendChild(c);
+      }
+      (function (idx) {
+        d.addEventListener("click", function () {
+          if (S.mode === "line") lineClick(idx); else onSquare(idx);
+        });
+      })(i);
+      el.board.appendChild(d);
+    }
+    updateHintButton();
+  }
+
+  function renderLevels() {
+    el.levels.innerHTML = "";
+    var h = document.createElement("h2");
+    h.className = "grouphead";
+    h.textContent = "Difficulty";
+    el.levels.appendChild(h);
+
+    var row = document.createElement("div");
+    row.className = "levelrow";
+    LEVELS.forEach(function (lv) {
+      var b = document.createElement("button");
+      b.className = "lvl" + (lv.n === S.level ? " on" : "");
+      b.textContent = lv.n;
+      b.title = lv.name;
+      b.addEventListener("click", function () { setLevel(lv.n); });
+      row.appendChild(b);
+    });
+    el.levels.appendChild(row);
+
+    var p = document.createElement("p");
+    p.className = "lvlname";
+    p.innerHTML = "<strong>" + currentLevel().name + "</strong><br>" + currentLevel().blurb;
+    el.levels.appendChild(p);
+  }
+
+  var REPS = [1, 3, 5, 10, 0];             // 0 means keep going until you leave
+
+
+
+
+  function renderReps() {
+    el.repsbox.innerHTML = "";
+    var h = document.createElement("h2");
+    h.className = "grouphead";
+    h.textContent = "Repeats";
+    el.repsbox.appendChild(h);
+
+    var row = document.createElement("div");
+    row.className = "levelrow";
+    REPS.forEach(function (n) {
+      var b = document.createElement("button");
+      b.className = "lvl" + (n === S.reps ? " on" : "");
+      b.textContent = n === 0 ? "\u221e" : String(n);
+      b.title = n === 0 ? "Keep going until you stop" : n + " in a row";
+      b.addEventListener("click", function () { setReps(n); });
+      row.appendChild(b);
+    });
+    el.repsbox.appendChild(row);
+
+    var p = document.createElement("p");
+    p.className = "lvlname";
+    p.textContent = S.reps === 0
+      ? "Pick a chapter below and it repeats until you stop."
+      : S.reps === 1
+        ? "Pick a chapter below for one position at a time."
+        : "Pick a chapter below and it repeats " + S.reps + " times.";
+    el.repsbox.appendChild(p);
+  }
+
+  function renderRuns() {
+    el.runs.innerHTML = "";
+    var h = document.createElement("h2");
+    h.className = "grouphead";
+    h.textContent = "Runs";
+    el.runs.appendChild(h);
+    SETS.forEach(function (set) {
+      var b = document.createElement("button");
+      b.className = "run";
+      var count = set.kind === "study" ? STRUCTURES.length
+                : set.kind === "line" ? set.lines.length : set.drills.length;
+      b.innerHTML = '<div class="name">' + set.name + '</div>' +
+                    '<div class="meta">' + set.blurb + ", " + count + " in a row</div>";
+      b.addEventListener("click", function () { startRun(set); });
+      el.runs.appendChild(b);
+    });
+  }
+
+  function renderChapters() {
+    el.chapters.innerHTML = "";
+    var head = document.createElement("h2");
+    head.className = "grouphead";
+    head.textContent = "Chapters";
+    el.chapters.appendChild(head);
+    var hint = document.createElement("p");
+    hint.className = "lvlname";
+    hint.textContent = "Pick any one and drill it on repeat.";
+    el.chapters.appendChild(hint);
+
+    if (!S.freeAll && CHAPTERS.some(function (c, i) { return !unlocked(i); })) {
+      var free = document.createElement("button");
+      free.className = "unlockall";
+      free.textContent = "Unlock every chapter";
+      free.title = "Skip the ladder and drill anything you like";
+      free.addEventListener("click", unlockAll);
+      el.chapters.appendChild(free);
+    }
+
+    var lastGroup = null;
+    CHAPTERS.forEach(function (ch, i) {
+      if (ch.group !== lastGroup) {
+        lastGroup = ch.group;
+        var h = document.createElement("h2");
+        h.className = "grouphead";
+        h.textContent = ch.group;
+        el.chapters.appendChild(h);
+      }
+      var open = unlocked(i);
+      var b = document.createElement("button");
+      b.className = "chapter" + (open ? "" : " locked") + (S.ch === ch ? " on" : "");
+      b.disabled = !open;
+      var done = S.wins[ch.id] || 0;
+      var meta;
+      if (open) {
+        meta = done >= ch.needed ? '<span class="tally">Cleared</span>'
+                                 : "Solved " + done + " of " + ch.needed;
+      } else {
+        // Say what actually unlocks it rather than just "Locked".
+        var prev = CHAPTERS[i - 1], left = prev.needed - (S.wins[prev.id] || 0);
+        meta = "Opens after " + left + " more " +
+               prev.title.replace(/^The /, "").toLowerCase() +
+               (left === 1 ? "" : "s");
+      }
+      b.innerHTML = '<div class="num">Chapter ' + (i + 1) + '</div>' +
+                    '<div class="name">' + ch.title + '</div>' +
+                    '<div class="meta">' + ch.material + '</div>' +
+                    '<div class="meta">' + meta + '</div>';
+      if (open) b.addEventListener("click", function () { startChapter(ch); });
+      el.chapters.appendChild(b);
+    });
+
+  }
+
+  function renderSheet() {
+    el.moves.innerHTML = "";
+    el.sheetEmpty.hidden = S.history.length > 0;
+    var whiteFirst = (S.mode === "line" && L) ? L.you === "w"
+                   : (S.ch ? S.ch.stm === "w" : true);
+    var cells = S.history.slice();
+    if (!whiteFirst) cells.unshift(null);
+    for (var i = 0; i < cells.length; i += 2) {
+      var li = document.createElement("li");
+      var no = document.createElement("span");
+      no.className = "no"; no.textContent = (i / 2 + 1) + ".";
+      li.appendChild(no);
+      [cells[i], cells[i + 1]].forEach(function (m) {
+        var s = document.createElement("span");
+        if (m) {
+          s.textContent = m.san;
+          if (m.ann) {
+            var a = document.createElement("span");
+            a.className = "ann " + m.ann;
+            a.textContent = m.ann === "best" ? "!"
+                          : m.ann === "slow" ? "?!"
+                          : m.ann === "gone" ? "\u00b7" : "??";
+            s.appendChild(a);
+          }
+        } else { s.textContent = "\u2026"; }
+        li.appendChild(s);
+      });
+      el.moves.appendChild(li);
+    }
+  }
+
+
+  function setReps(n) {
+    if (n === S.reps) return;
+    S.reps = n;
+    saveProgress();
+    renderReps();
+  }
+
+  // Picking one chapter drills that chapter, repeatedly. Handing the run engine a
+  // list that is the same chapter N times means the counter, auto-advance and
+  // summary all work with no special cases.
+  function startChapter(ch, reps) {
+    reps = (reps === undefined) ? S.reps : reps;
+    RUN = null;
+    setMode("drill");
+    S.ch = ch;
+
+    if (reps === 1) { el.runbar.hidden = true; newPosition(); return; }
+
+    var endless = (reps === 0), list = [];
+    for (var i = 0; i < (endless ? 1 : reps); i++) list.push(ch.id);
+    RUN = { set: { id: "solo:" + ch.id, name: ch.title, kind: "solo",
+                   drills: list, endless: endless, solo: true },
+            i: 0, results: [], started: Date.now() };
+    renderRunbar();
+    newPosition();
+  }
+
+  function unlockAll() {
+    S.freeAll = true;
+    saveProgress();
+    renderChapters();
+  }
+
+
+  el.btnNew.addEventListener("click", function () {
+    if (!S.ch) S.ch = CHAPTERS[0];
+    setMode("drill");
+    newPosition();
+  });
+  el.btnHint.addEventListener("click", hint);
+  el.btnBack.addEventListener("click", takeBack);
+  el.btnQuit.addEventListener("click", function () {
+    if (RUN && RUN.set.endless && RUN.results.length) showSummary(); else quitRun();
+  });
+  el.btnNextQ.addEventListener("click", nextQuestion);
+  el.btnDone.addEventListener("click", quitRun);
+  el.btnLineHint.addEventListener("click", lineHint);
+  el.btnLineNext.addEventListener("click", nextLine);
+  el.btnPlayPlan.addEventListener("click", function () {
+    var q = STRUCTURES[RUN.i];
+    var ids = linesFor(q.name).map(function (l) { return l.id; });
+    if (ids.length) startLines(ids);
+  });
+  el.promo.addEventListener("click", function (e) {
+    if (e.target === el.promo) el.promo.hidden = true;
+  });
+
+  loadProgress().then(function () {
+    renderLevels(); renderReps(); renderRuns(); renderChapters(); renderSheet(); render();
+    setMode("drill");
+    startChapter(CHAPTERS[0], 1);
+  });
+})();
+</script>
