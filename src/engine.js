@@ -298,10 +298,13 @@ async function syncChessCom(user, { months = 3, quiet = false } = {}) {
   return pgn;
 }
 async function autoSync() {
-  if (!S.username || location.protocol === 'file:') return;
-  const last = LS.get('lastSync') || 0; if (Date.now() - last < 3 * 3600e3) return;
-  try { const pgn = await syncChessCom(S.username, { months: S.games.length ? 1 : 3 }); await importText(pgn, S.username, true); } catch {}
+  if (!S.username || location.protocol === 'file:' || S.syncing) return;
+  // Check often while today's plan still has games or puzzles to see; otherwise every few hours.
+  const rec = S.plans[todayId()]; const gap = rec && checkable(rec) ? 10 * 60e3 : 3 * 3600e3;
+  const last = LS.get('lastSync') || 0; if (Date.now() - last < gap) return;
+  return checkChessCom(true);
 }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') autoSync(); });
 
 // ---------- Backup ----------
 function exportData() {

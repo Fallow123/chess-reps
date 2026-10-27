@@ -489,24 +489,32 @@ function ensurePlan(force) {
   for (const t of plan.tasks) if (t.id === 'import' || t.id === 'import-week') t.gamesAt = S.games.length;
   const done = {};
   if (old) for (const t of plan.tasks) if (old.done && old.done[t.id]) done[t.id] = true;
-  S.plans[id] = { plan, done };
+  // What chess.com showed when the day began, so a new Rush best or puzzle high can tick its task.
+  const base = old && old.base || statBase();
+  S.plans[id] = { plan, done, base, results: old && old.results || {} };
   savePlan(id);
 }
+const statBase = () => S.stats ? { rush: S.stats.rush || 0, tactics: S.stats.tactics || 0 } : { rush: null, tactics: null };
 function savePlan(id) {
   const data = S.plans[id];
   if (db) db.doc('plans/' + id).set(data).catch(() => toast('Could not save your plan. Check your connection.'));
   else { const all = LS.get('plans') || {}; all[id] = data; LS.set('plans', all); }
 }
 // Some tasks tick themselves once the app can see they are done.
-function autoDone(t) {
-  const start = new Date(); start.setHours(0, 0, 0, 0);
+const dayStart = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return +d; };
+const gamesToday = () => S.games.filter(g => gameTime(g) >= dayStart()).sort((a, b) => gameTime(a) - gameTime(b));
+function autoDone(t, rec) {
+  const start = dayStart(); const st = S.stats || {}; const base = rec.base || {};
+  if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
+  if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
+  if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
   if (t.id === 'drill') return Object.values(S.cards).filter(c => c.last >= +start).length >= (t.target || 1);
   if (t.id.startsWith('seed-')) return D.linesBoth[t.action.side] > 0;
   if (t.id.startsWith('gap-')) { const p = t.action.path; const c = new Chess(); for (const m of p) c.move(m); return (S.rep[t.action.side].get(posKey(c.fen())) || []).length > 0; }
   if (t.id === 'import' || t.id === 'import-week') return S.games.length > (t.gamesAt || 0);
   return false;
 }
-function isDone(rec, t) { return !!(rec.done && rec.done[t.id]) || (rec.plan.date === todayId() && autoDone(t)); }
+function isDone(rec, t) { return !!(rec.done && rec.done[t.id]) || (rec.plan.date === todayId() && autoDone(t, rec)); }
 function ratio(rec) { const ts = rec.plan.tasks; return ts.length ? ts.filter(t => isDone(rec, t)).length / ts.length : 0; }
 function streak() {
   let n = 0; const d = new Date();
@@ -541,6 +549,40 @@ function seedRep(side) {
 const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Build it', endgame: 'Start chapter', run: 'Start' };
 const KIND_LABEL = { tactics: 'Tactics', openings: 'Openings', endgames: 'Endgames', play: 'Play', review: 'Review', setup: 'Setup' };
 
+// What chess.com says about a task today: games played, a new Rush best, a puzzle high.
+function taskResult(t, rec) {
+  const st = S.stats || {}; const base = rec.base || {};
+  if (t.id === 'play') {
+    const gs = gamesToday(); if (!gs.length) return null;
+    const RES = { 1: 'Won', 0: 'Lost', 0.5: 'Drew' };
+    return h('ul', { class: 'tres' }, gs.map(g => h('li', { class: g.score === 1 ? 'w' : g.score === 0 ? 'l' : 'd' },
+      `${RES[g.score]} as ${sideName(g.me)} vs ${g.opp}${g.oppElo ? ' (' + g.oppElo + ')' : ''} · ${g.cls}${g.myElo ? ' · you ' + g.myElo : ''}${g.opening ? ' · ' + g.opening : ''}`)));
+  }
+  if (t.id === 'rush') {
+    if (base.rush != null && st.rush > base.rush) return h('p', { class: 'tres-line w' }, `New Puzzle Rush best: ${st.rush} (was ${base.rush || 'none'}).`);
+    const r = rec.results || {};
+    const inp = h('input', { type: 'text', inputmode: 'numeric', value: r.rush != null ? r.rush : '', placeholder: 'score', style: 'width:5em', 'aria-label': 'Your Puzzle Rush score today' });
+    inp.addEventListener('change', () => { const v = parseInt(inp.value, 10); rec.results = rec.results || {}; if (v >= 0) rec.results.rush = v; else delete rec.results.rush;
+      if (v > (S.settings.rush || 0) && !(st.rush >= v)) { S.settings.rush = v; save('settings'); } savePlan(todayId()); renderToday(); });
+    return h('div', { class: 'row tres-line' }, h('span', { class: 'note' }, r.rush != null ? `You scored ${r.rush}.` : 'Scored today:'), inp);
+  }
+  if (t.id === 'puzzles' && base.tactics != null && st.tactics > base.tactics) return h('p', { class: 'tres-line w' }, `New puzzle-rating high: ${st.tactics}.`);
+  return null;
+}
+const checkable = rec => rec.plan.tasks.some(t => ['play', 'rush', 'puzzles'].includes(t.id) && !isDone(rec, t));
+async function checkChessCom(quiet) {
+  if (!S.username || S.syncing) return;
+  S.syncing = true; if (S.tab === 'today') renderToday();
+  const before = S.games.length;
+  const rec = S.plans[todayId()]; const fixBase = () => { if (rec && !(rec.base && rec.base.rush != null) && S.stats) { rec.base = statBase(); savePlan(todayId()); } };
+  fixBase();
+  try { const pgn = await syncChessCom(S.username, { months: before ? 1 : 3 }); fixBase();
+    await importText(pgn, S.username, true);
+    if (!quiet) toast(S.games.length > before ? `Found ${S.games.length - before} new game${S.games.length - before > 1 ? 's' : ''}` : 'No new games since the last check');
+  } catch { if (!quiet) toast('Could not reach chess.com just now'); }
+  S.syncing = false; render();
+}
+
 function renderToday() {
   const box = $('#rw-today'); box.replaceChildren();
   const rec = S.plans[todayId()];
@@ -552,6 +594,9 @@ function renderToday() {
     h('h3', { class: 'plantitle' }, P.title),
     h('p', { class: 'ask' }, P.note),
     h('div', { class: 'progress' }, h('span', {}, `${doneN} of ${P.tasks.length} done`), h('span', { class: 'note' }, `about ${P.total} minutes`), h('i', { style: `width:${Math.round(100 * doneN / Math.max(1, P.tasks.length))}%` })));
+  if (S.username && location.protocol !== 'file:') left.append(h('div', { class: 'row', style: 'margin:-4px 0 14px' },
+    h('button', { class: 'btn quiet tiny', disabled: !!S.syncing, onclick: () => checkChessCom(false) }, S.syncing ? 'Checking chess.com…' : 'Check chess.com for what I did'),
+    h('span', { class: 'note' }, 'Games, a new Puzzle Rush best and puzzle highs tick themselves.')));
   const ul = h('ol', { class: 'tasks' });
   P.tasks.forEach(t => {
     const done = isDone(rec, t); const auto = !(rec.done && rec.done[t.id]) && done;
@@ -565,7 +610,7 @@ function renderToday() {
       h('div', { class: 'tbody' },
         h('div', { class: 'thead' }, h('span', { class: 'tkind k-' + t.kind }, KIND_LABEL[t.kind] || ''), h('span', { class: 'tmins' }, t.mins + ' min')),
         h('div', { class: 'ttitle' }, t.title),
-        h('p', { class: 'twhy' }, t.why)),
+        h('p', { class: 'twhy' }, t.why), taskResult(t, rec)),
       h('div', { class: 'tact' }, act)));
   });
   left.append(ul);
@@ -624,14 +669,16 @@ function renderToday() {
 }
 
 // ---------- Shell ----------
-const TABS = ['today', 'build', 'gaps', 'drill', 'games', 'endgames'];
+const TABS = ['today', 'story', 'build', 'gaps', 'drill', 'games', 'endgames'];
 function render() {
   for (const t of TABS) $('#tab-' + t).setAttribute('aria-selected', String(S.tab === t));
   const eg = S.tab === 'endgames';
-  $('#rw').hidden = eg; $('#app').hidden = !eg; $('#sidepick').hidden = eg || S.tab === 'today';
-  $('#rw-grid').hidden = S.tab === 'today'; $('#rw-today').hidden = S.tab !== 'today';
+  $('#rw').hidden = eg; $('#app').hidden = !eg; const flat = S.tab === 'today' || S.tab === 'story';
+  $('#sidepick').hidden = eg || flat;
+  $('#rw-grid').hidden = flat; $('#rw-today').hidden = S.tab !== 'today'; $('#rw-story').hidden = S.tab !== 'story';
   if (eg) return;
   if (S.tab === 'today') return renderToday();
+  if (S.tab === 'story') return renderStory();
   $('#side-w').setAttribute('aria-pressed', String(S.side === 'w')); $('#side-b').setAttribute('aria-pressed', String(S.side === 'b'));
   const panel = $('#rw-panel'), bar = $('#rw-bar'); panel.replaceChildren(); bar.replaceChildren();
   ({ build: renderBuild, gaps: renderGaps, drill: renderDrill, games: renderGames })[S.tab](panel, bar);

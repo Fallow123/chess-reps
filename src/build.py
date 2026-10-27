@@ -102,6 +102,7 @@ shell = '''
   </header>
   <nav class="shell-tabs" role="tablist">
     <button role="tab" id="tab-today" aria-selected="true">Today</button>
+    <button role="tab" id="tab-story" aria-selected="false">Your story</button>
     <button role="tab" id="tab-build" aria-selected="false">Build</button>
     <button role="tab" id="tab-gaps" aria-selected="false">Gaps<span class="count" id="count-gaps"></span></button>
     <button role="tab" id="tab-drill" aria-selected="false">Drill<span class="count" id="count-drill"></span></button>
@@ -110,6 +111,7 @@ shell = '''
   </nav>
   <div id="rw">
     <div class="today" id="rw-today"></div>
+    <div class="story" id="rw-story" hidden></div>
     <div class="grid" id="rw-grid">
       <div class="boardwrap"><div class="board" id="rw-board" aria-label="Board"></div><div class="evalbar" id="rw-evalbar" hidden aria-label="Evaluation"><i></i><span></span></div><div class="boardbar" id="rw-bar"></div></div>
       <div class="panel" id="rw-panel"></div>
@@ -123,7 +125,7 @@ shell = '''
 ''' + rd('logic.js') + rd('planner.js') + '''
 </script>
 <script>
-''' + app.replace('// ---------- Shell ----------', rd('engine.js') + '\n// ---------- Shell ----------') + '''
+''' + app.replace('// ---------- Shell ----------', rd('engine.js') + rd('story.js') + '\n// ---------- Shell ----------') + '''
 </script>
 <script>''' + egjs + '''</script>
 '''

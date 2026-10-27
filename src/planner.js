@@ -190,7 +190,7 @@ function buildPlan(ctx) {
       : theme === 'endgames' ? 'If it goes long, trade into an endgame you know instead of avoiding one.'
       : 'Afterwards, import the games so the gap report sees them.';
     const label = playKey === 'slow' ? 'rapid' : playKey;
-    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, why: intent + (theme === 'play' ? ' After each loss, spend 3 minutes finding the move that lost it.' : ''), action: { type: 'url', url: 'https://www.chess.com/play/online' } });
+    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, target: n, cls: label, why: intent + (theme === 'play' ? ' After each loss, spend 3 minutes finding the move that lost it.' : ''), action: { type: 'url', url: 'https://www.chess.com/play/online' } });
   }
 
   const focusNote = {
