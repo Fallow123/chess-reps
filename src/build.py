@@ -108,10 +108,12 @@ shell = '''
     <button role="tab" id="tab-drill" aria-selected="false">Drill<span class="count" id="count-drill"></span></button>
     <button role="tab" id="tab-games" aria-selected="false">Games</button>
     <button role="tab" id="tab-endgames" aria-selected="false">Endgames &amp; structures</button>
+    <button role="tab" id="tab-settings" aria-selected="false">Settings</button>
   </nav>
   <div id="rw">
     <div class="today" id="rw-today"></div>
     <div class="story" id="rw-story" hidden></div>
+    <div class="settings" id="rw-settings" hidden></div>
     <div class="grid" id="rw-grid">
       <div class="boardwrap"><div class="board" id="rw-board" aria-label="Board"></div><div class="evalbar" id="rw-evalbar" hidden aria-label="Evaluation"><i></i><span></span></div><div class="boardbar" id="rw-bar"></div></div>
       <div class="panel" id="rw-panel"></div>

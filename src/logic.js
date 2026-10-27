@@ -42,7 +42,7 @@ function timeClass(tc) {
 // How the game ended, from chess.com's Termination header.
 function endKind(t) {
   t = (t || '').toLowerCase();
-  if (t.includes('on time')) return 'time';
+  if (t.includes('on time') || t.includes('time forfeit')) return 'time';
   if (t.includes('checkmate')) return 'mate';
   if (t.includes('resignation')) return 'resign';
   if (t.includes('abandon')) return 'abandon';
@@ -68,12 +68,16 @@ function importPgn(text, me, maxPly = 40) {
     if (!color) continue;
     const res = h.Result === '1-0' ? 1 : h.Result === '0-1' ? 0 : h.Result === '1/2-1/2' ? 0.5 : null;
     const score = res == null ? null : color === 'w' ? res : 1 - res;
+    const url = h.Link || (/^https?:\/\/lichess\.org\//.test(h.Site || '') ? h.Site : '');
+    let end = endKind(h.Termination);
+    // lichess says only "Normal": tell mate from resignation by the last move.
+    if (end === 'other' && /normal/i.test(h.Termination || '')) end = g.toks.some(t => t.includes('#')) ? 'mate' : res === 0.5 ? 'draw' : 'resign';
     const id = hashStr((h.Link || '') + (h.UTCDate || h.Date || '') + (h.UTCTime || h.StartTime || '') + h.White + h.Black + g.moves.join(' '));
     out.push({ id, me: color, opp: (color === 'w' ? h.Black : h.White) || '?',
       oppElo: +(color === 'w' ? h.BlackElo : h.WhiteElo) || null, myElo: +(color === 'w' ? h.WhiteElo : h.BlackElo) || null,
       date: (h.UTCDate || h.Date || '').replace(/\./g, '-'), time: h.UTCTime || h.StartTime || '',
-      tc: h.TimeControl || '', cls: timeClass(h.TimeControl), end: endKind(h.Termination), plies: g.plies,
-      opening: openingName(h), score, url: h.Link || '', moves: g.moves.join(' '), full: g.toks.length > g.moves.length ? g.toks.join(' ') : undefined });
+      tc: h.TimeControl || '', cls: timeClass(h.TimeControl), end, plies: g.plies, src: url.includes('lichess.org') ? 'lichess' : 'chesscom',
+      opening: openingName(h), score, url, moves: g.moves.join(' '), full: g.toks.length > g.moves.length ? g.toks.join(' ') : undefined });
   }
   return { me, games: out };
 }

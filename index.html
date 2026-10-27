@@ -391,7 +391,7 @@ body { color: var(--bone); font-family: var(--serif); font-size: 16px; line-heig
 #rw h2.subhead { font-size: 15px; font-weight: 600; color: var(--dim); margin: 6px 0 -12px; }
 
 /* ---- story ---- */
-#rw .story { max-width: 880px; display: flex; flex-direction: column; gap: 0; }
+#rw .story { max-width: 1040px; display: flex; flex-direction: column; gap: 0; }
 
 #rw .story-hero { padding: 8px 0 36px; border-bottom: 1px solid var(--rule); }
 
@@ -472,6 +472,137 @@ body { color: var(--bone); font-family: var(--serif); font-size: 16px; line-heig
 #rw .tres-line.w { color: var(--sage); }
 
 #rw .tres-line input { padding: 4px 8px; font-size: 14px; }
+
+/* report card, after King Takes King's */
+#rw .report { position: relative; overflow: hidden; padding: 26px 28px 22px; margin-bottom: 18px; border-radius: 18px; color: #F3F1EA;
+  background: linear-gradient(135deg, #1B6B4A 0%, #0E4A33 55%, #0A3626 100%); box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+
+#rw .report::before { content: ""; position: absolute; inset: 0; opacity: .045; pointer-events: none;
+  background: conic-gradient(#fff 25%, transparent 0 50%, #fff 0 75%, transparent 0) 0 0 / 56px 56px; }
+
+#rw .report > * { position: relative; }
+
+#rw .report .eyebrow { color: var(--amber); letter-spacing: .1em; margin: 0; font-size: 13px; font-weight: 600; }
+
+#rw .rname { font-size: clamp(30px, 6vw, 44px); line-height: 1.1; margin: 2px 0 2px; font-weight: 700; overflow-wrap: anywhere; }
+
+#rw .rsub { margin: 0 0 14px; font-size: 15px; opacity: .8; }
+
+#rw .chip { display: inline-block; margin: 0 0 16px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.12); font-size: 14.5px; }
+
+#rw .rstats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-radius: 12px; background: rgba(0,0,0,.18); }
+
+#rw .rstats > div { padding: 14px 10px; text-align: center; border-left: 1px solid rgba(255,255,255,.08); }
+
+#rw .rstats > div:first-child { border-left: 0; }
+
+#rw .rstats b { display: block; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+#rw .rstats span { font-size: 13px; opacity: .75; }
+
+#rw .wdl { display: flex; gap: 3px; height: 7px; margin-top: 18px; }
+
+#rw .wdl i { display: block; height: 100%; border-radius: 4px; min-width: 0; }
+
+#rw .wdl .w { background: #6FD39B; }
+ #rw .wdl .d { background: #C9C6BC; }
+ #rw .wdl .l { background: #F07B63; }
+
+#rw .wdlnums { display: flex; justify-content: space-between; font-size: 13px; opacity: .8; margin-top: 6px; }
+
+#rw .cards { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; margin-bottom: 8px; }
+
+#rw .card { background: var(--panel); border-radius: 16px; padding: 20px 22px; box-shadow: inset 0 0 0 1px var(--rule); min-width: 0; }
+
+#rw .cardhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+
+#rw .card .eyebrow { margin: 0; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--dim); }
+
+#rw .story .bad { color: #F07B63; }
+ #rw .story .good { color: #6FD39B; }
+
+#rw .cardhead b.bad { font-size: 22px; font-variant-numeric: tabular-nums; }
+
+#rw .costrow { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 15.5px; }
+
+#rw .costbar { display: block; height: 7px; border-radius: 4px; background: rgba(240,123,99,.16); }
+
+#rw .costbar i { display: block; height: 100%; border-radius: 4px; background: #E0604A; }
+
+#rw .brkmove { font-size: 30px !important; margin: 6px 0 4px !important; font-variant-numeric: tabular-nums; }
+
+#rw .miniboard { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; max-width: 420px; margin-top: 12px; border-radius: 8px; overflow: hidden; }
+
+#rw .msq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
+
+#rw .msq.light { background: var(--maple); }
+ #rw .msq.dark { background: var(--dark-sq); }
+
+#rw .msq.hl { background-image: linear-gradient(rgba(240,123,99,.45), rgba(240,123,99,.45)); }
+
+@media (max-width: 760px) { #rw .cards { grid-template-columns: minmax(0, 1fr); }
+ #rw .rstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+ #rw .rstats > div:nth-child(3) { border-left: 0; }
+ #rw .report { padding: 22px 18px 18px; }
+ }
+
+/* ---- settings & accounts ---- */
+#rw .settings { max-width: 1040px; display: flex; flex-direction: column; gap: 22px; }
+
+#rw .settings .eyebrow { margin: 0; }
+
+#rw .settings .plantitle { margin: 0 0 4px; }
+
+#rw .acard { display: flex; flex-direction: column; gap: 10px; }
+
+#rw .acard .ask { margin: 0; }
+
+#rw .aname { font-size: 19px; }
+
+#rw .field { display: flex; flex-direction: column; gap: 5px; }
+
+#rw .field input { width: 100%; max-width: 360px; }
+
+#rw input[type="password"] { font: inherit; font-size: 15px; color: var(--bone); background: var(--panel-2, #1c1c1c); border: 0; box-shadow: inset 0 0 0 1px var(--rule); padding: 9px 11px; min-width: 0; }
+
+#rw input[type="password"]:focus { outline: 2px solid var(--amber); outline-offset: 0; }
+
+#rw .srcdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--dim); }
+
+#rw .srcdot.s-lichess { background: #E8E6E0; box-shadow: 0 0 0 2px #555; }
+
+#rw .srcdot.s-chesscom { background: #81B64C; }
+
+#rw .accts { display: flex; flex-direction: column; gap: 1px; }
+
+#rw .acct { display: flex; align-items: center; gap: 12px; background: var(--panel); padding: 10px 14px; }
+
+#rw .hist { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+
+#rw .hist th { text-align: left; font-weight: 400; color: var(--dim); font-size: 12.5px; padding: 0 8px 6px 0; }
+
+#rw .hist td { padding: 6px 8px 6px 0; border-top: 1px solid var(--rule); white-space: nowrap; }
+
+#rw .hist td.dim { color: var(--dim); }
+
+#rw .hist .bar { display: inline-block; width: 46px; height: 5px; background: var(--rule); vertical-align: middle; margin-right: 6px; }
+
+#rw .hist .bar i { display: block; height: 100%; background: var(--sage); }
+
+#rw .linkcard { max-width: 640px; }
+
+#rw .review { border-left: 3px solid var(--amber); background: var(--panel); padding: 18px 20px; margin-top: 18px; }
+
+#rw .review h3 { margin: 0 0 8px; }
+
+#rw .review ul { margin: 6px 0 12px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.45; }
+
+#rw .review .good { color: var(--sage); }
+ #rw .review .bad { color: var(--rust); }
+
+#rw .acard p { margin: 0; }
+
+#rw .review h2 { font-size: 15px; font-weight: 600; margin: 12px 0 4px; }
 
 
 </style>
@@ -927,10 +1058,12 @@ body { color: var(--bone); font-family: var(--serif); font-size: 16px; line-heig
     <button role="tab" id="tab-drill" aria-selected="false">Drill<span class="count" id="count-drill"></span></button>
     <button role="tab" id="tab-games" aria-selected="false">Games</button>
     <button role="tab" id="tab-endgames" aria-selected="false">Endgames &amp; structures</button>
+    <button role="tab" id="tab-settings" aria-selected="false">Settings</button>
   </nav>
   <div id="rw">
     <div class="today" id="rw-today"></div>
     <div class="story" id="rw-story" hidden></div>
+    <div class="settings" id="rw-settings" hidden></div>
     <div class="grid" id="rw-grid">
       <div class="boardwrap"><div class="board" id="rw-board" aria-label="Board"></div><div class="evalbar" id="rw-evalbar" hidden aria-label="Evaluation"><i></i><span></span></div><div class="boardbar" id="rw-bar"></div></div>
       <div class="panel" id="rw-panel"></div>
@@ -1064,7 +1197,7 @@ function timeClass(tc) {
 // How the game ended, from chess.com's Termination header.
 function endKind(t) {
   t = (t || '').toLowerCase();
-  if (t.includes('on time')) return 'time';
+  if (t.includes('on time') || t.includes('time forfeit')) return 'time';
   if (t.includes('checkmate')) return 'mate';
   if (t.includes('resignation')) return 'resign';
   if (t.includes('abandon')) return 'abandon';
@@ -1090,12 +1223,16 @@ function importPgn(text, me, maxPly = 40) {
     if (!color) continue;
     const res = h.Result === '1-0' ? 1 : h.Result === '0-1' ? 0 : h.Result === '1/2-1/2' ? 0.5 : null;
     const score = res == null ? null : color === 'w' ? res : 1 - res;
+    const url = h.Link || (/^https?:\/\/lichess\.org\//.test(h.Site || '') ? h.Site : '');
+    let end = endKind(h.Termination);
+    // lichess says only "Normal": tell mate from resignation by the last move.
+    if (end === 'other' && /normal/i.test(h.Termination || '')) end = g.toks.some(t => t.includes('#')) ? 'mate' : res === 0.5 ? 'draw' : 'resign';
     const id = hashStr((h.Link || '') + (h.UTCDate || h.Date || '') + (h.UTCTime || h.StartTime || '') + h.White + h.Black + g.moves.join(' '));
     out.push({ id, me: color, opp: (color === 'w' ? h.Black : h.White) || '?',
       oppElo: +(color === 'w' ? h.BlackElo : h.WhiteElo) || null, myElo: +(color === 'w' ? h.WhiteElo : h.BlackElo) || null,
       date: (h.UTCDate || h.Date || '').replace(/\./g, '-'), time: h.UTCTime || h.StartTime || '',
-      tc: h.TimeControl || '', cls: timeClass(h.TimeControl), end: endKind(h.Termination), plies: g.plies,
-      opening: openingName(h), score, url: h.Link || '', moves: g.moves.join(' '), full: g.toks.length > g.moves.length ? g.toks.join(' ') : undefined });
+      tc: h.TimeControl || '', cls: timeClass(h.TimeControl), end, plies: g.plies, src: url.includes('lichess.org') ? 'lichess' : 'chesscom',
+      opening: openingName(h), score, url, moves: g.moves.join(' '), full: g.toks.length > g.moves.length ? g.toks.join(' ') : undefined });
   }
   return { me, games: out };
 }
@@ -1325,9 +1462,19 @@ function weekThemes(weak) {
   return WEEK.map(t => t === 'focus' ? f : t);
 }
 
+const THEMES = { fork: 'fork', hangingPiece: 'hanging piece', mate: 'checkmate', mateIn1: 'mate in 1', mateIn2: 'mate in 2', mateIn3: 'mate in 3', pin: 'pin', skewer: 'skewer', discoveredAttack: 'discovered attack', backRankMate: 'back-rank mate', trappedPiece: 'trapped piece', deflection: 'deflection', attraction: 'attraction', sacrifice: 'sacrifice', defensiveMove: 'defensive move', quietMove: 'quiet move', advancedPawn: 'advanced pawn', promotion: 'promotion', zugzwang: 'zugzwang', intermezzo: 'in-between move', clearance: 'clearance', interference: 'interference', xRayAttack: 'x-ray', capturingDefender: 'capture-the-defender', exposedKing: 'exposed king', kingsideAttack: 'kingside attack', queensideAttack: 'queenside attack', rookEndgame: 'rook endgame', pawnEndgame: 'pawn endgame', bishopEndgame: 'bishop endgame', knightEndgame: 'knight endgame', queenEndgame: 'queen endgame', endgame: 'endgame', opening: 'opening', middlegame: 'middlegame', doubleCheck: 'double check', enPassant: 'en passant', castling: 'castling', underPromotion: 'underpromotion', smotheredMate: 'smothered mate', anastasiaMate: 'Anastasia mate', arabianMate: 'Arabian mate', bodenMate: 'Boden mate', hookMate: 'hook mate', dovetailMate: 'dovetail mate', doubleBishopMate: 'double-bishop mate', killBoxMate: 'kill-box mate', vukovicMate: 'Vuković mate', attackingF2F7: 'f2/f7 attack' };
+const themeName = t => THEMES[t] || t.replace(/([A-Z])/g, ' $1').toLowerCase();
+// Too broad to practise on their own.
+const BROAD_THEMES = new Set(['short', 'long', 'veryLong', 'oneMove', 'crushing', 'advantage', 'equality', 'master', 'masterVsMaster', 'superGM', 'mix', 'middlegame', 'opening', 'endgame', 'mate', 'healthyMix', 'playerGames']);
+// Where each task sends you, per site.
+const SITE = {
+  chesscom: { name: 'chess.com', puzzles: 'https://www.chess.com/puzzles/rated', rush: 'https://www.chess.com/puzzles/rush', play: 'https://www.chess.com/play/online', archive: () => 'https://www.chess.com/games/archive' },
+  lichess: { name: 'lichess', puzzles: 'https://lichess.org/training', rush: 'https://lichess.org/storm', play: 'https://lichess.org/', archive: u => `https://lichess.org/@/${encodeURIComponent(u || '')}/all` },
+};
 // ctx: { date, profile, weak, gaps:{w,b}, ends:{w,b}, lines:{w,b}, due:{w,b}, eg:{wins}, settings:{mins, cls, rush}, recentLosses }
 function buildPlan(ctx) {
-  const { date, profile: p, weak, settings: st } = ctx;
+  const { date, profile: p, weak, settings: st } = ctx; const L = st.site === 'lichess';
+  const site = SITE[L ? 'lichess' : 'chesscom'];
   const mins = st.mins || 40;
   const cls = st.cls && st.cls !== 'auto' ? st.cls : (p ? p.main : 'rapid');
   const tier = tierFor(p && p.elo);
@@ -1338,11 +1485,14 @@ function buildPlan(ctx) {
   const top = weak[0];
   const why = key => (weak.find(w => w.key === key) || {}).text;
 
-  if (!ctx.gamesCount) add({ id: 'import', kind: 'setup', title: 'Bring in your chess.com games', mins: 3, why: 'The plan is generic until it has your games. Everything after this is tuned to how you actually lose.', action: { type: 'tab', tab: 'games' } });
+  if (!ctx.gamesCount) add({ id: 'import', kind: 'setup', title: `Bring in your ${site.name} games`, mins: 3, why: 'The plan is generic until it has your games. Everything after this is tuned to how you actually lose.', action: { type: 'tab', tab: 'games' } });
 
   // 1. Warm-up: every day.
   const nPuzzles = theme === 'tactics' && mins >= 60 ? 20 : tier.puzzles;
-  add({ id: 'puzzles', kind: 'tactics', title: `Solve ${nPuzzles} rated puzzles`, mins: nPuzzles, why: why('tactics') || 'A daily warm-up keeps pattern recognition sharp. Go for accuracy, not speed.', action: { type: 'url', url: 'https://www.chess.com/puzzles/rated' } });
+  const focus = L && ctx.focus && ctx.focus[0];
+  add({ id: 'puzzles', kind: 'tactics', title: `Solve ${focus ? Math.min(10, nPuzzles) : nPuzzles} rated puzzles`, mins: focus ? Math.min(10, nPuzzles) : nPuzzles, target: focus ? Math.min(10, nPuzzles) : nPuzzles, why: why('tactics') || 'A daily warm-up keeps pattern recognition sharp. Go for accuracy, not speed.', action: { type: 'url', url: site.puzzles } });
+  // Yesterday's review picks a theme: the tactic that cost a game, or the puzzles you keep missing.
+  if (focus) add({ id: 'theme', kind: 'tactics', title: `Practice 20 ${themeName(focus.theme)} puzzles`, mins: 15, target: 20, theme: focus.theme, why: focus.why, action: { type: 'url', url: `https://lichess.org/training/${focus.theme}` } });
 
   // 2. Openings: due drills, or starting a repertoire.
   for (const side of ['w', 'b']) {
@@ -1377,8 +1527,9 @@ function buildPlan(ctx) {
     if (!gapList.length && !(ctx.xgaps && ctx.xgaps.length)) add({ id: 'deepen', kind: 'openings', title: `Extend your main line to move ${tier.depth / 2 + 2}`, mins: 10, why: `At your level, aim to know your main lines to about move ${tier.depth / 2 + 2}. Add the most common replies one move deeper.`, action: { type: 'tab', tab: 'build' } });
     if (room() >= 10) add({ id: 'model', kind: 'openings', title: `Model line: ${RUNS[isoWeek(date) % RUNS.length]}`, mins: 10, why: 'Learn what to do after the opening: the plan behind the structure your lines lead to.', action: { type: 'run', name: RUNS[isoWeek(date) % RUNS.length] } });
   } else if (theme === 'tactics') {
-    add({ id: 'rush', kind: 'tactics', title: 'Puzzle Rush, 5 minutes', mins: 6, why: st.rush ? `Your best is ${st.rush}. Beat it, and stop at three misses rather than guessing.` : 'Set a baseline today, then try to beat it every tactics day.', action: { type: 'url', url: 'https://www.chess.com/puzzles/rush' } });
-    if (room() >= 15) add({ id: 'calc', kind: 'tactics', title: 'Three hard puzzles, slowly', mins: 15, why: 'Calculate the whole line before you touch a piece: checks, captures and threats for both sides. This builds the habit fast puzzles skip.', action: { type: 'url', url: 'https://www.chess.com/puzzles/rated' } });
+    const best = L ? st.storm : st.rush;
+    add({ id: 'rush', kind: 'tactics', title: L ? 'Puzzle Storm, 3 minutes' : 'Puzzle Rush, 5 minutes', mins: L ? 4 : 6, why: best ? `Your best is ${best}. Beat it, and ${L ? 'keep your combo going rather than guessing' : 'stop at three misses rather than guessing'}.` : 'Set a baseline today, then try to beat it every tactics day.', action: { type: 'url', url: site.rush } });
+    if (room() >= 15) add({ id: 'calc', kind: 'tactics', title: 'Three hard puzzles, slowly', mins: 15, why: 'Calculate the whole line before you touch a piece: checks, captures and threats for both sides. This builds the habit fast puzzles skip.', target: 3, action: { type: 'url', url: site.puzzles } });
   } else if (theme === 'endgames') {
     const wins = (ctx.eg && ctx.eg.wins) || {};
     const next = EG_CHAPTERS.find(([id, , need]) => (wins[id] || 0) < need) || EG_CHAPTERS[EG_CHAPTERS.length - 1];
@@ -1393,7 +1544,7 @@ function buildPlan(ctx) {
     losses.forEach((g, i) => add({ id: 'review-' + i, kind: 'review', title: `Review your loss to ${g.opp}`, mins: 10, url: g.url,
       why: `Find the move where the game turned. Was it the opening, a tactic, or the clock? Write one sentence about it. (${g.date}, ${g.plies ? Math.ceil(g.plies / 2) + ' moves' : ''}${g.end === 'time' ? ', lost on time' : ''})`,
       action: { type: 'review', id: g.id, url: g.url } }));
-    if (!losses.length) add({ id: 'review-x', kind: 'review', title: 'Review your last game', mins: 10, why: 'Find the move where the game turned, and write one sentence about it.', action: { type: 'url', url: 'https://www.chess.com/games/archive' } });
+    if (!losses.length) add({ id: 'review-x', kind: 'review', title: 'Review your last game', mins: 10, why: 'Find the move where the game turned, and write one sentence about it.', action: { type: 'url', url: site.archive(st.lichessUser) } });
     add({ id: 'import-week', kind: 'setup', title: 'Import this week’s games', mins: 3, why: 'Next week’s plan and gap report should see this week’s games.', action: { type: 'tab', tab: 'games' } });
     if (left() >= 10) add({ id: 'model', kind: 'openings', title: `Model line: ${RUNS[isoWeek(date) % RUNS.length]}`, mins: 10, why: 'An easier finish to the week: learn the plan behind a structure.', action: { type: 'run', name: RUNS[isoWeek(date) % RUNS.length] } });
   }
@@ -1407,7 +1558,7 @@ function buildPlan(ctx) {
       : theme === 'endgames' ? 'If it goes long, trade into an endgame you know instead of avoiding one.'
       : 'Afterwards, import the games so the gap report sees them.';
     const label = playKey === 'slow' ? 'rapid' : playKey;
-    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, target: n, cls: label, why: intent + (theme === 'play' ? ' After each loss, spend 3 minutes finding the move that lost it.' : ''), action: { type: 'url', url: 'https://www.chess.com/play/online' } });
+    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, target: n, cls: label, why: intent + (theme === 'play' ? ' After each loss, spend 3 minutes finding the move that lost it.' : ''), action: { type: 'url', url: site.play } });
   }
 
   const focusNote = {
@@ -1499,7 +1650,7 @@ function save(what) {
     const data = what === 'rep-w' ? { edges: repToEdges(S.rep.w), updated: Date.now() }
       : what === 'rep-b' ? { edges: repToEdges(S.rep.b), updated: Date.now() }
       : what === 'cards' ? { cards: S.cards, updated: Date.now() }
-      : { username: S.username, mins: S.settings.mins, cls: S.settings.cls, rush: S.settings.rush, engine: S.settings.engine !== false, lichessToken: S.settings.lichessToken || '' };
+      : { username: S.username, mins: S.settings.mins, cls: S.settings.cls, rush: S.settings.rush, engine: S.settings.engine !== false, lichessToken: S.settings.lichessToken || '', lichessUser: S.settings.lichessUser || '', site: S.settings.site || 'chesscom' };
     if (db) { try { await db.doc(DOCS[what]).set(data); } catch (e) { toast(e && e.code === 'quota_exceeded' ? 'Storage is full. Remove some imported games.' : 'Could not save that change. Check your connection.'); } }
     else LS.set(DOCS[what], data);
   }, 600);
@@ -1520,7 +1671,7 @@ async function clearGames() {
   S.games = []; refresh(); render(); toast('Imported games removed');
 }
 async function load() {
-  S.xgaps = { w: LS.get('xgaps-w'), b: LS.get('xgaps-b') };
+  S.xgaps = { w: LS.get('xgaps-w'), b: LS.get('xgaps-b') }; S.li = LS.get('li') || {};
   try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch { db = null; }
   const get = async p => { if (db) { const s = await db.doc(p).get(); return s.exists ? s.data() : null; } return LS.get(p); };
   try {
@@ -1528,7 +1679,7 @@ async function load() {
     S.rep.w = repFromEdges(w && w.edges); S.rep.b = repFromEdges(b && b.edges);
     S.cards = cards && cards.cards ? JSON.parse(JSON.stringify(cards.cards)) : {};
     S.username = (set && set.username) || '';
-    if (set) S.settings = { mins: set.mins || 40, cls: set.cls || 'auto', rush: set.rush || null, engine: set.engine !== false, lichessToken: set.lichessToken || '' };
+    if (set) S.settings = { mins: set.mins || 40, cls: set.cls || 'auto', rush: set.rush || null, engine: set.engine !== false, lichessToken: set.lichessToken || '', lichessUser: set.lichessUser || '', site: set.site || 'chesscom' };
     S.stats = await get('stats/main');
     const planDocs = db ? (await db.collection('plans').limit(120).get()).docs.map(d => [d.id, d.data()]) : Object.entries(LS.get('plans') || {});
     for (const [id, d] of planDocs) S.plans[id] = JSON.parse(JSON.stringify(d));
@@ -1545,6 +1696,9 @@ async function load() {
 let D = { idx: new Map(), gaps: { list: [], games: 0, avgBook: 0, early: 0 }, ends: [], lines: [], due: [] };
 const lineId = l => hashStr(S.side + ':' + l.join(' '));
 const depthTarget = () => tierFor(D.profile && D.profile.elo).depth;
+// Ratings differ between sites, so the profile reads the main site's games when there are enough.
+const srcOf = g => g.src || (g.url && g.url.includes('lichess.org') ? 'lichess' : 'chesscom');
+function myGames() { const site = onLichess() ? 'lichess' : 'chesscom'; const m = S.games.filter(g => srcOf(g) === site); return m.length >= 20 ? m : S.games; }
 function refresh() {
   const rep = S.rep[S.side];
   D.idx = gameIndex(S.games, S.side);
@@ -1553,9 +1707,9 @@ function refresh() {
   D.lines = allLines(rep);
   const now = Date.now();
   D.due = D.lines.filter(l => { const c = S.cards[lineId(l)]; return !c || c.due <= now; });
-  if (D.pKey !== S.games.length) {
-    D.pKey = S.games.length; D.profile = computeProfile(S.games);
-    D.recentLosses = S.games.filter(g => g.score === 0).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 5);
+  if (D.pKey !== S.games.length + String(onLichess())) {
+    D.pKey = S.games.length + String(onLichess()); const mg = myGames(); D.profile = computeProfile(mg);
+    D.recentLosses = mg.filter(g => g.score === 0).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 5);
   }
   D.gapsBoth = { w: analyzeGaps(S.rep.w, S.games, 'w', depthTarget()), b: analyzeGaps(S.rep.b, S.games, 'b', depthTarget()) };
   D.linesBoth = { w: S.side === 'w' ? D.lines.length : allLines(S.rep.w).length, b: S.side === 'b' ? D.lines.length : allLines(S.rep.b).length };
@@ -1773,11 +1927,11 @@ function renderGaps(panel, bar) {
 
 // ---------- Games ----------
 const MONTHS = 3;
-async function importText(text, user, quiet) {
+async function importText(text, user, quiet, src) {
   const { me, games } = importPgn(text, user);
   if (!games.length) return quiet ? null : toast(me ? `No games found for ${me}. Check the username.` : 'No games found in that text.');
   const have = new Set(S.games.map(g => g.id)); const fresh = games.filter(g => !have.has(g.id));
-  if (!S.username && me) { S.username = me; save('settings'); }
+  if (!S.username && me && src !== 'lichess') { S.username = me; save('settings'); }
   if (fresh.length) { try { await saveGames(fresh); } catch { return toast('Could not save the games. Try a smaller file.'); } }
   S.games.push(...fresh); refresh();
   const rec = S.plans[todayId()]; if (rec && rec.plan.tasks.some(t => t.id === 'import')) ensurePlan(true);
@@ -1785,58 +1939,112 @@ async function importText(text, user, quiet) {
   if (quiet && !fresh.length) return;
   toast(`Imported ${fresh.length} new game${fresh.length === 1 ? '' : 's'}${games.length > fresh.length ? `, ${games.length - fresh.length} were already here` : ''}`);
 }
+const ago = t => { if (!t) return 'never'; const m = Math.round((Date.now() - t) / 6e4); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; };
 function renderGames(panel, bar) {
   if (S.review) return renderReview(panel, bar);
-  const name = h('input', { type: 'text', id: 'rw-user', value: S.username, placeholder: 'chess.com username', 'aria-label': 'chess.com username', autocomplete: 'off' });
-  const links = h('div', { class: 'row' }); const status = h('p', { class: 'note' });
-  const drawLinks = () => {
-    links.replaceChildren(); const u = name.value.trim().toLowerCase(); if (!u) return;
-    const now = new Date();
-    for (let i = 0; i < 4; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      links.append(h('a', { class: 'btn quiet tiny', href: `https://api.chess.com/pub/player/${encodeURIComponent(u)}/games/${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/pgn`, target: '_blank', rel: 'noopener' }, d.toLocaleString('en', { month: 'short', year: 'numeric' })));
-    }
-  };
-  name.addEventListener('input', drawLinks);
-  name.addEventListener('change', () => { S.username = name.value.trim(); save('settings'); });
-  drawLinks();
-  const ta = h('textarea', { id: 'rw-pgn', placeholder: '[Event "Live Chess"]\n[White "you"] …\n\n1. e4 e5 2. Nf3 …' });
-  const file = h('input', { type: 'file', id: 'rw-file', accept: '.pgn,.txt', multiple: true });
-  file.addEventListener('change', async () => { let t = ''; for (const f of file.files) t += '\n\n' + await f.text(); ta.value = t.trim(); });
-  panel.append(h('section', { class: 'sec' },
-    h('h3', {}, 'Bring in your chess.com games'),
-    h('p', { class: 'ask' }, 'Enter your username and fetch. If chess.com can’t be reached from here, open a month below to download it as a .pgn file, then choose the files.'),
-    h('div', { class: 'row' }, name, h('button', { class: 'btn', onclick: async () => { const u = name.value.trim(); if (!u) return toast('Enter your chess.com username first'); S.username = u; save('settings'); status.textContent = 'Asking chess.com for your games…'; let t = null; try { t = await syncChessCom(u, { months: MONTHS }); } catch (e) { status.textContent = e.message === 'nouser' ? `chess.com has no player called ${u}.` : 'This page cannot reach chess.com directly. Use the hosted Chess Reps, or download your months with the links below and choose the files.'; } if (t != null) { status.textContent = ''; await importText(t, u); } } }, `Fetch last ${MONTHS} months`)),
-    status, links,
-    h('div', { style: 'margin:16px 0 8px' }, file), ta,
-    h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn', onclick: () => ta.value.trim() ? importText(ta.value, name.value.trim()) : toast('Choose a .pgn file or paste PGN first') }, 'Import'), h('span', { class: 'note' }, 'Only the first 20 moves of each game are kept.'))));
+  const accts = [S.settings.lichessUser && ['lichess', S.settings.lichessUser], S.username && ['chesscom', S.username]].filter(Boolean);
+  const top = h('section', { class: 'sec' });
+  if (!accts.length) top.append(h('h3', {}, 'Link your accounts'), h('p', { class: 'ask' }, 'Link lichess and chess.com in Settings and your games come in by themselves, with new ones added each time you open Chess Reps.'),
+    h('button', { class: 'btn', onclick: () => { S.tab = 'settings'; render(); } }, 'Open Settings'));
+  else {
+    const rows = h('div', { class: 'accts' });
+    for (const [src, u] of accts) { const n = S.games.filter(g => srcOf(g) === src).length;
+      rows.append(h('div', { class: 'acct' }, h('span', { class: 'srcdot s-' + src }), h('div', { style: 'flex:1;min-width:0' }, h('b', {}, u), h('div', { class: 'note' }, `${src === 'lichess' ? 'lichess' : 'chess.com'} · ${n} games · synced ${ago(src === 'lichess' ? S.li.fetched : S.lastSync)}`)))); }
+    top.append(h('h2', {}, 'Synced accounts'), rows, h('div', { class: 'row', style: 'margin-top:10px' },
+      h('button', { class: 'btn tiny', disabled: !!S.syncing, onclick: () => checkChessCom(false) }, S.syncing ? 'Syncing…' : 'Sync now'),
+      h('button', { class: 'btn quiet tiny', onclick: () => { S.tab = 'settings'; render(); } }, 'Manage accounts')));
+  }
+  panel.append(top);
 
-  const w = S.games.filter(g => g.me === 'w'), b = S.games.filter(g => g.me === 'b');
+  const f = S.gfilter || 'all'; const list = S.games.filter(g => f === 'all' || srcOf(g) === f);
+  const w = list.filter(g => g.me === 'w'), b = list.filter(g => g.me === 'b');
   const sc = arr => { const s = arr.filter(g => g.score != null); return pct(s.reduce((a, g) => a + g.score, 0), s.length); };
-  const sec = h('section', { class: 'sec' }, h('h2', {}, 'Your games'));
-  if (!S.games.length) sec.append(h('p', { class: 'empty' }, 'No games yet. Once they are in, Gaps ranks what you face most.'));
+  const sec = h('section', { class: 'sec' }, h('div', { class: 'row', style: 'justify-content:space-between;margin-bottom:10px' }, h('h2', { style: 'margin:0' }, 'Your games'),
+    S.games.some(g => srcOf(g) === 'lichess') && S.games.some(g => srcOf(g) === 'chesscom') ? h('div', { class: 'seg' }, [['all', 'All'], ['lichess', 'lichess'], ['chesscom', 'chess.com']].map(([v, l]) => h('button', { 'aria-pressed': String(f === v), onclick: () => { S.gfilter = v; render(); } }, l))) : null));
+  if (!list.length) sec.append(h('p', { class: 'empty' }, 'No games yet. Once they are in, Gaps ranks what you face most.'));
   else {
     sec.append(h('div', { class: 'stats' },
       h('div', { class: 'stat' }, h('b', {}, String(w.length)), h('span', {}, 'as White · scored ' + sc(w))),
       h('div', { class: 'stat' }, h('b', {}, String(b.length)), h('span', {}, 'as Black · scored ' + sc(b))),
-      h('div', { class: 'stat' }, h('b', {}, String(S.games.length)), h('span', {}, 'in total'))));
-    const ul = h('ul', { class: 'list', style: 'margin-top:12px' });
-    for (const g of S.games.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 12))
-      ul.append(h('li', { class: 'item' }, h('span', { class: 'tag ' + (g.score === 1 ? 'ok' : g.score === 0 ? 'gap' : 'dim') }, g.score === 1 ? 'won' : g.score === 0 ? 'lost' : 'drew'),
-        h('span', { class: 'meta', style: 'flex:1' }, `${sideName(g.me)} vs ${g.opp}${g.oppElo ? ' (' + g.oppElo + ')' : ''} · ${g.date} · ${g.moves.split(' ').slice(0, 6).join(' ')}…`),
+      h('div', { class: 'stat' }, h('b', {}, String(list.length)), h('span', {}, 'in total'))));
+    const ul = h('ul', { class: 'list', style: 'margin-top:12px' }); const shown = S.gshow || 25;
+    for (const g of list.slice().sort((a, b) => gameTime(b) - gameTime(a)).slice(0, shown))
+      ul.append(h('li', { class: 'item' }, h('span', { class: 'srcdot s-' + srcOf(g), title: srcOf(g) === 'lichess' ? 'lichess' : 'chess.com' }), h('span', { class: 'tag ' + (g.score === 1 ? 'ok' : g.score === 0 ? 'gap' : 'dim') }, g.score === 1 ? 'won' : g.score === 0 ? 'lost' : 'drew'),
+        h('span', { class: 'meta', style: 'flex:1' }, `${sideName(g.me)} vs ${g.opp}${g.oppElo ? ' (' + g.oppElo + ')' : ''} · ${g.cls} · ${g.date} · ${g.opening || ''}`),
         engineOk() ? h('button', { class: 'btn quiet tiny', onclick: () => startReview(g) }, 'Review') : null,
         g.url ? h('a', { href: g.url, target: '_blank', rel: 'noopener', class: 'note' }, 'open') : null));
-    const rm = h('div', { class: 'row', style: 'margin-top:12px' });
-    rm.append(h('button', { class: 'btn quiet tiny danger', onclick: () => rm.replaceChildren(h('span', { class: 'note' }, 'Remove every imported game?'), h('button', { class: 'btn tiny', onclick: clearGames }, 'Remove'), h('button', { class: 'btn quiet tiny', onclick: render }, 'Keep them')) }, 'Remove imported games…'));
-    sec.append(ul, rm);
+    sec.append(ul);
+    if (list.length > shown) sec.append(h('button', { class: 'btn quiet tiny', style: 'margin-top:10px', onclick: () => { S.gshow = shown + 50; render(); } }, `Show more (${list.length - shown} older)`));
   }
   panel.append(sec);
+  bar.append(h('span', { class: 'note' }, `${S.games.length} games loaded`));
+}
+
+// ---------- Settings ----------
+async function linkLichess(u, token) {
+  S.settings.lichessUser = u; if (token != null) { S.settings.lichessToken = token; XCACHE.clear(); } save('settings');
+  try { const t = await syncLichess(u); await importText(t, u, true, 'lichess'); refresh(); ensurePlan(true); return true; }
+  catch (e) { if (e.message === 'nouser') { S.settings.lichessUser = ''; save('settings'); toast(`lichess has no player called ${u}`); } else toast('Could not reach lichess just now. Try Sync in a minute.'); return false; }
+}
+function renderSettings() {
+  const box = $('#rw-settings'); box.replaceChildren();
+  box.append(h('p', { class: 'eyebrow' }, 'Settings'), h('h3', { class: 'plantitle' }, 'Your accounts and preferences'));
+  const field = (label, inp, extra) => h('label', { class: 'field' }, h('span', { class: 'note' }, label), inp, extra || null);
+
+  // lichess
+  const L = S.li || {}; const liU = S.settings.lichessUser;
+  const liName = h('input', { type: 'text', id: 'set-liuser', value: liU || '', placeholder: 'e.g. Jon-Fallow', autocomplete: 'off' });
+  const liTok = h('input', { type: 'password', id: 'set-litoken', value: S.settings.lichessToken || '', placeholder: 'lip_…', autocomplete: 'off' });
+  const tokState = !S.settings.lichessToken ? ['dim', 'No token yet: games and Storm sync, but puzzles cannot be read.'] : L.puzzleErr === 'scope' ? ['gap', 'This token cannot read puzzles. Create a new one with the link below.'] : L.tokenOk ? ['ok', 'Token works: your puzzles are read each sync.'] : ['dim', 'Token saved. It is checked on the next sync.'];
+  const li = h('section', { class: 'card acard' },
+    h('div', { class: 'cardhead' }, h('div', { class: 'row' }, h('span', { class: 'srcdot s-lichess' }), h('b', { class: 'aname' }, 'lichess')), h('span', { class: 'tag ' + (liU ? 'ok' : 'warn') }, liU ? 'Linked' : 'Needed for the daily plan')),
+    h('p', { class: 'ask' }, 'Your daily plan runs on lichess. It sets your puzzles, Puzzle Storm and games, then reads lichess to tick them off and keep your history.'),
+    field('Username', liName), field('API token', liTok, h('a', { class: 'note', href: LI_TOKEN_URL, target: '_blank', rel: 'noopener' }, 'Create a token with puzzle access ↗')),
+    h('p', { class: 'note' }, 'On lichess, keep “Read puzzle activity” ticked, press Create, and copy the token here. It is saved in this browser only.'),
+    liU ? h('p', { class: 'tag ' + tokState[0], style: 'white-space:normal' }, tokState[1]) : null,
+    liU ? h('p', { class: 'note' }, `${S.games.filter(g => srcOf(g) === 'lichess').length} games${L.puzzle ? ` · puzzle rating ${L.puzzle}` : ''}${L.storm ? ` · Storm best ${L.storm}` : ''} · synced ${ago(L.fetched)}`) : null,
+    h('div', { class: 'row', style: 'margin-top:12px' },
+      h('button', { class: 'btn', disabled: !!S.syncing, onclick: async () => { const u = liName.value.trim(); if (!u) return toast('Enter your lichess username'); S.syncing = true; renderSettings(); const ok = await linkLichess(u, liTok.value.trim()); S.syncing = false; render(); if (ok) toast('lichess linked and synced'); } }, S.syncing ? 'Syncing…' : liU ? 'Save and sync' : 'Link lichess'),
+      liU ? h('button', { class: 'btn quiet', onclick: () => { S.settings.lichessUser = ''; S.settings.lichessToken = ''; save('settings'); refresh(); render(); toast('lichess unlinked. Your games stay here.'); } }, 'Unlink') : null));
+
+  // chess.com
+  const ccName = h('input', { type: 'text', id: 'set-ccuser', value: S.username || '', placeholder: 'e.g. TechMate007', autocomplete: 'off' });
+  const cc = h('section', { class: 'card acard' },
+    h('div', { class: 'cardhead' }, h('div', { class: 'row' }, h('span', { class: 'srcdot s-chesscom' }), h('b', { class: 'aname' }, 'chess.com')), h('span', { class: 'tag ' + (S.username ? 'ok' : 'dim') }, S.username ? 'Linked' : 'Optional')),
+    h('p', { class: 'ask' }, 'Your chess.com games feed your story, gaps and openings. chess.com does not share puzzle history, so the plan’s puzzles run on lichess.'),
+    field('Username', ccName),
+    S.username ? h('p', { class: 'note' }, `${S.games.filter(g => srcOf(g) === 'chesscom').length} games${S.stats && S.stats.rush ? ` · Rush best ${S.stats.rush}` : ''} · synced ${ago(S.lastSync)}`) : null,
+    h('div', { class: 'row', style: 'margin-top:12px' },
+      h('button', { class: 'btn' + (S.username ? ' quiet' : ''), disabled: !!S.syncing, onclick: async () => { const u = ccName.value.trim(); if (!u) return toast('Enter your chess.com username'); S.username = u; save('settings'); S.syncing = true; renderSettings();
+        try { const t = await syncChessCom(u, { months: MONTHS }); await importText(t, u, true); toast('chess.com linked and synced'); } catch (e) { toast(e.message === 'nouser' ? `chess.com has no player called ${u}` : 'Could not reach chess.com just now'); }
+        S.syncing = false; render(); } }, S.username ? 'Save and sync' : 'Link chess.com'),
+      S.username ? h('button', { class: 'btn quiet', onclick: () => { S.username = ''; save('settings'); render(); toast('chess.com unlinked. Your games stay here.'); } }, 'Unlink') : null));
+  box.append(h('div', { class: 'cards' }, li, cc));
+
+  // Plan + engine
+  const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
+  const changed = () => { save('settings'); ensurePlan(true); render(); };
+  box.append(h('section', { class: 'sec setsec' }, h('h2', {}, 'Daily plan'),
+    setRow('Usual time', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
+    setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
+    setRow('Engine', [[true, 'On'], [false, 'Off']], S.settings.engine !== false, v => { S.settings.engine = v; save('settings'); render(); })));
+
+  // Data
   const restore = h('input', { type: 'file', id: 'rw-restore', accept: '.json', hidden: true });
   restore.addEventListener('change', () => restore.files[0] && importData(restore.files[0]));
-  if (!db) panel.append(h('section', { class: 'sec' }, h('h2', {}, 'Your data'),
-    h('p', { class: 'ask' }, 'Everything is saved in this browser. Keep a backup file so you can move to another device or recover after clearing your browser.'),
-    h('div', { class: 'row' }, h('button', { class: 'btn quiet', onclick: exportData }, 'Download a backup'), h('button', { class: 'btn quiet', onclick: () => restore.click() }, 'Restore from a backup'), restore)));
-  bar.append(h('span', { class: 'note' }, `${S.games.length} games loaded${S.lastSync ? ' · synced with chess.com' : ''}`));
+  const rm = h('div', { class: 'row' }, h('button', { class: 'btn quiet tiny danger', onclick: () => rm.replaceChildren(h('span', { class: 'note' }, 'Remove every imported game?'), h('button', { class: 'btn tiny', onclick: clearGames }, 'Remove'), h('button', { class: 'btn quiet tiny', onclick: render }, 'Keep them')) }, 'Remove all games…'));
+  const ta = h('textarea', { id: 'rw-pgn', placeholder: '[Event "Live Chess"]\n[White "you"] …\n\n1. e4 e5 2. Nf3 …' });
+  const file = h('input', { type: 'file', id: 'rw-file', accept: '.pgn,.txt', multiple: true });
+  file.addEventListener('change', async () => { let t = ''; for (const f of file.files) t += '\n\n' + await f.text(); ta.value = t.trim(); });
+  const who = h('input', { type: 'text', id: 'rw-user', value: S.username || S.settings.lichessUser || '', placeholder: 'your name in the file', autocomplete: 'off' });
+  box.append(h('section', { class: 'sec' }, h('h2', {}, 'Your data'),
+    h('p', { class: 'ask' }, 'Everything is saved in this browser, never on a server. Keep a backup file to move to another device or recover after clearing your browser.'),
+    h('div', { class: 'row' }, h('button', { class: 'btn quiet', onclick: exportData }, 'Download a backup'), h('button', { class: 'btn quiet', onclick: () => restore.click() }, 'Restore from a backup'), restore),
+    h('details', { class: 'sec', style: 'margin-top:18px' }, h('summary', {}, 'Import a PGN file by hand'),
+      h('p', { class: 'ask' }, 'For games from other sites or over-the-board. Linked accounts sync on their own.'),
+      field('Your name in the file', who), h('div', { style: 'margin:10px 0 8px' }, file), ta,
+      h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn', onclick: () => ta.value.trim() ? importText(ta.value, who.value.trim()) : toast('Choose a .pgn file or paste PGN first') }, 'Import'))),
+    h('div', { style: 'margin-top:14px' }, rm)));
 }
 
 // ---------- Drill (same rules as the model-line trainer) ----------
@@ -1942,8 +2150,16 @@ const todayId = () => ymd(new Date());
 function egProgress() { try { return JSON.parse(localStorage.getItem('endgame-reps-progress')) || {}; } catch { return {}; } }
 function planContext(date) {
   return { date, profile: D.profile, weak: D.weak, gaps: D.gapsBoth, ends: {}, lines: D.linesBoth, due: D.dueBoth, eg: egProgress(),
+    focus: lastFocus(date),
     xgaps: (S.xgaps.w || []).concat(S.xgaps.b || []).sort((a, b) => b.reach - a.reach),
-    settings: Object.assign({}, S.settings, { rush: (S.stats && S.stats.rush) || S.settings.rush }), gamesCount: S.games.length, recentLosses: D.recentLosses || [] };
+    settings: Object.assign({}, S.settings, { rush: (S.stats && S.stats.rush) || S.settings.rush, storm: S.li && S.li.storm, site: onLichess() ? 'lichess' : 'chesscom' }), gamesCount: S.games.length, recentLosses: D.recentLosses || [] };
+}
+// The theme yesterday's review chose; failing that, lichess's weakest theme this month.
+function lastFocus(date) {
+  const d = new Date(date);
+  for (let i = 1; i <= 3; i++) { d.setDate(d.getDate() - 1); const r = S.plans[ymd(d)]; if (r && r.review && r.review.focus && r.review.focus.length) return r.review.focus; }
+  const weak = ((S.li && S.li.themes) || []).filter(x => x.nb >= 8 && !BROAD_THEMES.has(x.theme)).sort((a, b) => a.first / a.nb - b.first / b.nb)[0];
+  return weak ? [{ theme: weak.theme, why: `On lichess you solve ${themeName(weak.theme)} puzzles ${Math.round(100 * weak.first / weak.nb)}% of the time on the first try, your lowest theme this month.` }] : [];
 }
 function ensurePlan(force) {
   const id = todayId(); const old = S.plans[id];
@@ -1968,6 +2184,13 @@ const dayStart = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return +d
 const gamesToday = () => S.games.filter(g => gameTime(g) >= dayStart()).sort((a, b) => gameTime(a) - gameTime(b));
 function autoDone(t, rec) {
   const start = dayStart(); const st = S.stats || {}; const base = rec.base || {};
+  if (onLichess()) {
+    const pz = liPuzzlesToday().length;
+    if (t.id === 'puzzles') return pz >= (t.target || 10);
+    if (t.id === 'theme') return liPuzzlesToday().filter(x => (x.themes || []).includes(t.theme)).length >= (t.target || 20);
+    if (t.id === 'calc') { const p = rec.plan.tasks.find(x => x.id === 'puzzles'); return pz >= ((p && p.target) || 0) + 3; }
+    if (t.id === 'rush') return !!(liStormToday() || (rec.results && rec.results.rush != null));
+  }
   if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
@@ -2012,6 +2235,9 @@ function seedRep(side) {
 const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Build it', endgame: 'Start chapter', run: 'Start' };
 const KIND_LABEL = { tactics: 'Tactics', openings: 'Openings', endgames: 'Endgames', play: 'Play', review: 'Review', setup: 'Setup' };
 
+const onLichess = () => !!(S.settings && S.settings.lichessUser);
+const liPuzzlesToday = () => (S.li && S.li.puzzlesToday && S.li.puzzlesToday.date === todayId()) ? S.li.puzzlesToday.list : [];
+const liStormToday = () => (S.li && S.li.stormToday && S.li.stormToday.date === todayId()) ? S.li.stormToday : null;
 // What chess.com says about a task today: games played, a new Rush best, a puzzle high.
 function taskResult(t, rec) {
   const st = S.stats || {}; const base = rec.base || {};
@@ -2021,7 +2247,16 @@ function taskResult(t, rec) {
     return h('ul', { class: 'tres' }, gs.map(g => h('li', { class: g.score === 1 ? 'w' : g.score === 0 ? 'l' : 'd' },
       `${RES[g.score]} as ${sideName(g.me)} vs ${g.opp}${g.oppElo ? ' (' + g.oppElo + ')' : ''} · ${g.cls}${g.myElo ? ' · you ' + g.myElo : ''}${g.opening ? ' · ' + g.opening : ''}`)));
   }
-  if (t.id === 'rush') {
+  if (onLichess() && (t.id === 'puzzles' || t.id === 'calc')) {
+    if (S.li.puzzleErr === 'scope' || S.li.puzzleErr === 'token') return t.id === 'puzzles' ? h('p', { class: 'tres-line' }, h('span', { class: 'note' }, 'To tick this from lichess, add a token with puzzle access: '), h('a', { class: 'note', href: LI_TOKEN_URL, target: '_blank', rel: 'noopener' }, 'create one'), h('span', { class: 'note' }, ', then paste it in Settings.')) : null;
+    const pz = liPuzzlesToday(); if (!pz.length || t.id === 'calc') return null;
+    const won = pz.filter(x => x.win).length; const avg = Math.round(pz.reduce((a, x) => a + (x.rating || 0), 0) / pz.length);
+    return h('p', { class: 'tres-line' + (won / pz.length >= 0.7 ? ' w' : '') }, `${pz.length} solved today, ${won} right (${Math.round(100 * won / pz.length)}%). Puzzles averaged ${avg}${S.li.puzzle ? `; your puzzle rating is ${S.li.puzzle}` : ''}.`);
+  }
+  if (t.id === 'theme' && onLichess()) { const pz = liPuzzlesToday().filter(x => (x.themes || []).includes(t.theme)); if (!pz.length) return null; const won = pz.filter(x => x.win).length;
+    return h('p', { class: 'tres-line' + (won / pz.length >= 0.7 ? ' w' : '') }, `${pz.length} ${themeName(t.theme)} puzzles so far, ${won} right.`); }
+  if (t.id === 'rush' && onLichess() && liStormToday()) { const s = liStormToday(); return h('p', { class: 'tres-line w' }, `Today’s best Storm: ${s.score} over ${s.runs} run${s.runs > 1 ? 's' : ''}${S.li.storm ? ` (all-time ${S.li.storm})` : ''}.`); }
+  if (t.id === 'rush' && !onLichess()) {
     if (base.rush != null && st.rush > base.rush) return h('p', { class: 'tres-line w' }, `New Puzzle Rush best: ${st.rush} (was ${base.rush || 'none'}).`);
     const r = rec.results || {};
     const inp = h('input', { type: 'text', inputmode: 'numeric', value: r.rush != null ? r.rush : '', placeholder: 'score', style: 'width:5em', 'aria-label': 'Your Puzzle Rush score today' });
@@ -2033,23 +2268,75 @@ function taskResult(t, rec) {
   return null;
 }
 const checkable = rec => rec.plan.tasks.some(t => ['play', 'rush', 'puzzles'].includes(t.id) && !isDone(rec, t));
+const LI_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=puzzle:read&description=Chess+Reps';
 async function checkChessCom(quiet) {
-  if (!S.username || S.syncing) return;
+  if (!(S.username || S.settings.lichessUser) || S.syncing) return;
   S.syncing = true; if (S.tab === 'today') renderToday();
-  const before = S.games.length;
+  const before = S.games.length; const failed = [];
   const rec = S.plans[todayId()]; const fixBase = () => { if (rec && !(rec.base && rec.base.rush != null) && S.stats) { rec.base = statBase(); savePlan(todayId()); } };
   fixBase();
-  try { const pgn = await syncChessCom(S.username, { months: before ? 1 : 3 }); fixBase();
-    await importText(pgn, S.username, true);
-    if (!quiet) toast(S.games.length > before ? `Found ${S.games.length - before} new game${S.games.length - before > 1 ? 's' : ''}` : 'No new games since the last check');
-  } catch { if (!quiet) toast('Could not reach chess.com just now'); }
+  if (S.username) try { const pgn = await syncChessCom(S.username, { months: S.games.some(g => srcOf(g) === 'chesscom') ? 1 : 3 }); fixBase(); await importText(pgn, S.username, true); } catch { failed.push('chess.com'); }
+  if (S.settings.lichessUser) try { const pgn = await syncLichess(S.settings.lichessUser); await importText(pgn, S.settings.lichessUser, true, 'lichess'); } catch { failed.push('lichess'); }
+  const n = S.games.length - before;
+  if (!quiet) toast(failed.length ? `Could not reach ${failed.join(' or ')} just now` : n ? `Found ${n} new game${n > 1 ? 's' : ''}` : 'No new games since the last check');
   S.syncing = false; render();
 }
 
+const engineReady = () => engineOk() && location.protocol !== 'file:';
+async function runDayReview(rec) {
+  S.reviewing = 'Reading your day…'; if (S.tab === 'today') renderToday();
+  try { rec.review = await dailyReview(rec, msg => { S.reviewing = msg; const e = $('#rw-revprog'); if (e) e.textContent = msg; }); savePlan(todayId()); }
+  catch { toast('The review did not finish. Try again.'); }
+  S.reviewing = null; if (S.tab === 'today') renderToday();
+}
+function reviewCard(rec, allDone) {
+  const R = rec.review;
+  if (!R) return h('section', { class: 'review' }, h('h3', {}, 'Your day in review'),
+    h('p', { class: 'ask' }, allDone ? 'Everything is done. The engine is going through your lost games now.' : 'When every task is ticked, Chess Reps reviews your day: what went well, why any game was lost, which puzzle themes you missed, and what tomorrow should train.'),
+    S.reviewing ? h('p', { class: 'note', id: 'rw-revprog' }, S.reviewing) : h('button', { class: 'btn quiet tiny', onclick: () => runDayReview(rec) }, allDone ? 'Review my day' : 'Review my day so far'));
+  return h('section', { class: 'review' }, h('h3', {}, 'Your day in review'),
+    R.good.length ? [h('h2', { class: 'good' }, 'Went well'), h('ul', {}, R.good.map(x => h('li', {}, x)))] : null,
+    R.bad.length || R.losses.length ? [h('h2', { class: 'bad' }, 'To work on'), h('ul', {}, R.bad.map(x => h('li', {}, x)), R.losses.map(l => h('li', {}, `Lost to ${l.g.opp}. ${l.text} `, l.i != null && engineOk() ? h('button', { class: 'btn quiet tiny', onclick: () => { startReview(l.g); setTimeout(() => { if (S.review) { S.review.idx = l.i; render(); } }, 50); } }, 'See it') : null)))] : null,
+    R.next ? h('p', { class: 'lede', style: 'margin:6px 0 0' }, R.next) : h('p', { class: 'note' }, 'Nothing stood out to drill tomorrow. The plan keeps its weekly rhythm.'),
+    h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn quiet tiny', disabled: !!S.reviewing, onclick: () => runDayReview(rec) }, S.reviewing ? 'Reviewing…' : 'Review again'), h('span', { class: 'note' }, `Reviewed ${ago(R.at)}`)));
+}
+// The last two weeks: plan done, puzzles, Storm, games.
+function historySection() {
+  const H = LS.get('li-days') || {}; const rows = []; const d = new Date();
+  for (let i = 0; i < 14; i++) {
+    const k = ymd(d); const r = S.plans[k]; const x = H[k] || {};
+    const gs = S.games.filter(g => ymd(new Date(gameTime(g))) === k);
+    if (r || x.puzzles || x.storm || gs.length) rows.push({ k, d: new Date(d), r, x, gs });
+    d.setDate(d.getDate() - 1);
+  }
+  if (!rows.length) return null;
+  const tb = h('tbody');
+  for (const { d, r, x, gs } of rows) tb.append(h('tr', {},
+    h('td', {}, d.toLocaleDateString('en', { weekday: 'short', day: 'numeric' })),
+    h('td', {}, r ? [h('span', { class: 'bar' }, h('i', { style: `width:${Math.round(100 * ratio(r))}%` })), Math.round(100 * ratio(r)) + '%'] : h('span', { class: 'note' }, '–')),
+    h('td', { class: x.puzzles ? '' : 'dim' }, x.puzzles ? `${x.puzzles} (${Math.round(100 * x.won / x.puzzles)}%)` : '–'),
+    h('td', { class: x.storm ? '' : 'dim' }, x.storm ? String(x.storm) : '–'),
+    h('td', { class: gs.length ? '' : 'dim' }, gs.length ? [['W', 1], ['L', 0], ['D', 0.5]].map(([l, v]) => [gs.filter(g => g.score === v).length, l]).filter(x => x[0]).map(x => x.join('')).join(' ') : '–')));
+  return h('section', { class: 'sec' }, h('h2', {}, 'Your last two weeks'),
+    h('table', { class: 'hist' }, h('thead', {}, h('tr', {}, ['Day', 'Plan', 'Puzzles', 'Storm', 'Games'].map(t => h('th', {}, t)))), tb));
+}
 function renderToday() {
   const box = $('#rw-today'); box.replaceChildren();
+  if (!onLichess()) {
+    const u = h('input', { type: 'text', id: 'today-liuser', placeholder: 'lichess username', autocomplete: 'off' });
+    const t = h('input', { type: 'password', id: 'today-litoken', placeholder: 'lichess token (lip_…)', autocomplete: 'off' });
+    box.append(h('section', { class: 'card acard linkcard' }, h('p', { class: 'eyebrow' }, 'Your daily plan'), h('h3', { class: 'plantitle' }, 'Link lichess to start'),
+      h('p', { class: 'ask' }, 'The plan gives you puzzles, Puzzle Storm and games each day, then reads lichess to tick them off, review your day and pick tomorrow’s focus. chess.com does not share puzzle history, so the plan runs on lichess.'),
+      h('label', { class: 'field' }, h('span', { class: 'note' }, 'Username'), u),
+      h('label', { class: 'field' }, h('span', { class: 'note' }, 'API token'), t, h('a', { class: 'note', href: LI_TOKEN_URL, target: '_blank', rel: 'noopener' }, 'Create one with puzzle access ↗')),
+      h('div', { class: 'row' }, h('button', { class: 'btn', disabled: !!S.syncing, onclick: async () => { if (!u.value.trim()) return toast('Enter your lichess username'); S.syncing = true; renderToday(); const ok = await linkLichess(u.value.trim(), t.value.trim()); S.syncing = false; render(); if (ok) toast('lichess linked. Here is your plan.'); } }, S.syncing ? 'Linking…' : 'Link lichess'),
+        h('button', { class: 'btn quiet', onclick: () => { S.tab = 'settings'; render(); } }, 'Open Settings'))));
+    return;
+  }
   const rec = S.plans[todayId()];
   if (!rec) { box.append(h('p', { class: 'empty' }, 'Building today’s plan…')); return; }
+  const allDone = rec.plan.tasks.every(t => isDone(rec, t));
+  if (allDone && !rec.review && !S.reviewing && engineReady()) runDayReview(rec);
   const P = rec.plan; const now = new Date();
   const doneN = P.tasks.filter(t => isDone(rec, t)).length;
   const left = h('div', { class: 'plan' });
@@ -2057,15 +2344,16 @@ function renderToday() {
     h('h3', { class: 'plantitle' }, P.title),
     h('p', { class: 'ask' }, P.note),
     h('div', { class: 'progress' }, h('span', {}, `${doneN} of ${P.tasks.length} done`), h('span', { class: 'note' }, `about ${P.total} minutes`), h('i', { style: `width:${Math.round(100 * doneN / Math.max(1, P.tasks.length))}%` })));
-  if (S.username && location.protocol !== 'file:') left.append(h('div', { class: 'row', style: 'margin:-4px 0 14px' },
-    h('button', { class: 'btn quiet tiny', disabled: !!S.syncing, onclick: () => checkChessCom(false) }, S.syncing ? 'Checking chess.com…' : 'Check chess.com for what I did'),
-    h('span', { class: 'note' }, 'Games, a new Puzzle Rush best and puzzle highs tick themselves.')));
+  const siteName = onLichess() ? 'lichess' : 'chess.com';
+  if ((S.username || S.settings.lichessUser) && location.protocol !== 'file:') left.append(h('div', { class: 'row', style: 'margin:-4px 0 14px' },
+    h('button', { class: 'btn quiet tiny', disabled: !!S.syncing, onclick: () => checkChessCom(false) }, S.syncing ? `Checking ${siteName}…` : `Check ${siteName} for what I did`),
+    h('span', { class: 'note' }, onLichess() ? 'Games, puzzles and Puzzle Storm tick themselves.' : 'Games, a new Puzzle Rush best and puzzle highs tick themselves.')));
   const ul = h('ol', { class: 'tasks' });
   P.tasks.forEach(t => {
     const done = isDone(rec, t); const auto = !(rec.done && rec.done[t.id]) && done;
     const asLink = t.action.type === 'url' || (t.action.type === 'review' && (!engineOk() || !S.games.find(g => g.id === t.action.id)) && t.action.url);
     const act = asLink
-      ? h('a', { class: 'btn tiny' + (done ? ' quiet' : ''), href: t.action.url, target: '_blank', rel: 'noopener' }, (t.url ? 'Open game' : 'Open on chess.com') + ' ↗')
+      ? h('a', { class: 'btn tiny' + (done ? ' quiet' : ''), href: t.action.url, target: '_blank', rel: 'noopener' }, (t.url ? 'Open game' : 'Open on ' + (t.action.url.includes('lichess') ? 'lichess' : 'chess.com')) + ' ↗')
       : h('button', { class: 'btn tiny' + (done ? ' quiet' : ''), onclick: () => runAction(t) }, ACTION_LABEL[t.action.type] || 'Go');
     ul.append(h('li', { class: 'task' + (done ? ' done' : '') },
       h('button', { class: 'tick', 'aria-pressed': String(done), 'aria-label': (done ? 'Mark not done: ' : 'Mark done: ') + t.title, disabled: auto, title: auto ? 'Ticked automatically' : '',
@@ -2077,13 +2365,13 @@ function renderToday() {
       h('div', { class: 'tact' }, act)));
   });
   left.append(ul);
+  left.append(reviewCard(rec, allDone));
 
   const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
   const changed = () => { save('settings'); ensurePlan(true); render(); };
   left.append(h('section', { class: 'sec setsec' }, h('h2', {}, 'Shape the plan'),
     setRow('Time today', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
     setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
-    (() => { const ti = h('input', { type: 'text', id: 'rw-lichess', value: S.settings.lichessToken || '', placeholder: 'lip_…', autocomplete: 'off', style: 'width:12em' }); ti.addEventListener('change', () => { S.settings.lichessToken = ti.value.trim(); XCACHE.clear(); save('settings'); }); return h('div', { class: 'setrow' }, h('span', { class: 'note' }, 'Lichess token'), ti, h('a', { class: 'note', href: 'https://lichess.org/account/oauth/token/create?description=Chess+Reps', target: '_blank', rel: 'noopener' }, 'Get one (free, no permissions needed)')); })(),
     h('div', { class: 'row' }, h('button', { class: 'btn quiet tiny', onclick: () => { ensurePlan(true); render(); toast('Plan rebuilt from your latest data'); } }, 'Rebuild today’s plan'),
       h('span', { class: 'note' }, 'Rebuilding keeps what you have ticked.'))));
 
@@ -2097,8 +2385,10 @@ function renderToday() {
     const th = r ? r.plan.theme : themes[i];
     strip.append(h('div', { class: 'wday s-' + state + (i === wd ? ' now' : '') }, h('b', {}, d.toLocaleDateString('en', { weekday: 'short' })), h('span', {}, (THEME[th] || '').replace(' day', '').replace('Slow chess', 'Slow'))));
   }
+  const histSec = historySection(); 
   right.append(h('section', { class: 'sec' }, h('div', { class: 'streak' }, h('b', {}, String(st)), h('span', {}, st === 1 ? 'day in a row' : 'days in a row')), h('p', { class: 'note' }, 'A day counts when you finish at least 60% of its plan.'), strip));
 
+  if (histSec) right.append(histSec);
   const p = D.profile; const sec = h('section', { class: 'sec' }, h('h2', {}, 'What your games say'));
   if (!p) {
     sec.append(h('p', { class: 'empty' }, `No games yet. Import ${S.username || 'your'} games and this fills in: ratings, how you lose, and what to work on first.`), h('button', { class: 'btn tiny', onclick: () => { S.tab = 'games'; render(); } }, 'Import games'));
@@ -2108,7 +2398,8 @@ function renderToday() {
       rows.append(h('div', { class: 'rating' + (k === p.main ? ' main' : '') }, h('span', { class: 'note' }, k), h('b', {}, c.last ? String(c.last) : '–'),
         h('span', { class: 'trend ' + (c.trend > 0 ? 'up' : c.trend < 0 ? 'down' : '') }, c.trend ? (c.trend > 0 ? '+' : '−') + Math.abs(c.trend) : '±0'), h('span', { class: 'note' }, `${c.recent} games · scored ${pc(c.score)}`)));
     }
-    if (S.stats && S.stats.tactics) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.stats.tactics)), h('span'), h('span', { class: 'note' }, 'tactics rating')));
+    if (onLichess() && S.li.puzzle) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.li.puzzle)), h('span'), h('span', { class: 'note' }, S.li.storm ? `lichess puzzles · Storm best ${S.li.storm}` : 'lichess puzzles')));
+    else if (S.stats && S.stats.tactics) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.stats.tactics)), h('span'), h('span', { class: 'note' }, 'tactics rating')));
     sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} games. Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
     const wl = h('ul', { class: 'list weak' });
     const NAMES = { time: 'The clock', tactics: 'Tactics', endgames: 'Endgames', openings: 'Openings', tilt: 'Playing on tilt' };
@@ -2122,7 +2413,7 @@ function renderToday() {
       sec.append(h('h2', { style: 'margin-top:18px' }, 'Your most played openings'), ol);
     }
   }
-  if (!(S.stats && S.stats.rush)) {
+  if (!onLichess() && !(S.stats && S.stats.rush)) {
     const inp = h('input', { type: 'text', id: 'rw-rush', inputmode: 'numeric', value: S.settings.rush || '', placeholder: 'e.g. 24', style: 'width:6em' });
     inp.addEventListener('change', () => { S.settings.rush = +inp.value || null; save('settings'); });
     sec.append(h('div', { class: 'row', style: 'margin-top:16px' }, h('label', { class: 'note', for: 'rw-rush' }, 'Your Puzzle Rush best'), inp));
@@ -2430,8 +2721,52 @@ async function syncChessCom(user, { months = 3, quiet = false } = {}) {
   S.lastSync = Date.now(); LS.set('lastSync', S.lastSync);
   return pgn;
 }
+// ---------- lichess sync: games, ratings, today's puzzles and Puzzle Storm ----------
+const liHistory = () => LS.get('li-days') || {};
+const liHeaders = () => S.settings.lichessToken ? { Authorization: 'Bearer ' + S.settings.lichessToken } : {};
+async function syncLichess(user) {
+  const u = encodeURIComponent(user);
+  const mine = S.games.filter(g => g.src === 'lichess'); const last = mine.length ? Math.max(...mine.map(gameTime)) : 0;
+  const since = last ? last + 1000 : Date.now() - 90 * 864e5;
+  const r = await fetch(`https://lichess.org/api/games/user/${u}?since=${since}&max=500&opening=true&clocks=false&evals=false`, { headers: Object.assign({ Accept: 'application/x-chess-pgn' }, liHeaders()) });
+  if (r.status === 404) throw new Error('nouser');
+  if (!r.ok) throw new Error('http');
+  const pgn = await r.text();
+  const L = S.li = S.li || {};
+  try {
+    const j = await (await fetch(`https://lichess.org/api/user/${u}`)).json(); const pf = j.perfs || {};
+    L.puzzle = pf.puzzle && pf.puzzle.rating; L.storm = pf.storm && pf.storm.score;
+    L.ratings = Object.fromEntries(['bullet', 'blitz', 'rapid', 'classical'].map(k => [k, pf[k] && pf[k].rating]));
+  } catch {}
+  try {
+    const d = await (await fetch(`https://lichess.org/api/storm/dashboard/${u}?days=30`)).json();
+    const now = new Date(); const ids = [`${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`, `${now.getUTCFullYear()}/${now.getUTCMonth() + 1}/${now.getUTCDate()}`];
+    const day = (d.days || []).find(x => ids.includes(x._id));
+    const H = liHistory(); for (const x of d.days || []) { const [y, m, dd] = x._id.split('/'); const k = `${y}-${m.padStart(2, '0')}-${dd.padStart(2, '0')}`; H[k] = Object.assign(H[k] || {}, { storm: x.score, stormRuns: x.runs }); } LS.set('li-days', H);
+    L.stormToday = day ? { runs: day.runs, score: day.score, date: todayId() } : null; L.storm = Math.max(L.storm || 0, (d.high && d.high.allTime) || 0) || L.storm;
+  } catch {}
+  L.puzzleErr = null;
+  if (S.settings.lichessToken) {
+    try {
+      const H = liHistory(); const since = L.puzzlesSynced ? Math.min(dayStart(), L.puzzlesSynced - 864e5) : Date.now() - 30 * 864e5;
+      const pr = await fetch(`https://lichess.org/api/puzzle/activity?since=${since}&max=2000`, { headers: liHeaders() });
+      if (pr.status === 401 || pr.status === 403) L.puzzleErr = 'scope';
+      else if (pr.ok) {
+        const all = (await pr.text()).split('\n').filter(Boolean).map(x => { try { const o = JSON.parse(x); return { win: o.win, rating: o.puzzle && o.puzzle.rating, at: o.date, themes: (o.puzzle && o.puzzle.themes) || [] }; } catch { return null; } }).filter(Boolean);
+        L.puzzlesToday = { date: todayId(), list: all.filter(x => x.at >= dayStart()) };
+        const by = {}; for (const x of all) { const k = ymd(new Date(x.at)); (by[k] = by[k] || []).push(x); }
+        for (const [k, xs] of Object.entries(by)) H[k] = Object.assign(H[k] || {}, { puzzles: xs.length, won: xs.filter(x => x.win).length, prating: Math.round(xs.reduce((a, x) => a + (x.rating || 0), 0) / xs.length) });
+        LS.set('li-days', H); L.puzzlesSynced = Date.now(); L.tokenOk = true;
+        try { const db = await (await fetch('https://lichess.org/api/puzzle/dashboard/30', { headers: liHeaders() })).json();
+          L.themes = Object.entries(db.themes || {}).map(([k, v]) => ({ theme: k, nb: v.results.nb, first: v.results.firstWins, perf: v.results.performance })); } catch {}
+      }
+    } catch {}
+  } else L.puzzleErr = 'token';
+  L.fetched = Date.now(); LS.set('li', L);
+  return pgn;
+}
 async function autoSync() {
-  if (!S.username || location.protocol === 'file:' || S.syncing) return;
+  if (!(S.username || S.settings.lichessUser) || location.protocol === 'file:' || S.syncing) return;
   // Check often while today's plan still has games or puzzles to see; otherwise every few hours.
   const rec = S.plans[todayId()]; const gap = rec && checkable(rec) ? 10 * 60e3 : 3 * 3600e3;
   const last = LS.get('lastSync') || 0; if (Date.now() - last < gap) return;
@@ -2543,7 +2878,7 @@ function mistakeKinds(reviews) {
     opening: { label: 'Going wrong in the opening', n: 0, cost: 0, ex: null, tip: 'These come before move 12. Your repertoire and the Gaps tab are where to fix them.' },
     endgame: { label: 'Slipping in the endgame', n: 0, cost: 0, ex: null, tip: 'These come after move 40, with few pieces left. The endgame chapters train exactly this.' },
     plan: { label: 'Drifting without a plan', n: 0, cost: 0, ex: null, tip: 'Quiet mistakes in the middlegame. When unsure, improve your worst piece; the structures quiz helps here.' } };
-  let games = 0, moves = 0, lossSum = 0;
+  let games = 0, moves = 0, lossSum = 0; const breaks = [];
   for (const R of reviews) {
     games++; const ms = reviewMistakes(R);
     for (let i = (R.g.me === 'w' ? 0 : 1); i < R.sans.length; i += 2) if (R.evals[i] != null && R.evals[i + 1] != null) { moves++; const s = R.g.me === 'w' ? 1 : -1; lossSum += Math.max(0, Math.min(500, s * clampE(R.evals[i]) - s * clampE(R.evals[i + 1]))); }
@@ -2552,11 +2887,26 @@ function mistakeKinds(reviews) {
       const theirBest = R.best[m.i + 1] || ''; const myBest = m.best || '';
       const k = m.i < 24 ? 'opening' : m.i >= 80 ? 'endgame' : /x|\+/.test(theirBest) ? 'hang' : /x|\+/.test(myBest) ? 'miss' : 'plan';
       kinds[k].n++; kinds[k].cost += m.loss;
+      breaks.push({ g: R.g, i: m.i, san: m.san, best: m.best, loss: m.loss, before: m.before, after: m.after, kind: k, sans: R.sans });
       if (!kinds[k].ex || m.loss > kinds[k].ex.loss) kinds[k].ex = { g: R.g, i: m.i, san: m.san, best: m.best, loss: m.loss };
     }
   }
   const list = Object.values(kinds).filter(k => k.n).sort((a, b) => b.cost - a.cost);
-  return { games, acpl: moves ? Math.round(lossSum / moves) : null, list };
+  const acpl = moves ? Math.round(lossSum / moves) : null;
+  return { games, acpl, accuracy: acpl == null ? null : Math.round(Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * acpl) - 3.1669))), list, breaks: breaks.sort((a, b) => b.loss - a.loss) };
+}
+// Winning chances from a centipawn score, the curve lichess uses.
+const winPct = cp => Math.round(50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1));
+const moveLabel = (i, san) => `${Math.floor(i / 2) + 1}${i % 2 ? '…' : '.'} ${san}`;
+function miniBoard(fen, flip, hl) {
+  const c = new Chess(fen); const b = h('div', { class: 'miniboard', 'aria-label': 'Position before the move' });
+  const files = 'abcdefgh';
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+    const rank = flip ? r + 1 : 8 - r, file = flip ? 7 - f : f; const sq = files[file] + rank;
+    const d = h('div', { class: 'msq ' + ((rank + file) % 2 ? 'dark' : 'light') + (hl && hl.includes(sq) ? ' hl' : '') });
+    const p = c.get(sq); if (p) d.append(pieceEl(p)); b.append(d);
+  }
+  return b;
 }
 function storedReviews() {
   const out = [];
@@ -2565,24 +2915,90 @@ function storedReviews() {
     if (c.evals.length === sans.length + 1) out.push({ g, sans, evals: c.evals, best: c.best || [] }); }
   return out;
 }
-async function deepScan(n, onProgress) {
-  const pick = S.games.filter(g => g.full).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, n);
-  let k = 0; S.batch = true;
-  for (const g of pick) {
-    k++; onProgress(k, pick.length);
-    if (LS.get('review:' + g.id)) continue;
-    const sans = []; const c = new Chess(); for (const s of fullMoves(g)) { const m = c.move(s, { sloppy: true }); if (!m) break; sans.push(m.san); }
-    const evals = [], best = []; const cc = new Chess(); let ok = true;
-    for (let i = 0; i <= sans.length; i++) {
-      const a = await analyze(cc.fen(), { depth: 10 }); if (a.cancelled) { ok = false; break; }
-      evals[i] = cc.game_over() ? (cc.in_checkmate() ? (cc.turn() === 'w' ? -10000 : 10000) : 0) : evalNum(a.lines[0]);
-      best[i] = a.best ? pvToSan(cc.fen(), [a.best], 1)[0] : null;
-      if (i < sans.length) cc.move(sans[i]);
-    }
-    if (!ok) break;
-    LS.set('review:' + g.id, { evals, best });
+// Engine-check one game at depth 10 and cache it, as the Games review does.
+async function scanGame(g) {
+  const hit = LS.get('review:' + g.id); if (hit && hit.evals) return hit;
+  const sans = []; const c = new Chess(); for (const s of fullMoves(g)) { const m = c.move(s, { sloppy: true }); if (!m) break; sans.push(m.san); }
+  const evals = [], best = []; const cc = new Chess();
+  for (let i = 0; i <= sans.length; i++) {
+    const a = await analyze(cc.fen(), { depth: 10 }); if (a.cancelled) return null;
+    evals[i] = cc.game_over() ? (cc.in_checkmate() ? (cc.turn() === 'w' ? -10000 : 10000) : 0) : evalNum(a.lines[0]);
+    best[i] = a.best ? pvToSan(cc.fen(), [a.best], 1)[0] : null;
+    if (i < sans.length) cc.move(sans[i]);
   }
+  const out = { evals, best }; LS.set('review:' + g.id, out); return out;
+}
+async function deepScan(n, onProgress) {
+  const pick = myGames().filter(g => g.full).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, n);
+  let k = 0; S.batch = true;
+  for (const g of pick) { k++; onProgress(k, pick.length); if (!(await scanGame(g))) break; }
   S.batch = false;
+}
+
+// ---------- Why a game was lost: the tactic behind the worst move ----------
+const VAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 100 };
+// After `san` is played from `fen`, does the moved piece hit two or more valuable targets?
+function forkAfter(fen, san) {
+  const c = new Chess(fen); const m = c.move(san, { sloppy: true }); if (!m) return false;
+  const f = c.fen().split(' '); f[1] = m.color; f[3] = '-'; const t = new Chess(f.join(' '));
+  const hits = t.moves({ square: m.to, verbose: true }).filter(x => x.captured && VAL[x.captured] >= 3);
+  return hits.length + (c.in_check() && !hits.some(x => x.captured === 'k') ? 1 : 0) >= 2;
+}
+function motifOf(R, m) {
+  const c = new Chess(); for (const s of R.sans.slice(0, m.i)) c.move(s);
+  const pre = c.fen(); c.move(R.sans[m.i]); const post = c.fen();
+  const them = R.best[m.i + 1]; const mine = m.best; const no = Math.floor(m.i / 2) + 1;
+  const sgn = R.g.me === 'w' ? 1 : -1; const after = R.evals[m.i + 1] != null ? sgn * R.evals[m.i + 1] : 0;
+  if (after <= -5000 && them) return { theme: 'mate', text: `On move ${no}, ${m.san} walked into a mating attack starting with ${them}.` };
+  if (them && forkAfter(post, them)) return { theme: 'fork', text: `On move ${no}, ${m.san} allowed ${them}, a fork that won material.` };
+  if (them && them.includes('x')) { const cc = new Chess(post); const mv = cc.move(them, { sloppy: true }); if (mv && mv.captured && VAL[mv.captured] >= 3) return { theme: 'hangingPiece', text: `On move ${no}, ${m.san} left your ${({ n: 'knight', b: 'bishop', r: 'rook', q: 'queen' })[mv.captured]} loose and ${them} took it.` }; }
+  if (mine && forkAfter(pre, mine)) return { theme: 'fork', text: `On move ${no} you had ${mine}, a fork, and played ${m.san} instead.` };
+  if (mine && mine.includes('x')) return { theme: 'hangingPiece', text: `On move ${no}, ${mine} won free material; you played ${m.san}.` };
+  if (them && them.includes('+')) return { theme: 'exposedKing', text: `On move ${no}, ${m.san} opened your king to ${them}.` };
+  if (m.i >= 80) return { theme: 'endgame', text: `On move ${no}, ${m.san} let the endgame slip; ${mine || 'another move'} held it.` };
+  return { theme: 'defensiveMove', text: `On move ${no}, ${m.san} missed the threat behind ${them || 'their reply'}. ${mine ? mine + ' was the move.' : ''}` };
+}
+
+// ---------- End of day review ----------
+async function dailyReview(rec, onProgress) {
+  const out = { good: [], bad: [], losses: [], focus: [], at: Date.now() }; const dayName = new Date().toLocaleDateString('en', { weekday: 'long' });
+  const today = gamesToday(); const lost = today.filter(g => g.score === 0), won = today.filter(g => g.score === 1);
+  const done = rec.plan.tasks.filter(t => isDone(rec, t)).length;
+  out.good.push(`You finished ${done} of ${rec.plan.tasks.length} tasks.`);
+  if (won.length) out.good.push(`You won ${won.length} game${won.length > 1 ? 's' : ''}: ${won.map(g => 'against ' + g.opp + (g.oppElo ? ` (${g.oppElo})` : '')).join(', ')}.`);
+  const score = {}; const bump = (t, w, why) => { if (!t || BROAD_THEMES.has(t) && t !== 'mate' && t !== 'endgame') return; const e = score[t] = score[t] || { theme: t, w: 0, why }; e.w += w; if (!e.why) e.why = why; };
+  // Lost games: what went wrong, by engine.
+  if (engineOk()) {
+    S.batch = true; let k = 0;
+    for (const g of lost) {
+      k++; onProgress && onProgress(`Engine checking your loss to ${g.opp} (${k} of ${lost.length})…`);
+      const sc = await scanGame(g); if (!sc) continue;
+      const sans = []; const c = new Chess(); for (const s of fullMoves(g)) { const m = c.move(s, { sloppy: true }); if (!m) break; sans.push(m.san); }
+      if (sc.evals.length !== sans.length + 1) continue;
+      const R = { g, sans, evals: sc.evals, best: sc.best }; const ms = reviewMistakes(R).filter(m => m.loss >= 150).sort((a, b) => b.loss - a.loss);
+      if (!ms.length) { out.losses.push({ g, text: `No single big mistake against ${g.opp}: the game slipped away bit by bit${g.end === 'time' ? ', and ended on time' : ''}.` }); if (g.end === 'time') out.bad.push(`Lost on time to ${g.opp}.`); continue; }
+      const mo = motifOf(R, ms[0]);
+      out.losses.push({ g, i: ms[0].i, theme: mo.theme, text: mo.text });
+      bump(mo.theme, 3, `You lost to ${g.opp} on ${dayName}: ${mo.text}`);
+    }
+    S.batch = false;
+  } else if (lost.length) out.bad.push(`You lost ${lost.length} game${lost.length > 1 ? 's' : ''}. Open the hosted Chess Reps to have the engine explain why.`);
+  // Puzzles: which themes you missed.
+  const pz = liPuzzlesToday();
+  if (pz.length) {
+    const won = pz.filter(x => x.win).length; (won / pz.length >= 0.75 ? out.good : out.bad).push(`Puzzles: ${won} of ${pz.length} right (${Math.round(100 * won / pz.length)}%).`);
+    const miss = {}; for (const x of pz.filter(x => !x.win)) for (const t of x.themes || []) if (!BROAD_THEMES.has(t)) miss[t] = (miss[t] || 0) + 1;
+    const top = Object.entries(miss).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    if (top.length) out.bad.push(`Missed puzzle themes: ${top.map(([t, n]) => `${themeName(t)} (${n})`).join(', ')}.`);
+    for (const [t, n] of top) if (n >= 2) bump(t, n, `You missed ${n} ${themeName(t)} puzzles on ${dayName}.`);
+  }
+  const st = liStormToday(); if (st) out.good.push(`Puzzle Storm: ${st.score}${S.li.storm && st.score >= S.li.storm ? ', a new best' : ''}.`);
+  // lichess's own dashboard: your weakest theme over 30 days.
+  const weak = (S.li.themes || []).filter(x => x.nb >= 8 && !BROAD_THEMES.has(x.theme)).sort((a, b) => a.first / a.nb - b.first / b.nb)[0];
+  if (weak) bump(weak.theme, 2, `On lichess you solve ${themeName(weak.theme)} puzzles ${Math.round(100 * weak.first / weak.nb)}% of the time on the first try, your lowest theme this month.`);
+  out.focus = Object.values(score).sort((a, b) => b.w - a.w).slice(0, 2).map(x => ({ theme: x.theme, why: x.why }));
+  if (out.focus[0]) out.next = `Tomorrow: 20 ${themeName(out.focus[0].theme)} puzzles. ${out.focus[0].why}`;
+  return out;
 }
 
 function ratingSeries(games, cls) {
@@ -2608,7 +3024,7 @@ function whenYouPlay(games) {
 
 function renderStory() {
   const box = $('#rw-story'); box.replaceChildren();
-  const games = S.games; const p = D.profile;
+  const games = myGames(); const p = D.profile;
   if (!p || games.length < 20) {
     box.append(h('section', { class: 'story-hero' }, h('p', { class: 'eyebrow' }, 'Your chess story'), h('h3', { class: 'big' }, 'Every player has a story. Yours needs games.'),
       h('p', { class: 'ask' }, `Import at least 20 games and this page tells it: which legend you play like, your Reps Score, your rating journey, the openings you live by, and the mistake that costs you the most.${games.length ? ` You have ${games.length} so far.` : ''}`),
@@ -2622,28 +3038,80 @@ function renderStory() {
   const upset = pool.filter(g => g.score === 1 && g.oppElo && g.myElo).sort((a, b) => (b.oppElo - b.myElo) - (a.oppElo - a.myElo))[0];
   let best = 0, run = 0; for (const g of games.slice().sort((a, b) => gameTime(a) - gameTime(b))) { run = g.score === 1 ? run + 1 : 0; best = Math.max(best, run); }
 
-  // Hero
-  box.append(h('section', { class: 'story-hero' },
-    h('p', { class: 'eyebrow' }, `The story of ${who}`),
-    h('h3', { class: 'big' }, 'You play like ', h('em', {}, M.first.name)),
+  const site = onLichess() ? 'lichess' : 'chess.com';
+  const R = mistakeKinds(storedReviews().filter(r => pool.includes(r.g)));
+  const W = pool.filter(g => g.score === 1).length, Dn = pool.filter(g => g.score === 0.5).length, Ls = pool.filter(g => g.score === 0).length;
+  const N = Math.max(1, W + Dn + Ls);
+  const CH = ['Chapter one', 'Chapter two', 'Chapter three', 'Chapter four', 'Chapter five', 'Chapter six']; let chi = 0; const chno = () => h('p', { class: 'chno' }, CH[chi++]);
+  const scanBtn = (label, cls) => engineOk() ? h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: cls || 'btn', disabled: !!S.batch, onclick: async () => {
+    await deepScan(15, (k, n) => { const e = $('#rw-deep'); if (e) e.textContent = `Engine checking game ${k} of ${n}…`; }); render(); } }, label), h('span', { class: 'note', id: 'rw-deep' })) : h('p', { class: 'note' }, 'The engine scan runs on the hosted version of Chess Reps.');
+
+  // The report card
+  box.append(h('section', { class: 'report' },
+    h('p', { class: 'eyebrow' }, 'Your chess report'),
+    h('h3', { class: 'rname' }, onLichess() ? S.settings.lichessUser : who),
+    h('p', { class: 'rsub' }, `${site} · ${main}${now ? ' ' + now : ''}`),
+    h('p', { class: 'chip' }, 'You play like ', h('b', {}, M.first.name)),
+    h('div', { class: 'rstats' },
+      h('div', {}, h('b', {}, String(RS.total)), h('span', {}, 'Reps Score')),
+      h('div', {}, h('b', {}, R.accuracy != null ? R.accuracy + '%' : '–'), h('span', {}, R.accuracy != null ? `accuracy · ${R.games} games` : 'accuracy · scan below')),
+      h('div', {}, h('b', {}, peak ? String(peak) : '–'), h('span', {}, 'peak ' + main)),
+      h('div', {}, h('b', {}, String(pool.length)), h('span', {}, 'games'))),
+    h('div', { class: 'wdl', role: 'img', 'aria-label': `${W} won, ${Dn} drawn, ${Ls} lost` }, h('i', { class: 'w', style: `width:${100 * W / N}%` }), h('i', { class: 'd', style: `width:${100 * Dn / N}%` }), h('i', { class: 'l', style: `width:${100 * Ls / N}%` })),
+    h('div', { class: 'wdlnums' }, h('span', {}, `${W} won`), h('span', {}, `${Dn} drawn`), h('span', {}, `${Ls} lost`))));
+
+  // What costs you, and where a game broke
+  const cards = h('div', { class: 'cards' });
+  const cost = h('section', { class: 'card' }, h('div', { class: 'cardhead' }, h('p', { class: 'eyebrow bad' }, 'What costs you games'), R.list.length ? h('b', { class: 'bad' }, '≈ −' + (R.list.reduce((a, k) => a + k.cost, 0) / 100 / R.games).toFixed(1)) : null));
+  if (R.list.length) {
+    const max = R.list[0].cost;
+    cost.append(h('p', { class: 'note' }, `Pawns each kind of mistake throws away per game, from ${R.games} engine-checked games.`));
+    for (const k of R.list) cost.append(h('div', { class: 'costrow' }, h('div', { class: 'row', style: 'justify-content:space-between' }, h('span', {}, k.label), h('b', { class: 'bad' }, '−' + (k.cost / 100 / R.games).toFixed(1))), h('span', { class: 'costbar' }, h('i', { style: `width:${Math.max(4, 100 * k.cost / max)}%` }))));
+    cost.append(h('p', { class: 'ask', style: 'margin-top:14px' }, R.list[0].tip));
+    cost.append(scanBtn('Check more games', 'btn quiet tiny'));
+  } else {
+    cost.append(h('p', { class: 'ask' }, 'Let Stockfish go through your last 15 games. It finds every mistake and sorts them: pieces left loose, tactics you missed, opening errors, endgame slips. It takes a few minutes and stays in your browser.'), scanBtn('Scan my last 15 games'));
+  }
+  cards.append(cost);
+  if (R.breaks.length) {
+    let bi = 0; const brk = h('section', { class: 'card' });
+    const draw = () => {
+      const b = R.breaks[bi]; const c = new Chess(); for (const m of b.sans.slice(0, b.i)) c.move(m);
+      const mv = c.move(b.san); c.undo(); const bm = b.best ? c.move(b.best, { sloppy: true }) : null; if (bm) c.undo();
+      const sg = b.g.me === 'w' ? 1 : -1; const before = winPct(b.before), after = winPct(b.after);
+      brk.replaceChildren(
+        h('div', { class: 'cardhead' }, h('p', { class: 'eyebrow' }, 'Where a game broke'), h('span', { class: 'note' }, `${bi + 1} of ${R.breaks.length}`)),
+        h('h3', { class: 'brkmove' }, moveLabel(b.i, b.san)),
+        h('p', { class: 'note', style: 'font-style:normal' }, 'Winning chances ', h('b', { class: 'good' }, before + '%'), ' → ', h('b', { class: 'bad' }, after + '%'), bm ? ['. ', h('b', {}, bm.san), ' was the move.'] : '.'),
+        h('p', { class: 'note' }, `Against ${b.g.opp}${b.g.oppElo ? ' (' + b.g.oppElo + ')' : ''}, ${b.g.date}.`),
+        miniBoard(c.fen(), b.g.me === 'b', [mv && mv.from, mv && mv.to].filter(Boolean)),
+        h('div', { class: 'row', style: 'margin-top:12px' },
+          h('button', { class: 'btn quiet tiny', disabled: bi === 0, onclick: () => { bi--; draw(); } }, '← Previous'),
+          h('button', { class: 'btn quiet tiny', disabled: bi >= R.breaks.length - 1, onclick: () => { bi++; draw(); } }, 'Next →'),
+          h('button', { class: 'btn tiny', onclick: () => { startReview(b.g); setTimeout(() => { if (S.review) { S.review.idx = b.i; render(); } }, 50); } }, 'Open the game')));
+    };
+    draw(); cards.append(brk);
+  }
+  box.append(cards);
+
+  // Style
+  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'You play like ', h('em', {}, M.first.name)),
     h('p', { class: 'lede' }, `${M.first.tag}. ${M.first.blurb}`),
     h('p', { class: 'ask' }, `A ${M.fit}% match on style, with a touch of ${M.second.name}. Based on how you actually move in your last ${pool.length} games: ${F.raw.checksPer10.toFixed(1)} checks in every 10 moves, your queen out early in ${Math.round(F.raw.earlyQ * 100)}% of games, ${F.raw.wins ? Math.round(100 * F.raw.longWins / F.raw.wins) : 0}% of wins after move 40.`),
     h('div', { class: 'traits' }, FEATURE_NAMES.map((n, i) => h('div', { class: 'trait' }, h('span', { class: 'note' }, n), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(F.vec[i] * 100)}%` })), h('span', { class: 'meter ghost' }, h('i', { style: `width:${Math.round(M.first.v[i] * 100)}%` }))))),
     h('p', { class: 'note' }, `Amber is you, grey is ${M.first.name.split(' ').pop()}.`)));
 
   // Score
-  const sc = h('section', { class: 'story-ch' }, h('p', { class: 'chno' }, 'Chapter one'), h('h3', {}, 'Your Reps Score'),
+  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Your Reps Score'),
     h('div', { class: 'scorewrap' }, h('div', { class: 'scorebig' }, String(RS.total), h('small', {}, 'out of 100')),
       h('div', { class: 'scoreparts' }, RS.parts.map(x => h('div', { class: 'spart' }, h('div', { class: 'row', style: 'justify-content:space-between' }, h('span', {}, x.key), h('b', {}, String(x.v))), h('span', { class: 'meter wide' }, h('i', { style: `width:${x.v}%` })), h('span', { class: 'note' }, x.why))))),
-    h('p', { class: 'ask' }, `Your lowest part is ${RS.parts.slice().sort((a, b) => a.v - b.v)[0].key.toLowerCase()}. That is where your Today plan leans.`));
-  box.append(sc);
+    h('p', { class: 'ask' }, `Your lowest part is ${RS.parts.slice().sort((a, b) => a.v - b.v)[0].key.toLowerCase()}. That is where your Today plan leans.`)));
 
   // Rating journey
-  box.append(h('section', { class: 'story-ch' }, h('p', { class: 'chno' }, 'Chapter two'), h('h3', {}, 'The road so far'),
+  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'The road so far'),
     h('p', { class: 'lede' }, series.length >= 2 ? `In ${main}, you went from ${first} to ${now}${peak > now ? `, with a peak of ${peak}` : ''}. ${now - first >= 0 ? 'Up' : 'Down'} ${Math.abs(now - first)} points over ${series.length} rated games.` : `Most of your games are ${main}.`),
     sparkline(series),
     h('div', { class: 'facts' },
-      h('div', { class: 'fact' }, h('b', {}, String(games.length)), h('span', {}, 'games imported')),
       h('div', { class: 'fact' }, h('b', {}, String(best)), h('span', {}, 'longest winning streak')),
       upset ? h('div', { class: 'fact' }, h('b', {}, '+' + (upset.oppElo - upset.myElo)), h('span', {}, `your biggest upset, beating ${upset.opp} (${upset.oppElo})`)) : null,
       h('div', { class: 'fact' }, h('b', {}, pc(p.overall)), h('span', {}, 'your score recently')))));
@@ -2652,32 +3120,15 @@ function renderStory() {
   const ops = p.openings; const bySide = s => ops.filter(o => o.side === s && o.n >= 4);
   const weapon = ops.filter(o => o.n >= 5).sort((a, b) => b.score - a.score)[0]; const krypto = ops.filter(o => o.n >= 5).sort((a, b) => a.score - b.score)[0];
   const opList = s => { const ul = h('ul', { class: 'list' }); for (const o of bySide(s).slice(0, 4)) ul.append(h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, o.name), h('span', { class: 'note' }, o.n + ' games'), h('span', { class: 'tag ' + (o.score >= 0.55 ? 'ok' : o.score < 0.45 ? 'gap' : 'dim') }, pc(o.score)))); if (!ul.children.length) ul.append(h('li', { class: 'empty' }, 'Not enough games yet.')); return ul; };
-  box.append(h('section', { class: 'story-ch' }, h('p', { class: 'chno' }, 'Chapter three'), h('h3', {}, 'The openings you live by'),
+  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'The openings you live by'),
     h('p', { class: 'lede' }, [weapon ? `Your weapon is the ${weapon.name} as ${sideName(weapon.side)}, where you score ${pc(weapon.score)}. ` : '', krypto && krypto !== weapon ? `Your kryptonite is the ${krypto.name} as ${sideName(krypto.side)}: ${pc(krypto.score)}.` : ''].join('')),
     h('div', { class: 'two' }, h('div', {}, h('h2', {}, 'As White'), opList('w')), h('div', {}, h('h2', {}, 'As Black'), opList('b')))));
 
-  // How games end + costliest mistake
+  // How games end
   const wins = pool.filter(g => g.score === 1), losses = pool.filter(g => g.score === 0);
   const ends = arr => ['mate', 'resign', 'time', 'abandon'].map(k => [k, arr.filter(g => g.end === k).length]).filter(x => x[1]);
   const LABEL = { mate: 'by checkmate', resign: 'by resignation', time: 'on time', abandon: 'by abandonment' };
-  const R = mistakeKinds(storedReviews()); const top = R.list[0];
-  const ch4 = h('section', { class: 'story-ch' }, h('p', { class: 'chno' }, 'Chapter four'), h('h3', {}, 'The mistake costing you the most'));
-  if (top) {
-    ch4.append(h('p', { class: 'lede' }, top.label + '.'), h('p', { class: 'ask' }, `Across ${R.games} engine-checked games, this kind of mistake cost you the most: ${top.n} times, about ${(top.cost / 100 / R.games).toFixed(1)} pawns a game. ${top.tip}`));
-    if (top.ex) ch4.append(h('button', { class: 'btn quiet', onclick: () => { startReview(top.ex.g).then(() => {}); setTimeout(() => { if (S.review) { S.review.idx = top.ex.i; render(); } }, 50); } }, `See your worst one: ${Math.floor(top.ex.i / 2) + 1}${top.ex.i % 2 ? '…' : '.'}${top.ex.san} against ${top.ex.g.opp}`));
-    const ul = h('ul', { class: 'list', style: 'margin-top:14px' }); for (const k of R.list.slice(1, 4)) ul.append(h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, k.label), h('span', { class: 'note' }, `${k.n}×`))); ch4.append(ul);
-    if (R.acpl != null) ch4.append(h('p', { class: 'note' }, `Average loss per move in these games: ${R.acpl} centipawns. Lower is better; strong club players sit around 40.`));
-  } else {
-    const w0 = D.weak[0];
-    ch4.append(h('p', { class: 'lede' }, w0 ? w0.text : 'No clear pattern from results alone.'),
-      h('p', { class: 'ask' }, engineOk() ? 'For the real answer, let Stockfish go through your recent games. It finds every mistake and sorts them by kind: loose pieces, missed tactics, opening errors, endgame slips.' : 'The engine scan runs on the hosted version of Chess Reps.'));
-  }
-  if (engineOk()) {
-    const prog = h('span', { class: 'note', id: 'rw-deep' });
-    ch4.append(h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn' + (top ? ' quiet' : ''), disabled: !!S.batch, onclick: async () => {
-      await deepScan(15, (k, n) => { const e = $('#rw-deep'); if (e) e.textContent = `Engine checking game ${k} of ${n}…`; }); render(); } }, top ? 'Check more games' : 'Scan my last 15 games'), prog));
-  }
-  ch4.append(h('div', { class: 'two', style: 'margin-top:18px' },
+  const ch4 = h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'How your games end'), h('div', { class: 'two', style: 'margin-top:8px' },
     h('div', {}, h('h2', {}, `How you win (${wins.length})`), h('ul', { class: 'list' }, ends(wins).map(([k, n]) => h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, LABEL[k]), h('span', { class: 'note' }, Math.round(100 * n / Math.max(1, wins.length)) + '%'))))),
     h('div', {}, h('h2', {}, `How you lose (${losses.length})`), h('ul', { class: 'list' }, ends(losses).map(([k, n]) => h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, LABEL[k]), h('span', { class: 'note' }, Math.round(100 * n / Math.max(1, losses.length)) + '%')))))));
   box.append(ch4);
@@ -2686,7 +3137,7 @@ function renderStory() {
   const wp = whenYouPlay(pool);
   if (wp.length >= 2) {
     const bestT = wp.slice().sort((a, b) => b.score - a.score)[0], worstT = wp.slice().sort((a, b) => a.score - b.score)[0];
-    box.append(h('section', { class: 'story-ch' }, h('p', { class: 'chno' }, 'Chapter five'), h('h3', {}, 'When you play your best'),
+    box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'When you play your best'),
       h('p', { class: 'lede' }, bestT.score - worstT.score >= 0.08 ? `${bestT.label} are your time: you score ${pc(bestT.score)}, against ${pc(worstT.score)} in ${worstT.label.toLowerCase()}.` : 'The time of day makes little difference to your results.'),
       h('div', { class: 'facts' }, wp.map(r => h('div', { class: 'fact' }, h('b', {}, pc(r.score)), h('span', {}, `${r.label} · ${r.n} games`)))),
       p.tilt.score != null ? h('p', { class: 'ask' }, `After two losses in a row you score ${pc(p.tilt.score)}. ${p.tilt.score < p.overall - 0.08 ? 'That is the moment to stop for the day.' : 'You keep your head well after losses.'}`) : null));
@@ -2700,16 +3151,17 @@ function renderStory() {
 }
 
 // ---------- Shell ----------
-const TABS = ['today', 'story', 'build', 'gaps', 'drill', 'games', 'endgames'];
+const TABS = ['today', 'story', 'build', 'gaps', 'drill', 'games', 'endgames', 'settings'];
 function render() {
   for (const t of TABS) $('#tab-' + t).setAttribute('aria-selected', String(S.tab === t));
   const eg = S.tab === 'endgames';
-  $('#rw').hidden = eg; $('#app').hidden = !eg; const flat = S.tab === 'today' || S.tab === 'story';
+  $('#rw').hidden = eg; $('#app').hidden = !eg; const flat = S.tab === 'today' || S.tab === 'story' || S.tab === 'settings';
   $('#sidepick').hidden = eg || flat;
-  $('#rw-grid').hidden = flat; $('#rw-today').hidden = S.tab !== 'today'; $('#rw-story').hidden = S.tab !== 'story';
+  $('#rw-grid').hidden = flat; $('#rw-today').hidden = S.tab !== 'today'; $('#rw-story').hidden = S.tab !== 'story'; $('#rw-settings').hidden = S.tab !== 'settings';
   if (eg) return;
   if (S.tab === 'today') return renderToday();
   if (S.tab === 'story') return renderStory();
+  if (S.tab === 'settings') return renderSettings();
   $('#side-w').setAttribute('aria-pressed', String(S.side === 'w')); $('#side-b').setAttribute('aria-pressed', String(S.side === 'b'));
   const panel = $('#rw-panel'), bar = $('#rw-bar'); panel.replaceChildren(); bar.replaceChildren();
   ({ build: renderBuild, gaps: renderGaps, drill: renderDrill, games: renderGames })[S.tab](panel, bar);

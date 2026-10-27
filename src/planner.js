@@ -108,9 +108,19 @@ function weekThemes(weak) {
   return WEEK.map(t => t === 'focus' ? f : t);
 }
 
+const THEMES = { fork: 'fork', hangingPiece: 'hanging piece', mate: 'checkmate', mateIn1: 'mate in 1', mateIn2: 'mate in 2', mateIn3: 'mate in 3', pin: 'pin', skewer: 'skewer', discoveredAttack: 'discovered attack', backRankMate: 'back-rank mate', trappedPiece: 'trapped piece', deflection: 'deflection', attraction: 'attraction', sacrifice: 'sacrifice', defensiveMove: 'defensive move', quietMove: 'quiet move', advancedPawn: 'advanced pawn', promotion: 'promotion', zugzwang: 'zugzwang', intermezzo: 'in-between move', clearance: 'clearance', interference: 'interference', xRayAttack: 'x-ray', capturingDefender: 'capture-the-defender', exposedKing: 'exposed king', kingsideAttack: 'kingside attack', queensideAttack: 'queenside attack', rookEndgame: 'rook endgame', pawnEndgame: 'pawn endgame', bishopEndgame: 'bishop endgame', knightEndgame: 'knight endgame', queenEndgame: 'queen endgame', endgame: 'endgame', opening: 'opening', middlegame: 'middlegame', doubleCheck: 'double check', enPassant: 'en passant', castling: 'castling', underPromotion: 'underpromotion', smotheredMate: 'smothered mate', anastasiaMate: 'Anastasia mate', arabianMate: 'Arabian mate', bodenMate: 'Boden mate', hookMate: 'hook mate', dovetailMate: 'dovetail mate', doubleBishopMate: 'double-bishop mate', killBoxMate: 'kill-box mate', vukovicMate: 'Vuković mate', attackingF2F7: 'f2/f7 attack' };
+const themeName = t => THEMES[t] || t.replace(/([A-Z])/g, ' $1').toLowerCase();
+// Too broad to practise on their own.
+const BROAD_THEMES = new Set(['short', 'long', 'veryLong', 'oneMove', 'crushing', 'advantage', 'equality', 'master', 'masterVsMaster', 'superGM', 'mix', 'middlegame', 'opening', 'endgame', 'mate', 'healthyMix', 'playerGames']);
+// Where each task sends you, per site.
+const SITE = {
+  chesscom: { name: 'chess.com', puzzles: 'https://www.chess.com/puzzles/rated', rush: 'https://www.chess.com/puzzles/rush', play: 'https://www.chess.com/play/online', archive: () => 'https://www.chess.com/games/archive' },
+  lichess: { name: 'lichess', puzzles: 'https://lichess.org/training', rush: 'https://lichess.org/storm', play: 'https://lichess.org/', archive: u => `https://lichess.org/@/${encodeURIComponent(u || '')}/all` },
+};
 // ctx: { date, profile, weak, gaps:{w,b}, ends:{w,b}, lines:{w,b}, due:{w,b}, eg:{wins}, settings:{mins, cls, rush}, recentLosses }
 function buildPlan(ctx) {
-  const { date, profile: p, weak, settings: st } = ctx;
+  const { date, profile: p, weak, settings: st } = ctx; const L = st.site === 'lichess';
+  const site = SITE[L ? 'lichess' : 'chesscom'];
   const mins = st.mins || 40;
   const cls = st.cls && st.cls !== 'auto' ? st.cls : (p ? p.main : 'rapid');
   const tier = tierFor(p && p.elo);
@@ -121,11 +131,14 @@ function buildPlan(ctx) {
   const top = weak[0];
   const why = key => (weak.find(w => w.key === key) || {}).text;
 
-  if (!ctx.gamesCount) add({ id: 'import', kind: 'setup', title: 'Bring in your chess.com games', mins: 3, why: 'The plan is generic until it has your games. Everything after this is tuned to how you actually lose.', action: { type: 'tab', tab: 'games' } });
+  if (!ctx.gamesCount) add({ id: 'import', kind: 'setup', title: `Bring in your ${site.name} games`, mins: 3, why: 'The plan is generic until it has your games. Everything after this is tuned to how you actually lose.', action: { type: 'tab', tab: 'games' } });
 
   // 1. Warm-up: every day.
   const nPuzzles = theme === 'tactics' && mins >= 60 ? 20 : tier.puzzles;
-  add({ id: 'puzzles', kind: 'tactics', title: `Solve ${nPuzzles} rated puzzles`, mins: nPuzzles, why: why('tactics') || 'A daily warm-up keeps pattern recognition sharp. Go for accuracy, not speed.', action: { type: 'url', url: 'https://www.chess.com/puzzles/rated' } });
+  const focus = L && ctx.focus && ctx.focus[0];
+  add({ id: 'puzzles', kind: 'tactics', title: `Solve ${focus ? Math.min(10, nPuzzles) : nPuzzles} rated puzzles`, mins: focus ? Math.min(10, nPuzzles) : nPuzzles, target: focus ? Math.min(10, nPuzzles) : nPuzzles, why: why('tactics') || 'A daily warm-up keeps pattern recognition sharp. Go for accuracy, not speed.', action: { type: 'url', url: site.puzzles } });
+  // Yesterday's review picks a theme: the tactic that cost a game, or the puzzles you keep missing.
+  if (focus) add({ id: 'theme', kind: 'tactics', title: `Practice 20 ${themeName(focus.theme)} puzzles`, mins: 15, target: 20, theme: focus.theme, why: focus.why, action: { type: 'url', url: `https://lichess.org/training/${focus.theme}` } });
 
   // 2. Openings: due drills, or starting a repertoire.
   for (const side of ['w', 'b']) {
@@ -160,8 +173,9 @@ function buildPlan(ctx) {
     if (!gapList.length && !(ctx.xgaps && ctx.xgaps.length)) add({ id: 'deepen', kind: 'openings', title: `Extend your main line to move ${tier.depth / 2 + 2}`, mins: 10, why: `At your level, aim to know your main lines to about move ${tier.depth / 2 + 2}. Add the most common replies one move deeper.`, action: { type: 'tab', tab: 'build' } });
     if (room() >= 10) add({ id: 'model', kind: 'openings', title: `Model line: ${RUNS[isoWeek(date) % RUNS.length]}`, mins: 10, why: 'Learn what to do after the opening: the plan behind the structure your lines lead to.', action: { type: 'run', name: RUNS[isoWeek(date) % RUNS.length] } });
   } else if (theme === 'tactics') {
-    add({ id: 'rush', kind: 'tactics', title: 'Puzzle Rush, 5 minutes', mins: 6, why: st.rush ? `Your best is ${st.rush}. Beat it, and stop at three misses rather than guessing.` : 'Set a baseline today, then try to beat it every tactics day.', action: { type: 'url', url: 'https://www.chess.com/puzzles/rush' } });
-    if (room() >= 15) add({ id: 'calc', kind: 'tactics', title: 'Three hard puzzles, slowly', mins: 15, why: 'Calculate the whole line before you touch a piece: checks, captures and threats for both sides. This builds the habit fast puzzles skip.', action: { type: 'url', url: 'https://www.chess.com/puzzles/rated' } });
+    const best = L ? st.storm : st.rush;
+    add({ id: 'rush', kind: 'tactics', title: L ? 'Puzzle Storm, 3 minutes' : 'Puzzle Rush, 5 minutes', mins: L ? 4 : 6, why: best ? `Your best is ${best}. Beat it, and ${L ? 'keep your combo going rather than guessing' : 'stop at three misses rather than guessing'}.` : 'Set a baseline today, then try to beat it every tactics day.', action: { type: 'url', url: site.rush } });
+    if (room() >= 15) add({ id: 'calc', kind: 'tactics', title: 'Three hard puzzles, slowly', mins: 15, why: 'Calculate the whole line before you touch a piece: checks, captures and threats for both sides. This builds the habit fast puzzles skip.', target: 3, action: { type: 'url', url: site.puzzles } });
   } else if (theme === 'endgames') {
     const wins = (ctx.eg && ctx.eg.wins) || {};
     const next = EG_CHAPTERS.find(([id, , need]) => (wins[id] || 0) < need) || EG_CHAPTERS[EG_CHAPTERS.length - 1];
@@ -176,7 +190,7 @@ function buildPlan(ctx) {
     losses.forEach((g, i) => add({ id: 'review-' + i, kind: 'review', title: `Review your loss to ${g.opp}`, mins: 10, url: g.url,
       why: `Find the move where the game turned. Was it the opening, a tactic, or the clock? Write one sentence about it. (${g.date}, ${g.plies ? Math.ceil(g.plies / 2) + ' moves' : ''}${g.end === 'time' ? ', lost on time' : ''})`,
       action: { type: 'review', id: g.id, url: g.url } }));
-    if (!losses.length) add({ id: 'review-x', kind: 'review', title: 'Review your last game', mins: 10, why: 'Find the move where the game turned, and write one sentence about it.', action: { type: 'url', url: 'https://www.chess.com/games/archive' } });
+    if (!losses.length) add({ id: 'review-x', kind: 'review', title: 'Review your last game', mins: 10, why: 'Find the move where the game turned, and write one sentence about it.', action: { type: 'url', url: site.archive(st.lichessUser) } });
     add({ id: 'import-week', kind: 'setup', title: 'Import this week’s games', mins: 3, why: 'Next week’s plan and gap report should see this week’s games.', action: { type: 'tab', tab: 'games' } });
     if (left() >= 10) add({ id: 'model', kind: 'openings', title: `Model line: ${RUNS[isoWeek(date) % RUNS.length]}`, mins: 10, why: 'An easier finish to the week: learn the plan behind a structure.', action: { type: 'run', name: RUNS[isoWeek(date) % RUNS.length] } });
   }
@@ -190,7 +204,7 @@ function buildPlan(ctx) {
       : theme === 'endgames' ? 'If it goes long, trade into an endgame you know instead of avoiding one.'
       : 'Afterwards, import the games so the gap report sees them.';
     const label = playKey === 'slow' ? 'rapid' : playKey;
-    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, target: n, cls: label, why: intent + (theme === 'play' ? ' After each loss, spend 3 minutes finding the move that lost it.' : ''), action: { type: 'url', url: 'https://www.chess.com/play/online' } });
+    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, target: n, cls: label, why: intent + (theme === 'play' ? ' After each loss, spend 3 minutes finding the move that lost it.' : ''), action: { type: 'url', url: site.play } });
   }
 
   const focusNote = {

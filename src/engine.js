@@ -297,8 +297,52 @@ async function syncChessCom(user, { months = 3, quiet = false } = {}) {
   S.lastSync = Date.now(); LS.set('lastSync', S.lastSync);
   return pgn;
 }
+// ---------- lichess sync: games, ratings, today's puzzles and Puzzle Storm ----------
+const liHistory = () => LS.get('li-days') || {};
+const liHeaders = () => S.settings.lichessToken ? { Authorization: 'Bearer ' + S.settings.lichessToken } : {};
+async function syncLichess(user) {
+  const u = encodeURIComponent(user);
+  const mine = S.games.filter(g => g.src === 'lichess'); const last = mine.length ? Math.max(...mine.map(gameTime)) : 0;
+  const since = last ? last + 1000 : Date.now() - 90 * 864e5;
+  const r = await fetch(`https://lichess.org/api/games/user/${u}?since=${since}&max=500&opening=true&clocks=false&evals=false`, { headers: Object.assign({ Accept: 'application/x-chess-pgn' }, liHeaders()) });
+  if (r.status === 404) throw new Error('nouser');
+  if (!r.ok) throw new Error('http');
+  const pgn = await r.text();
+  const L = S.li = S.li || {};
+  try {
+    const j = await (await fetch(`https://lichess.org/api/user/${u}`)).json(); const pf = j.perfs || {};
+    L.puzzle = pf.puzzle && pf.puzzle.rating; L.storm = pf.storm && pf.storm.score;
+    L.ratings = Object.fromEntries(['bullet', 'blitz', 'rapid', 'classical'].map(k => [k, pf[k] && pf[k].rating]));
+  } catch {}
+  try {
+    const d = await (await fetch(`https://lichess.org/api/storm/dashboard/${u}?days=30`)).json();
+    const now = new Date(); const ids = [`${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`, `${now.getUTCFullYear()}/${now.getUTCMonth() + 1}/${now.getUTCDate()}`];
+    const day = (d.days || []).find(x => ids.includes(x._id));
+    const H = liHistory(); for (const x of d.days || []) { const [y, m, dd] = x._id.split('/'); const k = `${y}-${m.padStart(2, '0')}-${dd.padStart(2, '0')}`; H[k] = Object.assign(H[k] || {}, { storm: x.score, stormRuns: x.runs }); } LS.set('li-days', H);
+    L.stormToday = day ? { runs: day.runs, score: day.score, date: todayId() } : null; L.storm = Math.max(L.storm || 0, (d.high && d.high.allTime) || 0) || L.storm;
+  } catch {}
+  L.puzzleErr = null;
+  if (S.settings.lichessToken) {
+    try {
+      const H = liHistory(); const since = L.puzzlesSynced ? Math.min(dayStart(), L.puzzlesSynced - 864e5) : Date.now() - 30 * 864e5;
+      const pr = await fetch(`https://lichess.org/api/puzzle/activity?since=${since}&max=2000`, { headers: liHeaders() });
+      if (pr.status === 401 || pr.status === 403) L.puzzleErr = 'scope';
+      else if (pr.ok) {
+        const all = (await pr.text()).split('\n').filter(Boolean).map(x => { try { const o = JSON.parse(x); return { win: o.win, rating: o.puzzle && o.puzzle.rating, at: o.date, themes: (o.puzzle && o.puzzle.themes) || [] }; } catch { return null; } }).filter(Boolean);
+        L.puzzlesToday = { date: todayId(), list: all.filter(x => x.at >= dayStart()) };
+        const by = {}; for (const x of all) { const k = ymd(new Date(x.at)); (by[k] = by[k] || []).push(x); }
+        for (const [k, xs] of Object.entries(by)) H[k] = Object.assign(H[k] || {}, { puzzles: xs.length, won: xs.filter(x => x.win).length, prating: Math.round(xs.reduce((a, x) => a + (x.rating || 0), 0) / xs.length) });
+        LS.set('li-days', H); L.puzzlesSynced = Date.now(); L.tokenOk = true;
+        try { const db = await (await fetch('https://lichess.org/api/puzzle/dashboard/30', { headers: liHeaders() })).json();
+          L.themes = Object.entries(db.themes || {}).map(([k, v]) => ({ theme: k, nb: v.results.nb, first: v.results.firstWins, perf: v.results.performance })); } catch {}
+      }
+    } catch {}
+  } else L.puzzleErr = 'token';
+  L.fetched = Date.now(); LS.set('li', L);
+  return pgn;
+}
 async function autoSync() {
-  if (!S.username || location.protocol === 'file:' || S.syncing) return;
+  if (!(S.username || S.settings.lichessUser) || location.protocol === 'file:' || S.syncing) return;
   // Check often while today's plan still has games or puzzles to see; otherwise every few hours.
   const rec = S.plans[todayId()]; const gap = rec && checkable(rec) ? 10 * 60e3 : 3 * 3600e3;
   const last = LS.get('lastSync') || 0; if (Date.now() - last < gap) return;
