@@ -821,7 +821,8 @@ function render() {
   for (const t of TABS) $('#tab-' + t).setAttribute('aria-selected', String(S.tab === t));
   const eg = S.tab === 'endgames';
   $('#rw').hidden = eg; $('#app').hidden = !eg; const flat = S.tab === 'today' || S.tab === 'story' || S.tab === 'settings';
-  $('#sidepick').hidden = eg || flat;
+  const noBoard = S.tab === 'games' && !S.review; $('#rw-grid').classList.toggle('noboard', noBoard);
+  $('#sidepick').hidden = eg || flat || noBoard;
   $('#rw-grid').hidden = flat; $('#rw-today').hidden = S.tab !== 'today'; $('#rw-story').hidden = S.tab !== 'story'; $('#rw-settings').hidden = S.tab !== 'settings';
   if (eg) return;
   if (S.tab === 'today') return renderToday();

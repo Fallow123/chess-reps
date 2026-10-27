@@ -302,6 +302,7 @@ function renderStory() {
     };
     draw(); cards.append(brk);
   }
+  if (cards.children.length === 1) cards.classList.add('one');
   box.append(cards);
 
   // Style

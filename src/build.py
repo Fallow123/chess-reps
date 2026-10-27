@@ -51,6 +51,8 @@ app = rd('app.js').replace('/*PIECE*/', piece.strip())
 rwcss = scope(rd('rw.css'), '#rw')
 
 head = '''<title>Pawnstorm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: one shell, five tabs. The opening tabs put the board left and a notebook panel right; Endgames is the original trainer, untouched. */
@@ -90,11 +92,14 @@ body { color: var(--bone); font-family: var(--serif); font-size: 16px; line-heig
 <style>
 ''' + egcss + '''
 </style>
+<style>
+''' + rd('polish.css') + '''
+</style>
 '''
 shell = '''
 <div class="shell">
   <header class="shell-top">
-    <div><h1>Pawnstorm</h1><p class="tagline">One push a day. Built from your own games.</p></div>
+    <div class="brand"><span class="logo" aria-hidden="true"><svg viewBox="0 0 100 100"><g><circle cx="50" cy="36" r="12"/><path d="M40 48 h20 l-3 6 c6 9 9 18 10 27 h-34 c1 -9 4 -18 10 -27 z"/><path d="M22 88 h56 v-7 q0 -4 -5 -5 h-46 q-5 1 -5 5 z"/></g></svg></span><div><h1>Pawnstorm</h1><p class="tagline">One push a day. Built from your own games.</p></div></div>
     <div class="grow"></div>
     <div class="sidepick" id="sidepick" role="group" aria-label="Repertoire side">
       <button id="side-w" aria-pressed="true">White</button><button id="side-b" aria-pressed="false">Black</button>
