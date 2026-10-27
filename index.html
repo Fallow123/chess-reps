@@ -1868,7 +1868,7 @@ function renderBoard() {
   for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
     const file = flip ? 7 - f : f, rank = flip ? r + 1 : 8 - r;
     const sq = 'abcdefgh'[file] + rank; const p = g.get(sq);
-    const cls = ['sq', (file + rank) % 2 ? 'light' : 'dark'];
+    const cls = ['sq', (file + rank) % 2 ? 'dark' : 'light'];
     if (last && last.from === sq) cls.push('from');
     if (last && last.to === sq) cls.push('to');
     if (S.sel === sq) cls.push('sel');
