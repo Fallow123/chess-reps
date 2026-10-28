@@ -3321,6 +3321,19 @@ function render() {
   renderBoard();
   liveEval();
 }
+// Arrow keys step through the line: Build follows your prep forward, game review steps move by move.
+document.addEventListener('keydown', e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return;
+  const back = e.key === 'ArrowLeft';
+  if (S.tab === 'build') {
+    if (back) { if (!S.path.length) return; goTo(S.path.slice(0, -1)); }
+    else { const k = posKey(S.game.fen()); const next = (S.rep[S.side].get(k) || [])[0] || (S.draft[S.side].get(k) || [])[0]; if (!next) return; goTo(S.path.concat(next)); }
+  } else if (S.tab === 'games' && S.review) {
+    const R = S.review; const i = Math.max(0, Math.min(R.sans.length, R.idx + (back ? -1 : 1))); if (i === R.idx) return; R.idx = i; S.hint = null;
+  } else return;
+  e.preventDefault(); render();
+});
 for (const t of TABS) $('#tab-' + t).addEventListener('click', () => { if (t !== 'games' && S.review && !S.review.running) S.review = null; S.tab = t; S.sel = null; if (t !== 'drill') S.hint = null; render(); });
 for (const s of ['w', 'b']) $('#side-' + s).addEventListener('click', () => { if (S.side === s) return; S.side = s; S.drill = null; goTo([]); refresh(); render(); });
 
