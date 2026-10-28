@@ -159,6 +159,12 @@ function buildPlan(ctx) {
     add({ id: 'drill', kind: 'openings', title: `Drill ${k} opening line${k > 1 ? 's' : ''}`, mins: Math.ceil(k * 1.2), target: k, why: `${dueAll} line${dueAll > 1 ? 's are' : ' is'} due. Lines you recall every few days hold up under the clock.`, action: { type: 'tab', tab: 'drill', side: ctx.due.w >= ctx.due.b ? 'w' : 'b' } });
   }
 
+  // Your own mistakes, as puzzles: a short set most days, a bigger one on tactics and review days.
+  if (ctx.mp && theme !== 'play') {
+    const k = Math.min(ctx.mp, theme === 'tactics' || theme === 'review' ? 10 : mins <= 20 ? 3 : 5);
+    add({ id: 'mp', kind: 'tactics', title: `Fix ${k} of your own mistakes`, mins: Math.ceil(k * 1.5), target: k, why: 'Positions from your games where you went wrong. Find the move you missed; each one comes back until it sticks.', action: { type: 'mistakes' } });
+  }
+
   // 3. The day's theme.
   const slow = theme === 'slow' || (top && (top.key === 'time' || top.key === 'tilt') && theme === 'play');
   const playKey = slow && cls !== 'daily' && cls !== 'bullet' ? 'slow' : cls;

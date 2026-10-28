@@ -20,7 +20,7 @@ const S = {
   rep: { w: new Map(), b: new Map() }, draft: { w: new Map(), b: new Map() },
   games: [], username: '', cards: {},
   path: [], game: new Chess(), sel: null, hint: null,
-  drill: null, store: 'loading', batch: false, review: null, xgaps: { w: null, b: null }, checks: {},
+  drill: null, mp: null, drillMode: 'lines', store: 'loading', batch: false, review: null, xgaps: { w: null, b: null }, checks: {},
 };
 let db = null;
 
@@ -117,7 +117,7 @@ function refresh() {
   D.weak = weaknesses(D.profile, D.gapsBoth, D.linesBoth);
   const gc = D.gaps.list.filter(g => g.type !== 'short').length + D.ends.length;
   $('#count-gaps').textContent = gc ? String(gc) : '';
-  $('#count-drill').textContent = D.lines.length && D.due.length ? String(D.due.length) : '';
+  const dc = (D.lines.length ? D.due.length : 0) + mpDue().length; $('#count-drill').textContent = dc ? String(dc) : '';
 }
 
 // ---------- Board ----------
@@ -127,14 +127,16 @@ function pieceEl(p) {
   d.innerHTML = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g>' + PIECE[p.type] + '</g></svg>';
   return d;
 }
-const boardGame = () => (S.tab === 'drill' && S.drill && !S.drill.done ? S.drill.game : S.tab === 'games' && S.review ? reviewGame() : S.game);
+const mpOn = () => S.tab === 'drill' && S.drillMode === 'mistakes';
+const boardGame = () => (mpOn() ? (S.mp && !S.mp.done ? S.mp.game : new Chess()) : S.tab === 'drill' && S.drill && !S.drill.done ? S.drill.game : S.tab === 'games' && S.review ? reviewGame() : S.game);
 function canMove() {
+  if (mpOn()) { const d = S.mp; return !!(d && !d.done && !d.finished && !d.checking && d.game.turn() === d.p.g.me); }
   if (S.tab === 'drill') { const d = S.drill; return d && !d.done && !d.finished && !d.busy && d.game.turn() === S.side; }
   return S.tab === 'build' || S.tab === 'gaps';
 }
 function renderBoard() {
   const g = boardGame(); const b = $('#rw-board'); b.replaceChildren();
-  const flip = (S.tab === 'games' && S.review ? S.review.g.me : S.side) === 'b'; const hist = g.history({ verbose: true }); const last = hist[hist.length - 1];
+  const flip = (S.tab === 'games' && S.review ? S.review.g.me : mpOn() && S.mp && !S.mp.done ? S.mp.p.g.me : S.side) === 'b'; const hist = g.history({ verbose: true }); const last = hist[hist.length - 1];
   const targets = S.sel ? g.moves({ square: S.sel, verbose: true }) : [];
   const live = canMove();
   for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
@@ -166,6 +168,7 @@ function clickSq(sq) {
   renderBoard();
 }
 function userMove(san) {
+  if (mpOn()) return mpMove(san);
   if (S.tab === 'drill') return drillMove(san);
   if (S.tab === 'gaps') S.tab = 'build';
   // On Build, moves explore. Nothing joins your prep until you save it.
@@ -516,6 +519,9 @@ function finishLine() {
   refresh(); render();
 }
 function renderDrill(panel, bar) {
+  const nMp = mpDue().length;
+  panel.append(h('div', { class: 'seg', style: 'margin-bottom:14px' }, [['lines', 'Opening lines'], ['mistakes', 'My mistakes' + (nMp ? ` (${nMp})` : '')]].map(([v, l]) => h('button', { 'aria-pressed': String(S.drillMode === v), onclick: () => { if (S.drillMode === v) return; S.drillMode = v; S.drill = null; S.mp = null; S.hint = null; S.sel = null; render(); } }, l))));
+  if (S.drillMode === 'mistakes') return renderMistakes(panel, bar);
   const d = S.drill; const sn = sideName(S.side);
   if (!d) {
     const branch = S.path.length ? allLines(S.rep[S.side], S.path) : [];
@@ -567,7 +573,7 @@ const todayId = () => ymd(new Date());
 function egProgress() { try { return JSON.parse(localStorage.getItem('endgame-reps-progress')) || {}; } catch { return {}; } }
 function planContext(date) {
   return { date, profile: D.profile, weak: D.weak, gaps: D.gapsBoth, ends: {}, lines: D.linesBoth, due: D.dueBoth, eg: egProgress(),
-    focus: lastFocus(date),
+    focus: lastFocus(date), mp: mpDue().length,
     xgaps: (S.xgaps.w || []).concat(S.xgaps.b || []).sort((a, b) => b.reach - a.reach),
     settings: Object.assign({}, S.settings, { rush: (S.stats && S.stats.rush) || S.settings.rush, storm: S.li && S.li.storm, site: onLichess() ? 'lichess' : 'chesscom' }), gamesCount: S.games.length, recentLosses: D.recentLosses || [] };
 }
@@ -611,6 +617,7 @@ function autoDone(t, rec) {
   if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
+  if (t.id === 'mp') return mpSolvedToday() >= (t.target || 1);
   if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!(r && (r.lastWin || r.last) >= start); }
   if (t.id === 'drill') return Object.values(S.cards).filter(c => c.last >= +start).length >= (t.target || 1);
   if (t.id.startsWith('seed-')) return D.linesBoth[t.action.side] > 0;
@@ -634,6 +641,7 @@ function runAction(t) {
   if (a.type === 'tab') { S.tab = a.tab; render(); }
   else if (a.type === 'review') { const g = S.games.find(x => x.id === a.id); if (g) startReview(g); else { S.tab = 'games'; render(); } }
   else if (a.type === 'gap') { S.tab = 'build'; goTo(a.path); render(); }
+  else if (a.type === 'mistakes') { S.tab = 'drill'; S.drillMode = 'mistakes'; S.drill = null; S.mp = null; render(); const due = mpDue(); if (due.length) startMp(due); }
   else if (a.type === 'seed') { S.tab = 'build'; goTo([]); render(); }
   else if (a.type === 'endgame' || a.type === 'run') {
     S.tab = 'endgames'; render();
@@ -643,7 +651,7 @@ function runAction(t) {
     window.scrollTo({ top: 0 });
   }
 }
-const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start' };
+const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start', mistakes: 'Start' };
 const KIND_LABEL = { tactics: 'Tactics', openings: 'Openings', endgames: 'Endgames', play: 'Play', review: 'Review', setup: 'Setup' };
 
 const onLichess = () => !!(S.settings && S.settings.lichessUser);
@@ -776,6 +784,7 @@ function renderToday() {
       h('div', { class: 'tact' }, act)));
   });
   left.append(ul);
+  if (new Date().getDay() === 0) left.append(weekCard('Your week in review'));
   left.append(reviewCard(rec, allDone));
 
   const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
@@ -840,7 +849,7 @@ function render() {
   const eg = S.tab === 'endgames';
   $('#rw').hidden = eg; $('#app').hidden = !eg; const flat = S.tab === 'today' || S.tab === 'story' || S.tab === 'settings';
   const noBoard = S.tab === 'games' && !S.review; $('#rw-grid').classList.toggle('noboard', noBoard);
-  $('#sidepick').hidden = eg || flat || noBoard;
+  $('#sidepick').hidden = eg || flat || noBoard || mpOn();
   $('#rw-grid').hidden = flat; $('#rw-today').hidden = S.tab !== 'today'; $('#rw-story').hidden = S.tab !== 'story'; $('#rw-settings').hidden = S.tab !== 'settings';
   if (eg) return;
   if (S.tab === 'today') return renderToday();

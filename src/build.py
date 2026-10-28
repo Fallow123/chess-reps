@@ -132,7 +132,7 @@ shell = '''
 ''' + rd('logic.js') + rd('planner.js') + '''
 </script>
 <script>
-''' + app.replace('// ---------- Shell ----------', rd('engine.js') + rd('story.js') + '\n// ---------- Shell ----------') + '''
+''' + app.replace('// ---------- Shell ----------', rd('engine.js') + rd('story.js') + rd('progress.js') + '\n// ---------- Shell ----------') + '''
 </script>
 <script>''' + egjs + '''</script>
 '''
