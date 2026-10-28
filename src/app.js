@@ -649,7 +649,31 @@ function autoDone(t, rec) {
   if (t.id === 'import' || t.id === 'import-week') return S.games.length > (t.gamesAt || 0);
   return false;
 }
-function isDone(rec, t) { return !!(rec.done && rec.done[t.id]) || (rec.plan.date === todayId() && autoDone(t, rec)); }
+// Ticks that came from lichess are written down as they happen, so past days keep them.
+let autoSaveT = null;
+function isDone(rec, t) {
+  if (rec.done && rec.done[t.id]) return true;
+  if (rec.auto && rec.auto[t.id]) return true;
+  if (rec.plan.date === todayId()) {
+    if (!autoDone(t, rec)) return false;
+    rec.auto = rec.auto || {}; rec.auto[t.id] = true;
+    clearTimeout(autoSaveT); autoSaveT = setTimeout(() => savePlan(rec.plan.date), 400);
+    return true;
+  }
+  return autoDonePast(t, rec.plan.date);
+}
+// For days before this fix: rebuild what we can from lichess history, games and the drill logs.
+function autoDonePast(t, k) {
+  const x = (LS.get('li-days') || {})[k] || {};
+  const gs = S.games.filter(g => ymd(new Date(gameTime(g))) === k);
+  if (t.id === 'puzzles') return (x.puzzles || 0) >= (t.target || 10);
+  if (t.id === 'calc') return (x.puzzles || 0) >= 13;
+  if (t.id === 'rush') return !!x.storm;
+  if (t.id === 'play' || t.id === 'blitz') return gs.filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
+  if (t.id === 'threat') return ((thLog()[k] || {}).n || 0) >= (t.target || 8);
+  if (t.id === 'loose') return ((lpLog()[k] || {}).n || 0) >= (t.target || 10);
+  return false;
+}
 function ratio(rec) { const ts = rec.plan.tasks; return ts.length ? ts.filter(t => isDone(rec, t)).length / ts.length : 0; }
 function streak() {
   let n = 0; const d = new Date();

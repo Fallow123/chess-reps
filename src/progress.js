@@ -179,8 +179,10 @@ function progressSection() {
 function weekReport(endAt) {
   const end = endAt || Date.now(); const a = weekStart(end - 1); const prev = a - 7 * 864e5;
   const inW = (t, s) => t >= s && t < s + 7 * 864e5;
-  const games = S.games.filter(g => srcOf(g) === mySite());
+  // Every game you played counts, on either site; the rating line stays on your main site.
+  const games = S.games;
   const cur = games.filter(g => inW(gameTime(g), a)), old = games.filter(g => inW(gameTime(g), prev));
+  const mine = gs => gs.filter(g => srcOf(g) === mySite());
   const cls = (D.profile && D.profile.main) || 'rapid';
   const elo = (gs, lastOne) => { const r = gs.filter(g => g.cls === cls && g.myElo).sort((x, y) => gameTime(x) - gameTime(y)); return r.length ? r[lastOne ? r.length - 1 : 0].myElo : null; };
   const rev = new Map(storedReviews().map(R => [R.g.id, R]));
@@ -191,7 +193,8 @@ function weekReport(endAt) {
   const mpc = Object.values(mpCards()).filter(c => inW(c.last || 0, a)).length;
   const eg = egProgress().seen || {}; const egn = Object.values(eg).filter(r => inW(r.lastWin || 0, a)).length;
   const W = cur.filter(g => g.score === 1).length, Dn = cur.filter(g => g.score === 0.5).length, L = cur.length - W - Dn;
-  const r0 = elo(old.length ? old : cur, true) || elo(cur, false), r1 = elo(cur, true);
+  const liveR = mySite() === 'lichess' && S.li && S.li.ratings && S.li.ratings[cls];
+  const r0 = elo(mine(old).length ? mine(old) : mine(cur), true) || elo(mine(cur), false), r1 = liveR || elo(mine(cur), true);
   const aCur = acc(cur), aOld = acc(old);
   const good = [], work = [];
   if (r0 && r1 && r1 > r0) good.push(`Your ${cls} rating went up ${r1 - r0}, to ${r1}.`); else if (r0 && r1 && r1 < r0) work.push(`Your ${cls} rating dropped ${r0 - r1}, to ${r1}.`);
@@ -203,7 +206,10 @@ function weekReport(endAt) {
   if (mpc) good.push(`You practised ${mpc} of your own mistakes.`);
   if (egn) good.push(`You solved ${egn} endgame chapter${egn > 1 ? 's' : ''}.`);
   const next = D.weak && D.weak[0] ? D.weak[0].text : null;
-  return { from: a, good, work, next, games: cur.length };
+  const byDay = [];
+  for (let t = a; t < Math.min(end, a + 7 * 864e5); t += 864e5) { const k = ymd(new Date(t)); const gs = cur.filter(g => ymd(new Date(gameTime(g))) === k); const x = H[k] || {};
+    byDay.push({ label: new Date(t).toLocaleDateString('en', { weekday: 'short' }), games: gs.length, puzzles: x.puzzles || 0 }); }
+  return { from: a, good, work, next, games: cur.length, byDay };
 }
 function weekCard(title) {
   const R = weekReport();
@@ -211,5 +217,6 @@ function weekCard(title) {
     h('h3', {}, title || 'Your week'), h('p', { class: 'note', style: 'margin-top:-4px' }, 'Since ' + new Date(R.from).toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' }) + '.'),
     R.good.length ? [h('h2', { class: 'good' }, 'Went well'), h('ul', {}, R.good.map(x => h('li', {}, x)))] : null,
     R.work.length ? [h('h2', { class: 'bad' }, 'To work on'), h('ul', {}, R.work.map(x => h('li', {}, x)))] : null,
+    h('div', { class: 'wkdays' }, R.byDay.map(d => h('div', { class: 'wkday' + (d.games || d.puzzles ? '' : ' off') }, h('b', {}, d.label), h('span', {}, d.games ? `${d.games} game${d.games > 1 ? 's' : ''}` : 'no games'), h('span', {}, d.puzzles ? `${d.puzzles} puzzles` : 'no puzzles')))),
     R.next ? h('p', { class: 'lede', style: 'margin:6px 0 0' }, 'Next week leans on this: ' + R.next) : null);
 }
