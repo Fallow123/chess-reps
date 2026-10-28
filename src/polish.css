@@ -198,3 +198,20 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 #rw .wkday b { color: var(--bone); font-size: 13px; }
 #rw .wkday.off { opacity: .55; }
 @media (max-width: 640px) { #rw .wkdays { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Today: time picker on top, all-time tracker on the right */
+.setsec.top { gap: 8px; padding: 12px 14px; margin: 0 0 18px; border: 1px solid var(--rule); border-radius: 10px; }
+.setsec.top .row { margin: 0; }
+.trkgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.trk { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 8px; min-width: 0; }
+.trk b { font-size: 26px; font-weight: 600; line-height: 1.1; color: var(--amber); font-variant-numeric: tabular-nums; }
+.trk span { font-size: 14px; }
+.trk .note { font-size: 12px; }
+.trk-r { margin: 8px 0 0; font-size: 15px; }
+.trk-r .trend { margin-left: 4px; }
+.hist tr.off td { color: var(--dim); opacity: .55; }
+.hist .bar { width: 30px; }
+.hist .pbar { display: inline-block; width: 28px; height: 5px; background: var(--rule); vertical-align: middle; margin-right: 6px; }
+.hist .pbar i { display: block; height: 100%; background: var(--amber); }
+.hist tfoot td { border-top: 2px solid var(--rule); padding-top: 8px; }
+.hist b { font-weight: 600; }
+@media (max-width: 520px) { .hist { font-size: 13px; } .hist .bar, .hist .pbar { display: none; } .hist td, .hist th { padding-right: 6px; } }

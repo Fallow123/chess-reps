@@ -1244,6 +1244,23 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 #rw .wkday b { color: var(--bone); font-size: 13px; }
 #rw .wkday.off { opacity: .55; }
 @media (max-width: 640px) { #rw .wkdays { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* Today: time picker on top, all-time tracker on the right */
+.setsec.top { gap: 8px; padding: 12px 14px; margin: 0 0 18px; border: 1px solid var(--rule); border-radius: 10px; }
+.setsec.top .row { margin: 0; }
+.trkgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.trk { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 8px; min-width: 0; }
+.trk b { font-size: 26px; font-weight: 600; line-height: 1.1; color: var(--amber); font-variant-numeric: tabular-nums; }
+.trk span { font-size: 14px; }
+.trk .note { font-size: 12px; }
+.trk-r { margin: 8px 0 0; font-size: 15px; }
+.trk-r .trend { margin-left: 4px; }
+.hist tr.off td { color: var(--dim); opacity: .55; }
+.hist .bar { width: 30px; }
+.hist .pbar { display: inline-block; width: 28px; height: 5px; background: var(--rule); vertical-align: middle; margin-right: 6px; }
+.hist .pbar i { display: block; height: 100%; background: var(--amber); }
+.hist tfoot td { border-top: 2px solid var(--rule); padding-top: 8px; }
+.hist b { font-weight: 600; }
+@media (max-width: 520px) { .hist { font-size: 13px; } .hist .bar, .hist .pbar { display: none; } .hist td, .hist th { padding-right: 6px; } }
 
 </style>
 
@@ -2626,25 +2643,83 @@ function reviewCard(rec, allDone) {
     R.next ? h('p', { class: 'lede', style: 'margin:6px 0 0' }, R.next) : h('p', { class: 'note' }, 'Nothing stood out to drill tomorrow. The plan keeps its weekly rhythm.'),
     h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn quiet tiny', disabled: !!S.reviewing, onclick: () => runDayReview(rec) }, S.reviewing ? 'Reviewing…' : 'Review again'), h('span', { class: 'note' }, `Reviewed ${ago(R.at)}`)));
 }
-// The last two weeks: plan done, puzzles, Storm, games.
+// The last two weeks, every day: plan done, puzzles, Storm, games, drills, with totals.
 function historySection() {
-  const H = LS.get('li-days') || {}; const rows = []; const d = new Date();
+  const H = LS.get('li-days') || {}; const TL = thLog(), LL = lpLog(); const rows = []; const d = new Date();
   for (let i = 0; i < 14; i++) {
-    const k = ymd(d); const r = S.plans[k]; const x = H[k] || {};
-    const gs = S.games.filter(g => ymd(new Date(gameTime(g))) === k);
-    if (r || x.puzzles || x.storm || gs.length) rows.push({ k, d: new Date(d), r, x, gs });
+    const k = ymd(d); const x = H[k] || {};
+    rows.push({ k, d: new Date(d), r: S.plans[k], x, gs: S.games.filter(g => ymd(new Date(gameTime(g))) === k), dr: ((TL[k] || {}).n || 0) + ((LL[k] || {}).n || 0) });
     d.setDate(d.getDate() - 1);
   }
-  if (!rows.length) return null;
+  if (!rows.some(o => o.r || o.x.puzzles || o.x.storm || o.gs.length || o.dr)) return null;
+  const wld = gs => [['W', 1], ['L', 0], ['D', 0.5]].map(([l, v]) => [gs.filter(g => g.score === v).length, l]).filter(x => x[0]).map(x => x.join('')).join(' ');
+  const maxP = Math.max(1, ...rows.map(o => o.x.puzzles || 0));
   const tb = h('tbody');
-  for (const { d, r, x, gs } of rows) tb.append(h('tr', {},
-    h('td', {}, d.toLocaleDateString('en', { weekday: 'short', day: 'numeric' })),
-    h('td', {}, r ? [h('span', { class: 'bar' }, h('i', { style: `width:${Math.round(100 * ratio(r))}%` })), Math.round(100 * ratio(r)) + '%'] : h('span', { class: 'note' }, '–')),
-    h('td', { class: x.puzzles ? '' : 'dim' }, x.puzzles ? `${x.puzzles} (${Math.round(100 * x.won / x.puzzles)}%)` : '–'),
-    h('td', { class: x.storm ? '' : 'dim' }, x.storm ? String(x.storm) : '–'),
-    h('td', { class: gs.length ? '' : 'dim' }, gs.length ? [['W', 1], ['L', 0], ['D', 0.5]].map(([l, v]) => [gs.filter(g => g.score === v).length, l]).filter(x => x[0]).map(x => x.join('')).join(' ') : '–')));
+  for (const { d, r, x, gs, dr } of rows) {
+    const empty = !r && !x.puzzles && !x.storm && !gs.length && !dr;
+    tb.append(h('tr', { class: empty ? 'off' : '' },
+      h('td', {}, d.toLocaleDateString('en', { weekday: 'short', day: 'numeric' })),
+      h('td', {}, r ? [h('span', { class: 'bar' }, h('i', { style: `width:${Math.round(100 * ratio(r))}%` })), Math.round(100 * ratio(r)) + '%'] : h('span', { class: 'note' }, '–')),
+      h('td', { class: x.puzzles ? '' : 'dim' }, x.puzzles ? [h('span', { class: 'pbar' }, h('i', { style: `width:${Math.round(100 * x.puzzles / maxP)}%` })), h('b', {}, String(x.puzzles)), h('span', { class: 'note' }, ` ${Math.round(100 * x.won / x.puzzles)}%`)] : '–'),
+      h('td', { class: x.storm ? '' : 'dim' }, x.storm ? [h('b', {}, String(x.storm)), x.stormRuns > 1 ? h('span', { class: 'note' }, ` ×${x.stormRuns}`) : null] : '–'),
+      h('td', { class: gs.length ? '' : 'dim' }, gs.length ? wld(gs) : '–'),
+      h('td', { class: dr ? '' : 'dim' }, dr ? String(dr) : '–')));
+  }
+  const sum = f => rows.reduce((a, o) => a + (f(o) || 0), 0);
+  const tp = sum(o => o.x.puzzles), tw = sum(o => o.x.won), ts = sum(o => o.x.stormRuns || (o.x.storm ? 1 : 0)), tg = rows.flatMap(o => o.gs), td = sum(o => o.dr);
+  const active = rows.filter(o => o.x.puzzles || o.x.storm || o.gs.length || o.dr || (o.r && ratio(o.r) > 0)).length;
+  const tf = h('tfoot', {}, h('tr', {}, h('td', {}, 'Total'), h('td', {}, h('span', { class: 'note' }, `${active} of 14 days active`)),
+    h('td', {}, tp ? [h('b', {}, String(tp)), h('span', { class: 'note' }, ` ${Math.round(100 * tw / tp)}%`)] : '–'),
+    h('td', {}, ts ? `${ts} run${ts > 1 ? 's' : ''}` : '–'), h('td', {}, tg.length ? wld(tg) : '–'), h('td', {}, td ? String(td) : '–')));
   return h('section', { class: 'sec' }, h('h2', {}, 'Your last two weeks'),
-    h('table', { class: 'hist' }, h('thead', {}, h('tr', {}, ['Day', 'Plan', 'Puzzles', 'Storm', 'Games'].map(t => h('th', {}, t)))), tb));
+    h('table', { class: 'hist' }, h('thead', {}, h('tr', {}, ['Day', 'Plan', 'Puzzles', 'Storm', 'Games', 'Drills'].map(t => h('th', {}, t)))), tb, tf),
+    h('p', { class: 'note' }, 'Puzzles show how many you did and the share solved. Storm is the day’s best score, ×runs when you played more than one. Drills are threat checks and loose-piece rounds.'));
+}
+// Everything since your first plan, done inside the plan or not.
+function trackerStart() {
+  let s = LS.get('started');
+  const first = Object.keys(S.plans).sort()[0];
+  if (!s || (first && first < s)) { s = first || todayId(); LS.set('started', s); }
+  return s;
+}
+function trackerStats() {
+  const from = trackerStart(); const t0 = new Date(from + 'T00:00:00').getTime();
+  const since = o => Object.entries(o).filter(([k]) => k >= from).map(([, v]) => v);
+  const sum = (o, f) => since(o).reduce((a, v) => a + (f(v) || 0), 0);
+  const H = LS.get('li-days') || {}; const gs = S.games.filter(g => gameTime(g) >= t0);
+  const plans = since(S.plans); const eg = egProgress();
+  const cls = (D.profile && D.profile.main) || 'rapid';
+  const rated = gs.filter(g => g.cls === cls && g.myElo).sort((a, b) => gameTime(a) - gameTime(b));
+  const liveR = mySite() === 'lichess' && S.li && S.li.ratings && S.li.ratings[cls];
+  return { from, days: Math.round((dayStart() - t0) / 864e5) + 1,
+    games: gs.length, w: gs.filter(g => g.score === 1).length, l: gs.filter(g => g.score === 0).length, d: gs.filter(g => g.score === 0.5).length,
+    puzzles: sum(H, v => v.puzzles), won: sum(H, v => v.won), storms: sum(H, v => v.stormRuns || (v.storm ? 1 : 0)), stormBest: since(H).reduce((a, v) => Math.max(a, v.storm || 0), 0),
+    plans: plans.length, hit: plans.filter(r => ratio(r) >= 0.6).length, tasks: plans.reduce((a, r) => a + r.plan.tasks.filter(t => isDone(r, t)).length, 0),
+    threats: sum(thLog(), v => v.n), loose: sum(lpLog(), v => v.n),
+    mp: Object.values(mpCards()).filter(c => c.last >= t0).reduce((a, c) => a + (c.n || 0) + (c.miss || 0), 0),
+    eg: Object.values(eg.wins || {}).reduce((a, n) => a + (n || 0), 0), structs: Object.values(eg.structs || {}).filter(Boolean).length,
+    cls, r0: rated.length ? rated[0].myElo : null, r1: liveR || (rated.length ? rated[rated.length - 1].myElo : null) };
+}
+function trackerSection() {
+  const T = trackerStats(); const n = x => x.toLocaleString('en');
+  const tile = (v, label, sub) => h('div', { class: 'trk' }, h('b', {}, n(v)), h('span', {}, label), sub ? h('span', { class: 'note' }, sub) : null);
+  const tiles = [
+    tile(T.games, T.games === 1 ? 'game played' : 'games played', T.games ? `${T.w}W ${T.l}L ${T.d}D` : null),
+    tile(T.puzzles, 'lichess puzzles', T.puzzles ? `${Math.round(100 * T.won / T.puzzles)}% solved` : null),
+    tile(T.storms, T.storms === 1 ? 'Puzzle Storm run' : 'Puzzle Storm runs', T.stormBest ? `best ${T.stormBest}` : null),
+    tile(T.tasks, 'plan tasks done', `${T.hit} of ${T.plans} days hit`),
+    T.mp ? tile(T.mp, 'own-mistake puzzles') : null,
+    T.threats ? tile(T.threats, 'threat checks') : null,
+    T.loose ? tile(T.loose, 'loose-piece drills') : null,
+    T.eg ? tile(T.eg, 'endgames won') : null,
+    T.structs ? tile(T.structs, 'structures learned') : null,
+  ].filter(Boolean);
+  const d0 = new Date(T.from + 'T00:00:00').toLocaleDateString('en', { day: 'numeric', month: 'short' });
+  const rLine = T.r0 && T.r1 ? h('p', { class: 'trk-r' }, T.cls[0].toUpperCase() + T.cls.slice(1) + ' ', h('b', {}, String(T.r0)), ' → ', h('b', {}, String(T.r1)),
+    h('span', { class: 'trend ' + (T.r1 > T.r0 ? 'up' : T.r1 < T.r0 ? 'down' : '') }, ` ${T.r1 >= T.r0 ? '+' : '−'}${Math.abs(T.r1 - T.r0)}`)) : null;
+  return h('section', { class: 'sec' }, h('h2', {}, 'Since you started'),
+    h('p', { class: 'note' }, `${d0} to today, ${T.days} day${T.days > 1 ? 's' : ''}. Counts everything, in the plan or not: puzzles and Storm come from lichess, games from both sites.`),
+    rLine, h('div', { class: 'trkgrid' }, tiles));
 }
 function renderToday() {
   const box = $('#rw-today'); box.replaceChildren();
@@ -2666,6 +2741,15 @@ function renderToday() {
   const P = rec.plan; const now = new Date();
   const doneN = P.tasks.filter(t => isDone(rec, t)).length;
   const left = h('div', { class: 'plan' });
+  const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
+  const changed = () => { save('settings'); ensurePlan(true); render(); };
+  const setBar = h('section', { class: 'setsec top' },
+    setRow('Time today', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
+    setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
+    h('div', { class: 'row' }, h('button', { class: 'btn quiet tiny', onclick: () => { ensurePlan(true); render(); toast('Plan rebuilt from your latest data'); } }, 'Rebuild today’s plan'),
+      h('span', { class: 'note' }, 'Rebuilding keeps what you have ticked.')));
+
+  left.append(setBar);
   left.append(h('p', { class: 'eyebrow' }, now.toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' })),
     h('h3', { class: 'plantitle' }, P.title),
     h('p', { class: 'ask' }, P.note),
@@ -2694,14 +2778,6 @@ function renderToday() {
   if (new Date().getDay() === 0) left.append(weekCard('Your week in review'));
   left.append(reviewCard(rec, allDone));
 
-  const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
-  const changed = () => { save('settings'); ensurePlan(true); render(); };
-  left.append(h('section', { class: 'sec setsec' }, h('h2', {}, 'Shape the plan'),
-    setRow('Time today', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
-    setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
-    h('div', { class: 'row' }, h('button', { class: 'btn quiet tiny', onclick: () => { ensurePlan(true); render(); toast('Plan rebuilt from your latest data'); } }, 'Rebuild today’s plan'),
-      h('span', { class: 'note' }, 'Rebuilding keeps what you have ticked.'))));
-
   // Right: streak, week, what your games say.
   const right = h('div', { class: 'coach' });
   const st = streak(); const themes = weekThemes(D.weak); const wd = weekdayIdx(now);
@@ -2713,6 +2789,7 @@ function renderToday() {
     strip.append(h('div', { class: 'wday s-' + state + (i === wd ? ' now' : '') }, h('b', {}, d.toLocaleDateString('en', { weekday: 'short' })), h('span', {}, (THEME[th] || '').replace(' day', '').replace('Slow chess', 'Slow'))));
   }
   const histSec = historySection(); 
+  right.append(trackerSection());
   right.append(h('section', { class: 'sec' }, h('div', { class: 'streak' }, h('b', {}, String(st)), h('span', {}, st === 1 ? 'day in a row' : 'days in a row')), h('p', { class: 'note' }, 'A day counts when you finish at least 60% of its plan.'), strip));
 
   if (histSec) right.append(histSec);
