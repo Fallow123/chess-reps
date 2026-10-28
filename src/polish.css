@@ -215,3 +215,5 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 .hist tfoot td { border-top: 2px solid var(--rule); padding-top: 8px; }
 .hist b { font-weight: 600; }
 @media (max-width: 520px) { .hist { font-size: 13px; } .hist .bar, .hist .pbar { display: none; } .hist td, .hist th { padding-right: 6px; } }
+a.brand { color: inherit; text-decoration: none; cursor: pointer; }
+a.brand:hover h1 { color: var(--amber); }

@@ -987,6 +987,7 @@ document.addEventListener('keydown', e => {
   e.preventDefault(); render();
 });
 for (const t of TABS) $('#tab-' + t).addEventListener('click', () => { if (t !== 'games' && S.review && !S.review.running) S.review = null; S.tab = t; S.sel = null; if (t !== 'drill') S.hint = null; render(); });
+$('#brand-home').addEventListener('click', e => { e.preventDefault(); $('#tab-today').click(); window.scrollTo(0, 0); });
 for (const s of ['w', 'b']) $('#side-' + s).addEventListener('click', () => { if (S.side === s) return; S.side = s; S.drill = null; goTo([]); refresh(); render(); });
 
 if (typeof Chess === 'undefined') $('#rw-panel').append(h('p', { class: 'lnote bad' }, 'The move generator did not load. Reload the page to try again.'));
