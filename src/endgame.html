@@ -958,7 +958,7 @@
     history: [], busy: false, over: false, hinted: false, promoted: false,
     hintLevel: 0, hintsUsed: 0, lostIt: false,
     lastFrom: null, lastTo: null, snapshot: null,
-    wins: {}, seen: {}
+    wins: {}, seen: {}, structs: {}, runs: {}
   };
   CHAPTERS.forEach(function (c) { S.wins[c.id] = 0; });
 
@@ -986,6 +986,8 @@
       if (data.reps !== undefined) S.reps = data.reps;
       if (data.freeAll) S.freeAll = true;
       if (data.seen) S.seen = data.seen;
+      if (data.structs) S.structs = data.structs;
+      if (data.runs) S.runs = data.runs;
     } else {                                     // saved before levels existed
       S.wins = Object.assign(S.wins, data);
     }
@@ -1004,7 +1006,7 @@
 
   function saveProgress() {
     var blob = JSON.stringify({ wins: S.wins, level: S.level, reps: S.reps,
-                            freeAll: S.freeAll, seen: S.seen });
+                            freeAll: S.freeAll, seen: S.seen, structs: S.structs, runs: S.runs });
     if (window.storage) { window.storage.set(PKEY, blob).catch(function () {}); return; }
     try { window.localStorage.setItem(PKEY, blob); } catch (e) {}
   }
@@ -1438,8 +1440,10 @@
       drills: ["philidor", "lucena", "rookpawngeneral"] },
     { id: "everything", name: "The whole ladder", blurb: "All thirteen, in order",
       drills: CHAPTERS.map(function (c) { return c.id; }) },
-    { id: "structures", name: "Pawn structures", blurb: "Eight skeletons and their plans",
+    { id: "structures", name: "Pawn structures", blurb: "Thirteen structures: a lesson, then a quiz",
       kind: "study" },
+    { id: "structquiz", name: "Structures quiz", blurb: "Mixed questions from the ones you have learned",
+      kind: "study", quiz: true },
     { id: "minority", name: "The minority attack", blurb: "Three model lines, move by move",
       kind: "line", lines: ["minority-direct", "minority-a5", "minority-a6"] },
     { id: "iqp-lines", name: "Playing the isolani", blurb: "Three ways to cash it in",
@@ -1603,6 +1607,187 @@
            "structure is perfectly healthy."
     }
   ];
+
+
+  /* ---------- the structures course ----------
+     Each structure gets a short lesson (the idea, each side's plan, what to watch)
+     and a few questions: the plan, the break, the piece that matters.        */
+  var LESSONS = {
+    "The Carlsbad": {
+      idea: "White has two queenside pawns against three, and Black has the half-open e-file and a solid d5. Nobody's pawns are weak yet. The plans are about creating a weakness on the other side.",
+      white: "The minority attack: Rb1, b4, a4 and b5. After bxc6 Black is left with a backward c6 pawn on a half-open file. The other plan is the central f3 and e4 break, usually after castling long.",
+      black: "Counter on the kingside with ...Ne4, ...f5 and a rook lift, or meet b5 with ...c6xb5 or ...a6 in time. In the endgame, the weak c6 pawn is what decides.",
+      watch: "Ne5 for White and Ne4 for Black are the dream squares. Swapping the light-squared bishops helps the side that wants to use those squares.",
+      qs: [{ ask: "White starts the minority attack. What is Black's standard counterplay?",
+        options: ["...Ne4 and ...f5, building a kingside attack", "...b5, stopping the attack cold", "...c5, opening the centre", "Doubling rooks on the c-file"], answer: 0,
+        why: "The minority attack is slow, so Black uses the time on the other wing. ...Ne4, backed by ...f5, gives Black a kingside initiative. Stopping b4-b5 with ...b5 leaves c6 and c5 weak for good." },
+      { ask: "The minority attack is done: Black has a pawn on c6 and White a knight that could reach c5. What should White aim for next?",
+        options: ["Pile up on c6 and trade into an endgame where it falls", "Push e3-e4 at once", "Sacrifice on h7", "Swap the knight for a bishop"], answer: 0,
+        why: "The attack's whole point was to create a lasting weakness. Now White plays against it with rooks on the c-file and a piece on c5, and every trade brings the pawn closer to falling." }]
+    },
+    "The isolated queen's pawn": {
+      idea: "One side has a d-pawn with no neighbours. It gives space and outposts on e5 and c5, but it can never be guarded by a pawn and the square in front of it is a hole.",
+      white: "With the isolani: attack while the pieces are on. Knights on e5 and c3, a bishop on the b1-h7 diagonal, a rook lift, and the d4-d5 break to open the centre at the right moment.",
+      black: "Against it: blockade d5 with a knight, trade pieces (especially attackers), and steer for an endgame where the pawn is only a target.",
+      watch: "Every trade helps the side without the isolani. The d5 square is the key square for both sides.",
+      qs: [{ ask: "You are Black against the isolani. Which piece is the best blockader on d5?",
+        options: ["A knight", "The queen", "A rook", "The light-squared bishop"], answer: 0,
+        why: "A knight on d5 cannot be chased by pawns, it attacks key squares, and it does not mind sitting in front of a pawn. A queen there gets chased away, and a bishop blocks its own diagonal." },
+      { ask: "With the isolani, which trade is the worst for you?",
+        options: ["Trading your attacking pieces when you have no break", "Trading a bad bishop", "Getting d4-d5 in, even at the cost of a trade", "Swapping your d4 pawn for a central pawn"], answer: 0,
+        why: "The isolani only pays while your pieces are active. Trading attackers without getting d5 in leaves you with the weakness and none of the compensation." }]
+    },
+    "Hanging pawns": {
+      idea: "Two pawns side by side on c4 and d4 (or c5 and d5), with no pawns beside them. Side by side they are strong; as soon as one moves, the other is backward.",
+      white: "Use the space: pieces behind the pawns, and a well-timed d4-d5 or c4-c5 that opens lines toward the king or wins a tempo with a threat.",
+      black: "Pressure them with rooks on c8 and d8, a knight and bishop, and pieces that force one pawn to move. Then blockade the square in front of the other.",
+      watch: "The question is always: when one pawn moves, which square in front of the other becomes a hole?",
+      qs: [{ ask: "When is pushing d4-d5 with the hanging pawns a good idea?",
+        options: ["When it opens lines toward Black's king or comes with a threat", "Always, as soon as possible", "Never; they must stay side by side", "Only in the endgame"], answer: 0,
+        why: "The push gives up the pair's strength, so it has to buy something: an open diagonal to the king, a tactic, or a piece driven away. Pushed for nothing, it leaves c4 backward and d5 or c5 for a blockader." }]
+    },
+    "The Maróczy Bind": {
+      idea: "White's c4 and e4 pawns take away d5 and b5. Black's position is solid but cramped, and the fight is about whether Black can break out.",
+      white: "Keep the bind: Be3, Qd2, f3 so e4 is solid, and pieces ready to meet ...b5 or ...d5. Then space on the queenside with b4 and c5, or a slow kingside push.",
+      black: "Trade pieces to ease the cramp, then break with a prepared ...b5 (after ...a6, ...Rc8 and ...Qa5) or ...f5. A knight on c5 or e5 is Black's best piece.",
+      watch: "...e5 looks freeing but hands White d5 forever. Black's d6 pawn is the target if the breaks never come.",
+      qs: [{ ask: "Why does Black welcome piece trades against the Maróczy?",
+        options: ["With less space, fewer pieces means less cramping", "Trades win the e4 pawn", "Trades lead to a won pawn ending", "They don't; Black should avoid trades"], answer: 0,
+        why: "Space matters most when there are many pieces that need squares. Every trade gives Black's remaining pieces room, and the endgame is often fine for Black." }]
+    },
+    "The locked chain": {
+      idea: "Pawn chains point at the side where each player attacks. Here White's chain d4-e5 points at the kingside and Black's d5-e6 points at the queenside.",
+      white: "Space on the kingside: f4-f5 to hit the base on e6, or pieces toward the king. Keep the centre locked with d4 well protected.",
+      black: "Strike the base of White's chain with ...c5, then pressure d4 with ...Qb6, ...Nc6 and ...cxd4. ...f6 at the head is the second option.",
+      watch: "Black's light-squared bishop is shut in behind its own pawns. Swapping it (...b6 and ...Ba6) or bringing it out before ...e6 is the long-term problem.",
+      qs: [{ ask: "In the French structure, which of Black's pieces is the long-term problem?",
+        options: ["The light-squared bishop, stuck behind e6 and d5", "The king's knight", "The dark-squared bishop", "The queen's rook"], answer: 0,
+        why: "Black's pawns are on light squares, so the light-squared bishop has nothing to bite. That's why Black often plays ...b6 and ...Ba6 to swap it, or brings it out before playing ...e6." }]
+    },
+    "The Stonewall": {
+      idea: "A wall of pawns on c6, d5, e6 and f5. It grips e4 and gives a kingside attack, at a permanent cost on the dark squares.",
+      white: "Take the e5 hole with a knight, swap Black's good dark-squared bishop (Ba3 or Bf4), and break with c4xd5 or f3 and e4 to open things up.",
+      black: "A knight on e4, then ...Qe8-h5, ...Rf6-h6 and ...g5 against the king. Solve the light-squared bishop with ...b6 and ...Ba6.",
+      watch: "If dark-squared bishops come off, e5 becomes a permanent home for a white knight and Black's attack loses its partner.",
+      qs: [{ ask: "Which white piece wants the e5 hole?",
+        options: ["A knight, where no black pawn can chase it", "The queen", "A rook", "The light-squared bishop"], answer: 0,
+        why: "No black pawn can ever attack e5, since the d- and f-pawns are on d5 and f5. A knight there sees f7, d7 and g6, and Black has to give up a piece to remove it." }]
+    },
+    "The Benoni": {
+      idea: "White has more central space with d5 and e4; Black has a queenside majority and the half-open e-file. A sharp race of central break against queenside expansion.",
+      white: "The e4-e5 break, prepared with f4 or Re1 and Bf4. Stop ...b5 with a4, and keep the knight that wants c4.",
+      black: "Push the majority with ...a6, ...Rb8 and ...b5. Pressure e4 down the e-file. The bishop on g7 is Black's best piece.",
+      watch: "If White gets e5 in under good conditions, Black's position collapses. If Black gets ...b5 and ...c4, White's centre loses support.",
+      qs: [{ ask: "What is White's thematic break in the Benoni?",
+        options: ["e4-e5, opening the centre and freeing d5", "b2-b4, attacking c5", "g2-g4, starting a kingside storm", "c2-c4, adding to the centre"], answer: 0,
+        why: "e4-e5 opens lines while Black's pieces are on the queenside, and frees the d5 pawn to run. Most Benoni games turn on whether it comes in time." }]
+    },
+    "The Boleslavsky hole": {
+      idea: "Black's ...e5 gives up d5 for good but gains time, space and dark-square control. The game turns on whether White can use d5.",
+      white: "Fight for d5: Nc3-d5, Bg5 to swap the f6 knight, and Bc4 or Be2-f3 against the d5 square. A piece on d5 that cannot be swapped off is the goal.",
+      black: "Cover d5 with ...Be6 and ...Nf6, swap whatever lands there, and expand with ...b5. The ...d5 break, when it works, solves everything.",
+      watch: "Black's light-squared bishop is precious here: it is the only piece that can fight for d5.",
+      qs: [{ ask: "Which black break removes the d5 hole for good?",
+        options: ["...d6-d5", "...f7-f5", "...a7-a5", "...g7-g5"], answer: 0,
+        why: "Once the d-pawn reaches d5 and can't be won, there is no hole any more. The Najdorf and Sveshnikov are full of lines where Black prepares exactly that." }]
+    }
+  };
+  var NEW_STRUCTURES = [
+    {
+      name: "The Hedgehog",
+      from: "English and Sicilian, Black's patient setup",
+      fen: "8/5ppp/pp1pp3/8/2P1P3/8/PP3PPP/8",
+      lesson: {
+        idea: "Black's pawns sit low on a6, b6, d6 and e6, the spikes. White has more space, but Black's position is very hard to break and full of counterpunches.",
+        white: "Keep the clamp and squeeze: rooks on d1 and c1, pieces covering b5 and d5, and the push e4-e5 or a kingside advance only when it's safe.",
+        black: "Wait behind the curtain: ...Qc7, ...Rfd8 and ...Rac8, pieces on e7, f6, d7 and b7. Then break with ...b5 or ...d5 the moment White overreaches.",
+        watch: "The spikes break at the right time, never early. White's danger is overextending, after which the advanced pawns become targets."
+      },
+      qs: [{ ask: "Black is in the hedgehog. What are Black's freeing breaks?",
+        options: ["...b6-b5 and ...d6-d5", "...e6-e5 and ...f7-f5", "...a6-a5 and ...h7-h5", "...g7-g5 and ...h7-h5"], answer: 0,
+        why: "The hedgehog's breaks are ...b5 against c4 and ...d5 against c4 and e4. Each opens lines at the moment White's pieces are poorly placed." },
+      { ask: "What is the most common way to go wrong as Black in the hedgehog?",
+        options: ["Breaking too early, before the pieces are ready", "Waiting for too long", "Castling kingside", "Trading the light-squared bishop"], answer: 0,
+        why: "The setup is built on patience. A premature ...d5 or ...b5 opens the position while White is better developed, and the extra space starts to matter." },
+      { ask: "White pushes everything forward: e5, f4, g4. What is the danger for White?",
+        options: ["Overextending, so the pawns become targets when the spikes break", "None: more space is always better", "A lost pawn ending", "Black's king walks to the queenside"], answer: 0,
+        why: "Every white pawn that moves leaves squares behind it. The hedgehog is waiting for exactly this, and ...d5 or ...b5 then hits a loose position." }]
+    },
+    {
+      name: "The King's Indian chain",
+      from: "King's Indian Defence, Classical with d4-d5",
+      fen: "8/ppp2p1p/3p2p1/3Pp3/2P1P3/8/PP3PPP/8",
+      lesson: {
+        idea: "The centre is locked with d5 and e4 against d6 and e5. The chains point to opposite wings, so each side attacks where its chain points: White on the queenside, Black on the kingside.",
+        white: "Break at the base of Black's chain: c4-c5 to hit d6, supported by b4, Nd2-c4 and a4-a5. Open the c-file and break into c7.",
+        black: "Break at the base of White's chain on the kingside: the knight steps back (...Ne8 or ...Nd7), then ...f5, ...f4, ...g5-g4 against White's king.",
+        watch: "It's a race. Black needs to be quicker on the kingside than White on the queenside, and a single wasted tempo usually decides it."
+      },
+      qs: [{ ask: "Where does each side play in the King's Indian chain?",
+        options: ["White on the queenside with c5; Black on the kingside with ...f5", "Both sides in the centre", "White on the kingside; Black on the queenside", "Neither: it's a fortress"], answer: 0,
+        why: "Each chain points to one wing. White's c4-d5 chain points to the queenside, so White breaks with c5. Black's d6-e5 chain points to the kingside, so Black breaks with ...f5." },
+      { ask: "Why does Black's knight on f6 usually retreat to e8 or d7?",
+        options: ["To clear the f-pawn so ...f5 can come", "To defend the king", "To go to the queenside", "Because it is attacked"], answer: 0,
+        why: "The knight on f6 blocks the f-pawn, and ...f5 is Black's entire plan. Stepping back costs a tempo, which is why the race is so close." }]
+    },
+    {
+      name: "Doubled c-pawns",
+      from: "Nimzo-Indian, Sämisch and Hübner",
+      fen: "8/pp3ppp/3p4/2p1p3/2PP4/P1P1P3/5PPP/8",
+      lesson: {
+        idea: "White gave up a bishop for a knight to get the bishop pair and a big centre, at the cost of doubled c-pawns. The c4 pawn is a permanent target.",
+        white: "Open the position for the bishops: f3 and e4, or f4, and a kingside attack. Closed positions are where the bishops are poor.",
+        black: "Keep it closed with ...d6 and ...e5, then hit c4 with ...b6, ...Ba6, ...Na5 and ...Rc8. Knights love closed positions.",
+        watch: "If the centre opens, White's bishops take over. If it stays shut, the c4 pawn usually falls."
+      },
+      qs: [{ ask: "Against the doubled c-pawns, what does Black attack?",
+        options: ["The front pawn on c4", "The pawn on c3", "The pawn on a3", "White's king"], answer: 0,
+        why: "c4 is the pawn that can't be defended by another pawn and sits on a half-open file for Black once ...cxd4 happens, so ...b6, ...Ba6, ...Na5 and ...Rc8 all aim at it." },
+      { ask: "What kind of position does White want with the bishop pair?",
+        options: ["Open, with f3 and e4 or f4-f5", "Closed and locked", "A queenless middlegame", "A knight endgame"], answer: 0,
+        why: "Bishops need open diagonals. White's whole compensation for the weak pawns is the pair, so White opens the centre and kingside, and Black does the opposite." }]
+    },
+    {
+      name: "The Scheveningen",
+      from: "Sicilian with ...d6 and ...e6",
+      fen: "8/pp3ppp/3pp3/8/4P3/8/PPP2PPP/8",
+      lesson: {
+        idea: "Black's small centre (d6 and e6) is modest but very solid and flexible. It controls e5, d5, c5 and f5, and can break with ...d5 or ...e5 later.",
+        white: "Attack before Black is organised: g4-g5 (the Keres attack) to drive the f6 knight away, or f4 with e5 or f5. Castle long and race.",
+        black: "Expand on the queenside with ...a6, ...b5 and ...Bb7. Strike in the centre with ...d5 or ...e5 when White's pieces are committed to the attack.",
+        watch: "Speed decides. White needs the kingside attack to land before Black's queenside play and central break."
+      },
+      qs: [{ ask: "What is White's sharpest plan against the Scheveningen?",
+        options: ["g2-g4-g5, chasing the f6 knight", "c2-c4, a Maróczy setup", "A slow b2-b3 and Bb2", "Trading queens"], answer: 0,
+        why: "The f6 knight is the key defender of Black's king and covers d5 and e4. g4-g5 kicks it away, so this pawn storm, the Keres attack, is White's most dangerous try." },
+      { ask: "When is Black's central break ...d5 usually good?",
+        options: ["When White's pieces are committed to a kingside attack", "On move one", "Never: the d6 pawn must stay", "Only in the endgame"], answer: 0,
+        why: "A pawn storm leaves White's centre thin. Opening it with ...d5 at that moment turns White's attack into a weakness." }]
+    },
+    {
+      name: "The Caro-Kann setup",
+      from: "Caro-Kann Classical and Slav",
+      fen: "8/pp3ppp/2p1p3/8/3P4/8/PPP2PPP/8",
+      lesson: {
+        idea: "White has a d4 pawn against Black's c6 and e6: a little more space and the e5 square. Black is very solid, with no weaknesses, and aims to equalise and outlast.",
+        white: "A knight on e5, space on the kingside with h4-h5, and often castling long. The c4 push to fight for d5 is the queenside plan.",
+        black: "Free the position with ...c5 (sometimes ...e5), swap off pieces, and head for endgames, where the d4 pawn can become a target.",
+        watch: "White's advantage is small and needs to be used in the middlegame. Black should not rush: a well-timed ...c5 usually equalises."
+      },
+      qs: [{ ask: "In the Caro-Kann setup, what is Black's main freeing break?",
+        options: ["...c6-c5, challenging d4", "...g7-g5", "...b7-b5", "...f7-f5"], answer: 0,
+        why: "...c5 hits White's only central pawn and opens the c-file for Black. Prepared by ...Nbd7 and ...Qc7, it usually solves Black's opening problems." },
+      { ask: "Which square is White's best outpost here?",
+        options: ["e5, for a knight", "d5, for a bishop", "c6, for a rook", "f7, for the queen"], answer: 0,
+        why: "Black has no d-pawn, so only ...f6 could ever cover e5. A knight there pressures f7 and d7 and supports a kingside attack. Black often trades it with ...Nd7." }]
+    }
+  ];
+  STRUCTURES.forEach(function (s) {
+    var L = LESSONS[s.name];
+    s.lesson = { idea: L.idea, white: L.white, black: L.black, watch: L.watch };
+    s.qs = [{ ask: s.ask, options: s.options, answer: s.answer, why: s.why }].concat(L.qs);
+  });
+  STRUCTURES = STRUCTURES.concat(NEW_STRUCTURES);
 
   function fromFen(placement) {
     var b = new Array(64).fill(null), rows = placement.split(" ")[0].split("/");
@@ -2251,7 +2436,7 @@
   var RUN = null;
 
   function startRun(set) {
-    RUN = { set: set, i: 0, results: [], started: Date.now(), order: null };
+    RUN = { set: set, i: 0, results: [], started: Date.now(), order: null, queue: set.kind === "study" ? studyQueue(set) : null };
     renderRunbar();
     if (set.kind === "study") { showQuestion(); return; }
     if (set.kind === "line") { startLines(set.lines); return; }
@@ -2269,7 +2454,7 @@
       el.btnQuit.textContent = "Finish";
       return;
     }
-    var total = RUN.set.kind === "study" ? STRUCTURES.length
+    var total = RUN.set.kind === "study" ? RUN.queue.length
               : RUN.set.kind === "line" ? RUN.set.lines.length
               : RUN.set.drills.length;
     el.runcount.textContent = (RUN.i + 1) + " of " + total;
@@ -2328,29 +2513,68 @@
     }, 1400);
   }
 
-  /* ---------- study mode ---------- */
+  /* ---------- study mode ----------
+     The course takes two structures at a time, lesson first, then its questions,
+     and finishes with a couple of review questions from ones already learned.
+     The quiz mixes questions from everything learned so far.                 */
+  function shuffled(a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function studyQueue(set) {
+    var learned = STRUCTURES.filter(function (x) { return S.structs[x.name]; });
+    var qOf = function (st) { return st.qs.map(function (q) { return { kind: "q", s: st, q: q }; }); };
+    if (set.quiz) {
+      var pool = (learned.length >= 3 ? learned : STRUCTURES).reduce(function (a, st) { return a.concat(qOf(st)); }, []);
+      return shuffled(pool).slice(0, 8);
+    }
+    // New structures first, in order; then the ones you scored worst on, longest ago.
+    var score = function (st) { var r = S.structs[st.name]; return r ? (r.right / Math.max(1, r.n)) * 10 + (r.last / 864e5) / 1e6 : -1; };
+    var next = STRUCTURES.filter(function (x) { return !S.structs[x.name]; });
+    if (next.length < 2) next = next.concat(learned.slice().sort(function (a, b) { return score(a) - score(b); }));
+    next = next.slice(0, 2);
+    var out = [];
+    next.forEach(function (st) { out.push({ kind: "lesson", s: st }); out = out.concat(qOf(st)); });
+    var rest = learned.filter(function (x) { return next.indexOf(x) < 0; });
+    shuffled(rest).slice(0, 2).forEach(function (st) { out.push({ kind: "q", s: st, q: st.qs[Math.floor(Math.random() * st.qs.length)], review: true }); });
+    return out;
+  }
   function showQuestion() {
-    var q = STRUCTURES[RUN.i];
+    var item = RUN.queue[RUN.i], st = item.s;
     S.gen++;                                   // cancel anything the last drill has in flight
     setMode("study");
-    S.board = fromFen(q.fen);
+    veil(false);
+    S.board = fromFen(st.fen);
     S.ch = null; S.sel = null; S.tb = null;
     S.lastFrom = S.lastTo = null; S.history = [];
     render(); renderSheet();
     renderRunbar();
 
-    el.qtitle.textContent = q.name;
-    el.qask.textContent = q.from + ". " + q.ask;
-    el.why.hidden = true;
+    el.qtitle.textContent = (item.review ? "Review: " : "") + st.name;
     el.btnPlayPlan.hidden = true;
     el.opts.innerHTML = "";
 
-    // Shuffle, or the correct answer's position becomes the answer.
-    var order = q.options.map(function (_, i) { return i; });
-    for (var i = order.length - 1; i > 0; i--) {
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = order[i]; order[i] = order[j]; order[j] = t;
+    if (item.kind === "lesson") {
+      var L = st.lesson;
+      el.qask.textContent = st.from + ".";
+      el.whytext.innerHTML = '<span class="lsn"><b>The idea.</b> ' + L.idea + '</span>' +
+        '<span class="lsn"><b>White’s plan.</b> ' + L.white + '</span>' +
+        '<span class="lsn"><b>Black’s plan.</b> ' + L.black + '</span>' +
+        '<span class="lsn"><b>Watch for.</b> ' + L.watch + '</span>';
+      el.why.hidden = false;
+      el.btnNextQ.textContent = "Quiz me on it";
+      var avail = linesFor(st.name);
+      el.btnPlayPlan.hidden = avail.length === 0;
+      if (avail.length) el.btnPlayPlan.textContent = "Watch the plan (" + avail.length + " lines)";
+      return;
     }
+    var q = item.q;
+    el.qask.textContent = q.ask;
+    el.why.hidden = true;
+
+    // Shuffle, or the correct answer's position becomes the answer.
+    var order = shuffled(q.options.map(function (_, i) { return i; }));
     RUN.order = order;
 
     order.forEach(function (orig) {
@@ -2363,7 +2587,7 @@
   }
 
   function answerQuestion(picked) {
-    var q = STRUCTURES[RUN.i], order = RUN.order;
+    var item = RUN.queue[RUN.i], q = item.q, order = RUN.order;
     var buttons = el.opts.querySelectorAll(".opt");
     for (var slot = 0; slot < buttons.length; slot++) {
       buttons[slot].disabled = true;
@@ -2371,12 +2595,15 @@
       if (orig === q.answer) buttons[slot].className = "opt right";
       else if (orig === picked) buttons[slot].className = "opt wrong";
     }
-    RUN.results[RUN.i] = { label: q.name, good: picked === q.answer, tally: null };
+    var good = picked === q.answer;
+    RUN.results.push({ label: (item.review ? "Review: " : "") + item.s.name, good: good, tally: null });
+    var r = S.structs[item.s.name] || (S.structs[item.s.name] = { n: 0, right: 0, last: 0 });
+    r.n++; if (good) r.right++; r.last = Date.now(); saveProgress();
     el.whytext.textContent = q.why;
     el.why.hidden = false;
-    el.btnNextQ.textContent = (RUN.i + 1 >= STRUCTURES.length) ? "See how you did" : "Next";
+    el.btnNextQ.textContent = (RUN.i + 1 >= RUN.queue.length) ? "See how you did" : "Next";
 
-    var avail = linesFor(q.name);
+    var avail = linesFor(item.s.name);
     el.btnPlayPlan.hidden = avail.length === 0;
     if (avail.length) {
       el.btnPlayPlan.textContent = "Play the plan (" + avail.length + " lines)";
@@ -2384,7 +2611,7 @@
   }
 
   function nextQuestion() {
-    if (RUN.i + 1 >= STRUCTURES.length) return showSummary();
+    if (RUN.i + 1 >= RUN.queue.length) return showSummary();
     RUN.i++;
     showQuestion();
   }
@@ -2392,6 +2619,7 @@
   /* ---------- summary ---------- */
   function showSummary() {
     if (!RUN) return;
+    S.runs[RUN.set.name] = Date.now(); saveProgress(); renderRuns();
     setMode("summary");
     var clean = 0;
     el.sumtitle.textContent = RUN.set.name;
@@ -2591,10 +2819,13 @@
     SETS.forEach(function (set) {
       var b = document.createElement("button");
       b.className = "run";
-      var count = set.kind === "study" ? STRUCTURES.length
+      var count = set.kind === "study" ? 0
                 : set.kind === "line" ? set.lines.length : set.drills.length;
+      var learned = STRUCTURES.filter(function (x) { return S.structs[x.name]; }).length;
       b.innerHTML = '<div class="name">' + set.name + '</div>' +
-                    '<div class="meta">' + set.blurb + ", " + count + " in a row</div>";
+                    '<div class="meta">' + set.blurb + (set.kind === "study"
+                      ? ", " + learned + " of " + STRUCTURES.length + " learned"
+                      : ", " + count + " in a row") + "</div>";
       b.addEventListener("click", function () { startRun(set); });
       el.runs.appendChild(b);
     });
@@ -2747,7 +2978,7 @@
   el.btnLineHint.addEventListener("click", lineHint);
   el.btnLineNext.addEventListener("click", nextLine);
   el.btnPlayPlan.addEventListener("click", function () {
-    var q = STRUCTURES[RUN.i];
+    var q = RUN.queue[RUN.i].s;
     var ids = linesFor(q.name).map(function (l) { return l.id; });
     if (ids.length) startLines(ids);
   });

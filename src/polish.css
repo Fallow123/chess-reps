@@ -175,3 +175,7 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 .wchart rect:hover, .wchart circle:hover + circle, .wchart .wdot:hover { opacity: .8; }
 .weekcard { margin-top: 4px; }
 @media (max-width: 640px) { .wgrid { grid-template-columns: 1fr; } }
+
+/* Structures course: lesson text */
+#app .why .lsn { display: block; margin: 0 0 10px; line-height: 1.55; }
+#app .why .lsn b { color: var(--bone); }

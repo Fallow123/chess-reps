@@ -197,7 +197,10 @@ function buildPlan(ctx) {
     const next = EG_CHAPTERS.find(([id, , need]) => (wins[id] || 0) < need) || EG_CHAPTERS[EG_CHAPTERS.length - 1];
     egDue(ctx.eg, date).slice(0, 2).forEach((d, i) => add({ id: 'egrev-' + i, kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. Solve it twice more so it stays automatic.` : 'You cleared this chapter. Solve it twice more so the technique stays automatic.', action: { type: 'endgame', title: d.title } }));
     add({ id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: (why('endgames') ? why('endgames') + ' ' : '') + `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } });
-    if (room() >= 10) add({ id: 'struct', kind: 'endgames', title: 'Pawn structures quiz', mins: 10, why: 'Name the plan for each structure. Endgames and middlegames are won by knowing which pawns to push.', action: { type: 'run', name: 'Pawn structures' } });
+    const learned = Object.keys((ctx.eg && ctx.eg.structs) || {}).length;
+    if (room() >= 10) add(learned < 13
+      ? { id: 'struct', kind: 'endgames', title: 'Pawn structures: learn the next two', mins: 10, why: `A short lesson on each structure's plans, then a quiz. ${learned ? learned + ' of 13 learned so far.' : 'Thirteen structures in all, from the Carlsbad to the Hedgehog.'}`, action: { type: 'run', name: 'Pawn structures' } }
+      : { id: 'struct', kind: 'endgames', title: 'Structures quiz', mins: 8, why: 'Eight mixed questions on the structures you have learned: plans, breaks and the pieces that matter.', action: { type: 'run', name: 'Structures quiz' } });
   } else if (theme === 'slow') {
     const lostOnTime = ctx.recentLosses.find(g => g.end === 'time');
     if (lostOnTime) add({ id: 'clock', kind: 'review', title: `Replay your time loss to ${lostOnTime.opp}`, mins: 10, url: lostOnTime.url,

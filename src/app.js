@@ -632,6 +632,8 @@ function autoDone(t, rec) {
   if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
+  // Runs in the endgame trainer (structures course, model lines) record when they were finished.
+  if (t.action && t.action.type === 'run') { const r = (egProgress().runs || {})[t.action.name]; return !!(r && r >= start); }
   if (t.id === 'threat') return thDoneToday() >= (t.target || 10);
   if (t.id === 'mp') return mpSolvedToday() >= (t.target || 1);
   if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!(r && (r.lastWin || r.last) >= start); }
