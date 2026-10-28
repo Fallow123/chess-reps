@@ -106,8 +106,11 @@ function refresh() {
   D.lines = allLines(rep);
   const now = Date.now();
   D.due = D.lines.filter(l => { const c = S.cards[lineId(l)]; return !c || c.due <= now; });
-  if (D.pKey !== S.games.length + mySite()) {
-    D.pKey = S.games.length + mySite(); const mg = myGames(); D.profile = computeProfile(mg);
+  const live = mySite() === 'lichess' && S.li && S.li.ratings || null;
+  if (D.pKey !== S.games.length + mySite() + JSON.stringify(live)) {
+    D.pKey = S.games.length + mySite() + JSON.stringify(live); const mg = myGames(); D.profile = computeProfile(mg);
+    // A game's PGN carries the rating from before it was played. lichess's profile has the rating now.
+    if (D.profile && live) { for (const [k, c] of Object.entries(D.profile.classes)) if (live[k]) { c.last = live[k]; c.peak = Math.max(c.peak, live[k]); c.trend = c.first ? c.last - c.first : 0; } D.profile.elo = D.profile.classes[D.profile.main] && D.profile.classes[D.profile.main].last; }
     D.recentLosses = mg.filter(g => g.score === 0).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 5);
   }
   D.gapsBoth = { w: analyzeGaps(S.rep.w, S.games, 'w', depthTarget()), b: analyzeGaps(S.rep.b, S.games, 'b', depthTarget()) };
@@ -832,11 +835,11 @@ function renderToday() {
     const rows = h('div', { class: 'ratings' });
     for (const [k, c] of Object.entries(p.classes).filter(([k]) => k !== 'other').sort((a, b) => b[1].n - a[1].n)) {
       rows.append(h('div', { class: 'rating' + (k === p.main ? ' main' : '') }, h('span', { class: 'note' }, k), h('b', {}, c.last ? String(c.last) : '–'),
-        h('span', { class: 'trend ' + (c.trend > 0 ? 'up' : c.trend < 0 ? 'down' : '') }, c.trend ? (c.trend > 0 ? '+' : '−') + Math.abs(c.trend) : '±0'), h('span', { class: 'note' }, `${c.recent} games · scored ${pc(c.score)}`)));
+        h('span', { class: 'trend ' + (c.trend > 0 ? 'up' : c.trend < 0 ? 'down' : '') }, c.trend ? (c.trend > 0 ? '+' : '−') + Math.abs(c.trend) : '±0'), h('span', { class: 'note' }, c.recent ? `${c.recent} game${c.recent > 1 ? 's' : ''} in 30 days · scored ${pc(c.score)}` : `none in 30 days · scored ${pc(c.score)} before`)));
     }
     if (onLichess() && S.li.puzzle) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.li.puzzle)), h('span'), h('span', { class: 'note' }, S.li.storm ? `lichess puzzles · Storm best ${S.li.storm}` : 'lichess puzzles')));
     else if (S.stats && S.stats.tactics) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.stats.tactics)), h('span'), h('span', { class: 'note' }, 'tactics rating')));
-    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} ${mySite() === 'lichess' ? 'lichess' : 'chess.com'} games. Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
+    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} ${mySite() === 'lichess' ? 'lichess' : 'chess.com'} games. ${mySite() === 'lichess' ? 'Ratings are your current lichess ratings, refreshed on every sync. ' : ''}Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
     const wl = h('ul', { class: 'list weak' });
     const NAMES = { time: 'The clock', tactics: 'Tactics', endgames: 'Endgames', openings: 'Openings', tilt: 'Playing on tilt' };
     for (const w of D.weak) wl.append(h('li', { class: 'item' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'wname' }, NAMES[w.key]), h('div', { class: 'meta' }, w.text)), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(100 * w.score)}%` }))));
