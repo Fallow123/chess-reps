@@ -455,7 +455,7 @@ function renderSettings() {
   const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
   const changed = () => { save('settings'); ensurePlan(true); render(); };
   box.append(h('section', { class: 'sec setsec' }, h('h2', {}, 'Daily plan'),
-    setRow('Usual time', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
+    setRow('Usual time', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min'], [120, '2 hours'], [180, '3 hours']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
     setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
     setRow('Engine', [[true, 'On'], [false, 'Off']], S.settings.engine !== false, v => { S.settings.engine = v; save('settings'); render(); })));
 
@@ -872,7 +872,7 @@ function renderToday() {
   const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
   const changed = () => { save('settings'); ensurePlan(true); render(); };
   const setBar = h('section', { class: 'setsec top' },
-    setRow('Time today', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
+    setRow('Time today', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min'], [120, '2 hours'], [180, '3 hours']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
     setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
     h('div', { class: 'row' }, h('button', { class: 'btn quiet tiny', onclick: () => { ensurePlan(true); render(); toast('Plan rebuilt from your latest data'); } }, 'Rebuild today’s plan'),
       h('span', { class: 'note' }, 'Rebuilding keeps what you have ticked.')));

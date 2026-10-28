@@ -1725,13 +1725,13 @@ function buildPlan(ctx) {
   // Games come first: 3 a day when the time allows them and their reviews, 2 on a normal budget, never fewer than 1.
   // Play day adds one; review day keeps a single game so the habit does not lapse.
   const nGames = theme === 'review' ? 1 : Math.max(1, Math.min(theme === 'play' ? 4 : 3, Math.floor(mins * (theme === 'play' ? 0.9 : 0.75) / (GAME_MIN[playKey] || 12))));
-  const reserve = nGames * playMins;
+  const reserve = nGames * playMins + (theme === 'play' && playKey !== 'blitz' && playKey !== 'bullet' ? 12 : 0);
   const room = () => left() - reserve;
 
   if (!ctx.gamesCount) add({ id: 'import', kind: 'setup', title: `Bring in your ${site.name} games`, mins: 3, why: 'The plan is generic until it has your games. Everything after this is tuned to how you actually lose.', action: { type: 'tab', tab: 'games' } });
 
   // 1. Warm-up: every day.
-  const nPuzzles = theme === 'tactics' && mins >= 60 ? 20 : tier.puzzles;
+  const nPuzzles = mins >= 180 ? 30 : mins >= 120 || (theme === 'tactics' && mins >= 60) ? 20 : tier.puzzles;
   const focus = L && ctx.focus && ctx.focus[0];
   add({ id: 'puzzles', kind: 'tactics', title: `Solve ${focus ? Math.min(10, nPuzzles) : nPuzzles} rated puzzles`, mins: focus ? Math.min(10, nPuzzles) : nPuzzles, target: focus ? Math.min(10, nPuzzles) : nPuzzles, why: why('tactics') || 'A daily warm-up keeps pattern recognition sharp. Go for accuracy, not speed.', action: { type: 'url', url: site.puzzles } });
   // Yesterday's review picks a theme: the tactic that cost a game, or the puzzles you keep missing.
@@ -1804,6 +1804,26 @@ function buildPlan(ctx) {
 
   // A learned endgame that is due comes back on other days too, when there is room.
   if (theme !== 'endgames' && theme !== 'play') { const d = egDue(ctx.eg, date)[0]; if (d && room() >= 8) add({ id: 'egrev-0', kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. A short review keeps the technique automatic.` : 'You cleared this chapter. A short review keeps the technique automatic.', action: { type: 'endgame', title: d.title } }); }
+  // Long days (2 and 3 hours): deeper work on top of the day's theme, best first, while it fits.
+  if (mins >= 120) {
+    const has = id => tasks.some(t => t.id === id);
+    const wins = (ctx.eg && ctx.eg.wins) || {};
+    const next = EG_CHAPTERS.find(([id, , need]) => (wins[id] || 0) < need) || EG_CHAPTERS[EG_CHAPTERS.length - 1];
+    const learned = Object.keys((ctx.eg && ctx.eg.structs) || {}).length;
+    const run = RUNS[isoWeek(date) % RUNS.length];
+    const extras = [
+      { id: 'selfan', kind: 'review', title: 'Analyse a game of yours before the engine', mins: 20, why: 'Pick one of today’s or yesterday’s games. Write down where you think it turned and what you should have played, then check with Stockfish. Comparing your notes to the engine is how your own judgement improves.', action: { type: 'url', url: site.archive(st.lichessUser) } },
+      { id: 'calc', kind: 'tactics', title: 'Three hard puzzles, slowly', mins: 15, target: 3, why: 'Calculate the whole line before you touch a piece: checks, captures and threats for both sides.', action: { type: 'url', url: site.puzzles } },
+      { id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } },
+      learned < 13 ? { id: 'struct', kind: 'endgames', title: 'Pawn structures: learn the next two', mins: 10, why: `A short lesson on each structure's plans, then a quiz. ${learned ? learned + ' of 13 learned so far.' : ''}`, action: { type: 'run', name: 'Pawn structures' } }
+        : { id: 'struct', kind: 'endgames', title: 'Structures quiz', mins: 8, why: 'Eight mixed questions on the structures you have learned.', action: { type: 'run', name: 'Structures quiz' } },
+      { id: 'model', kind: 'openings', title: `Model line: ${run}`, mins: 10, why: 'Learn what to do after the opening: the plan behind the structure your lines lead to.', action: { type: 'run', name: run } },
+      { id: 'rush', kind: 'tactics', title: L ? 'Puzzle Storm, 3 minutes' : 'Puzzle Rush, 5 minutes', mins: L ? 4 : 6, why: 'Fast pattern recognition to finish a long session.', action: { type: 'url', url: site.rush } },
+    ];
+    if (mins >= 180) extras.push({ id: 'selfan2', kind: 'review', title: 'Analyse a second game, then compare', mins: 20, why: 'Same method on another game. Look for the same kind of mistake in both: that is your next thing to train.', action: { type: 'url', url: site.archive(st.lichessUser) } });
+    for (const t of extras) if (!has(t.id) && room() >= t.mins) add(t);
+  }
+
   // 4. Play, every day.
   {
     const n = nGames;
@@ -2327,7 +2347,7 @@ function renderSettings() {
   const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
   const changed = () => { save('settings'); ensurePlan(true); render(); };
   box.append(h('section', { class: 'sec setsec' }, h('h2', {}, 'Daily plan'),
-    setRow('Usual time', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
+    setRow('Usual time', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min'], [120, '2 hours'], [180, '3 hours']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
     setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
     setRow('Engine', [[true, 'On'], [false, 'Off']], S.settings.engine !== false, v => { S.settings.engine = v; save('settings'); render(); })));
 
@@ -2744,7 +2764,7 @@ function renderToday() {
   const setRow = (label, opts, cur, fn) => h('div', { class: 'setrow' }, h('span', { class: 'note' }, label), h('div', { class: 'seg' }, opts.map(([v, l]) => h('button', { 'aria-pressed': String(cur === v), onclick: () => fn(v) }, l))));
   const changed = () => { save('settings'); ensurePlan(true); render(); };
   const setBar = h('section', { class: 'setsec top' },
-    setRow('Time today', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
+    setRow('Time today', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min'], [120, '2 hours'], [180, '3 hours']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
     setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
     h('div', { class: 'row' }, h('button', { class: 'btn quiet tiny', onclick: () => { ensurePlan(true); render(); toast('Plan rebuilt from your latest data'); } }, 'Rebuild today’s plan'),
       h('span', { class: 'note' }, 'Rebuilding keeps what you have ticked.')));
