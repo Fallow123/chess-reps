@@ -83,11 +83,55 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 #rw .evalbar, #rw .evalbar i { border-radius: 6px; }
 #rw .miniboard { border-radius: 10px; }
 
-/* endgames: same surfaces */
-#app .chapter, #app .run { border-radius: 12px; border-left: 0 !important; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); margin-bottom: 6px; }
-#app .chapter.on, #app .chapter[aria-current="true"] { box-shadow: inset 0 0 0 1.5px var(--amber); }
-#app .chapters, #app .runs { gap: 0; }
-#app .grouphead { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-top: 14px; }
+/* endgames & structures */
+#app .eghead { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: 22px 24px; margin: 0 0 22px; border-radius: 18px;
+  background: linear-gradient(135deg, #1B6B4A 0%, #0E4A33 60%, #0A3626 100%); color: #F3F1EA; box-shadow: 0 12px 34px rgba(0,0,0,.45); }
+#app .eghead > div:first-child { flex: 1; min-width: 260px; }
+#app .egeyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+#app .egtitle { margin: 4px 0 6px; font-family: var(--display); font-size: 26px; font-weight: 700; color: #F3F1EA; }
+#app .egsub { margin: 0; font-size: 14px; opacity: .8; max-width: 60ch; }
+#app .egstats { display: flex; gap: 0; border-radius: 12px; background: rgba(0,0,0,.2); }
+#app .egstats > div { padding: 12px 20px; text-align: center; }
+#app .egstats > div + div { border-left: 1px solid rgba(255,255,255,.1); }
+#app .egstats b { display: block; font-family: var(--display); font-size: 28px; line-height: 1.1; }
+#app .egstats b small { font-size: 15px; opacity: .6; }
+#app .egstats span { font-size: 12.5px; opacity: .75; }
+#app .layout { gap: 22px; grid-template-columns: 300px minmax(0, 1fr) 240px; }
+#app .sidecol { display: flex; flex-direction: column; gap: 14px; }
+#app .levels { margin: 0; padding: 14px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); display: block; }
+#app .levelrow { padding: 0; gap: 4px; }
+#app .lvl { border-radius: 8px; border: 0 !important; font-size: 14px; padding: 7px 0; background: var(--panel-2); }
+#app .lvl.on { background: var(--amber); color: #111; font-weight: 600; }
+#app .lvlname { margin: 8px 0 0; font-size: 13px; }
+#app .chapters, #app .runs { display: flex; flex-direction: column; gap: 6px; }
+#app .grouphead { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 14px 0 2px 2px; }
+#app .grouphead.due { color: var(--amber); margin-top: 0; }
+#app .chapter, #app .run { display: block; border-radius: 12px; border-left: 0 !important; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); padding: 11px 14px; margin: 0; }
+#app .chapter:hover:not(.locked), #app .run:hover { background: var(--panel-2); }
+#app .chapter.on { box-shadow: inset 0 0 0 1.5px var(--amber); background: var(--panel-2); }
+#app .chapter.locked { opacity: .5; }
+#app .chapter .crow { display: flex; align-items: center; gap: 10px; }
+#app .chapter .num { flex: none; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--panel-3); color: var(--dim); }
+#app .chapter.cleared .num { background: rgba(92,201,138,.18); color: var(--sage); }
+#app .chapter .name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; margin: 0; }
+#app .chapter .meta { font-size: 12.5px; margin: 4px 0 0 34px; }
+#app .chip { flex: none; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--panel-3); color: var(--dim); white-space: nowrap; }
+#app .chip.ok { background: rgba(92,201,138,.15); color: var(--sage); }
+#app .chip.due { background: var(--amber); color: #111; }
+#app .chip.lock { background: none; box-shadow: inset 0 0 0 1px var(--rule); }
+#app .pbar { height: 4px; border-radius: 3px; background: var(--panel-3); margin: 8px 0 0 34px; overflow: hidden; }
+#app .pbar i { display: block; height: 100%; background: var(--amber); border-radius: 3px; }
+#app .unlockall { margin-top: 8px; border-radius: 10px; font-size: 13px; }
+#app .run .name { font-size: 15px; font-weight: 600; }
+#app .run .meta { font-size: 12.5px; color: var(--dim); }
+#app .sheet { padding: 14px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); }
+#app .sheet h2 { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 0 0 8px; }
+#app .statusbar { margin-top: 14px; }
+#app .prompt { font-size: 17px; font-weight: 600; }
+#app .controls { gap: 8px; }
+#app .runbar { border-radius: 12px; }
+@media (max-width: 1100px) { #app .layout { grid-template-columns: 280px minmax(0, 1fr); } #app .sheet { grid-column: 2; } }
+@media (max-width: 900px) { #app .layout { grid-template-columns: minmax(0, 1fr); } #app .sheet { grid-column: auto; } #app .eghead { padding: 18px; } #app .egtitle { font-size: 22px; } }
 
 .toast { border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5), inset 0 0 0 1px var(--rule); font-size: 14.5px; }
 

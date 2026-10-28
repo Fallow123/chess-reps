@@ -611,6 +611,7 @@ function autoDone(t, rec) {
   if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
+  if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!(r && (r.lastWin || r.last) >= start); }
   if (t.id === 'drill') return Object.values(S.cards).filter(c => c.last >= +start).length >= (t.target || 1);
   if (t.id.startsWith('seed-')) return D.linesBoth[t.action.side] > 0;
   if (t.id.startsWith('gap-')) { const p = t.action.path; const c = new Chess(); for (const m of p) c.move(m); return (S.rep[t.action.side].get(posKey(c.fen())) || []).length > 0; }

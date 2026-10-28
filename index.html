@@ -1129,11 +1129,55 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 #rw .evalbar, #rw .evalbar i { border-radius: 6px; }
 #rw .miniboard { border-radius: 10px; }
 
-/* endgames: same surfaces */
-#app .chapter, #app .run { border-radius: 12px; border-left: 0 !important; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); margin-bottom: 6px; }
-#app .chapter.on, #app .chapter[aria-current="true"] { box-shadow: inset 0 0 0 1.5px var(--amber); }
-#app .chapters, #app .runs { gap: 0; }
-#app .grouphead { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-top: 14px; }
+/* endgames & structures */
+#app .eghead { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; padding: 22px 24px; margin: 0 0 22px; border-radius: 18px;
+  background: linear-gradient(135deg, #1B6B4A 0%, #0E4A33 60%, #0A3626 100%); color: #F3F1EA; box-shadow: 0 12px 34px rgba(0,0,0,.45); }
+#app .eghead > div:first-child { flex: 1; min-width: 260px; }
+#app .egeyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); }
+#app .egtitle { margin: 4px 0 6px; font-family: var(--display); font-size: 26px; font-weight: 700; color: #F3F1EA; }
+#app .egsub { margin: 0; font-size: 14px; opacity: .8; max-width: 60ch; }
+#app .egstats { display: flex; gap: 0; border-radius: 12px; background: rgba(0,0,0,.2); }
+#app .egstats > div { padding: 12px 20px; text-align: center; }
+#app .egstats > div + div { border-left: 1px solid rgba(255,255,255,.1); }
+#app .egstats b { display: block; font-family: var(--display); font-size: 28px; line-height: 1.1; }
+#app .egstats b small { font-size: 15px; opacity: .6; }
+#app .egstats span { font-size: 12.5px; opacity: .75; }
+#app .layout { gap: 22px; grid-template-columns: 300px minmax(0, 1fr) 240px; }
+#app .sidecol { display: flex; flex-direction: column; gap: 14px; }
+#app .levels { margin: 0; padding: 14px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); display: block; }
+#app .levelrow { padding: 0; gap: 4px; }
+#app .lvl { border-radius: 8px; border: 0 !important; font-size: 14px; padding: 7px 0; background: var(--panel-2); }
+#app .lvl.on { background: var(--amber); color: #111; font-weight: 600; }
+#app .lvlname { margin: 8px 0 0; font-size: 13px; }
+#app .chapters, #app .runs { display: flex; flex-direction: column; gap: 6px; }
+#app .grouphead { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 14px 0 2px 2px; }
+#app .grouphead.due { color: var(--amber); margin-top: 0; }
+#app .chapter, #app .run { display: block; border-radius: 12px; border-left: 0 !important; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); padding: 11px 14px; margin: 0; }
+#app .chapter:hover:not(.locked), #app .run:hover { background: var(--panel-2); }
+#app .chapter.on { box-shadow: inset 0 0 0 1.5px var(--amber); background: var(--panel-2); }
+#app .chapter.locked { opacity: .5; }
+#app .chapter .crow { display: flex; align-items: center; gap: 10px; }
+#app .chapter .num { flex: none; width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--panel-3); color: var(--dim); }
+#app .chapter.cleared .num { background: rgba(92,201,138,.18); color: var(--sage); }
+#app .chapter .name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; margin: 0; }
+#app .chapter .meta { font-size: 12.5px; margin: 4px 0 0 34px; }
+#app .chip { flex: none; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--panel-3); color: var(--dim); white-space: nowrap; }
+#app .chip.ok { background: rgba(92,201,138,.15); color: var(--sage); }
+#app .chip.due { background: var(--amber); color: #111; }
+#app .chip.lock { background: none; box-shadow: inset 0 0 0 1px var(--rule); }
+#app .pbar { height: 4px; border-radius: 3px; background: var(--panel-3); margin: 8px 0 0 34px; overflow: hidden; }
+#app .pbar i { display: block; height: 100%; background: var(--amber); border-radius: 3px; }
+#app .unlockall { margin-top: 8px; border-radius: 10px; font-size: 13px; }
+#app .run .name { font-size: 15px; font-weight: 600; }
+#app .run .meta { font-size: 12.5px; color: var(--dim); }
+#app .sheet { padding: 14px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); }
+#app .sheet h2 { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 0 0 8px; }
+#app .statusbar { margin-top: 14px; }
+#app .prompt { font-size: 17px; font-weight: 600; }
+#app .controls { gap: 8px; }
+#app .runbar { border-radius: 12px; }
+@media (max-width: 1100px) { #app .layout { grid-template-columns: 280px minmax(0, 1fr); } #app .sheet { grid-column: 2; } }
+@media (max-width: 900px) { #app .layout { grid-template-columns: minmax(0, 1fr); } #app .sheet { grid-column: auto; } #app .eghead { padding: 18px; } #app .egtitle { font-size: 22px; } }
 
 .toast { border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5), inset 0 0 0 1px var(--rule); font-size: 14.5px; }
 
@@ -1192,6 +1236,7 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
   </div>
 <div id="app" hidden>
 
+  <div class="eghead" id="eghead"></div>
   <div class="layout">
     <div class="sidecol">
       <div class="levels" id="levels"></div>
@@ -1573,6 +1618,13 @@ const tierFor = elo => TIERS.find(t => (elo || 1000) < t.max);
 const TC = { bullet: '1|1', blitz: '5|0', rapid: '10|0', slow: '15|10', daily: '1 day' };
 const GAME_MIN = { bullet: 4, blitz: 12, rapid: 22, slow: 35, daily: 5 };
 const RUNS = ['Pawn structures', 'The minority attack', 'Playing the isolani', 'Breaking the bind', 'Attacking a pawn chain'];
+// Cleared chapters come back on a growing interval (2, 4, 8… days), most overdue first.
+function egDue(eg, date) {
+  const wins = (eg && eg.wins) || {}, seen = (eg && eg.seen) || {}, now = +date;
+  return EG_CHAPTERS.filter(([id, , need]) => (wins[id] || 0) >= need)
+    .map(([id, title]) => { const r = seen[id] || {}; return { id, title, over: r.last ? (now - r.last) / DAY_MS - (r.iv || 2) : 99, iv: r.iv || 0 }; })
+    .filter(x => x.over >= 0).sort((a, b) => b.over - a.over);
+}
 const EG_CHAPTERS = [["queenmate","The queen mate",2],["rookmate","The rook mate",2],["twobishops","Two bishops",2],["square","The square of the pawn",2],["opposition","The opposition",2],["keysquares","Key squares",2],["pawnwin","Queening the pawn",3],["distant","Distant opposition",2],["holddraw","Holding the draw",3],["triangulation","Triangulation",2],["corresponding","Corresponding squares",2],["seventh","The seventh rank",2],["rookpawn","The rook pawn exception",2],["queenvspawn","Queen against a pawn",2],["rookvspawn","Rook against a pawn",2],["philidor","Philidor: the third rank",3],["lucena","Lucena: building the bridge",3],["rookpawngeneral","Rook and pawn, in general",3],["bishopknight","Bishop and knight",1]];
 // Monday first. 'focus' becomes whatever your games say needs the most work.
 const WEEK = ['openings', 'tactics', 'endgames', 'openings', 'focus', 'play', 'review'];
@@ -1659,7 +1711,8 @@ function buildPlan(ctx) {
   } else if (theme === 'endgames') {
     const wins = (ctx.eg && ctx.eg.wins) || {};
     const next = EG_CHAPTERS.find(([id, , need]) => (wins[id] || 0) < need) || EG_CHAPTERS[EG_CHAPTERS.length - 1];
-    add({ id: 'eg', kind: 'endgames', title: `Endgame: ${next[1]}`, mins: 15, why: (why('endgames') ? why('endgames') + ' ' : '') + `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } });
+    egDue(ctx.eg, date).slice(0, 2).forEach((d, i) => add({ id: 'egrev-' + i, kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. Solve it twice more so it stays automatic.` : 'You cleared this chapter. Solve it twice more so the technique stays automatic.', action: { type: 'endgame', title: d.title } }));
+    add({ id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: (why('endgames') ? why('endgames') + ' ' : '') + `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } });
     if (room() >= 10) add({ id: 'struct', kind: 'endgames', title: 'Pawn structures quiz', mins: 10, why: 'Name the plan for each structure. Endgames and middlegames are won by knowing which pawns to push.', action: { type: 'run', name: 'Pawn structures' } });
   } else if (theme === 'slow') {
     const lostOnTime = ctx.recentLosses.find(g => g.end === 'time');
@@ -1675,6 +1728,8 @@ function buildPlan(ctx) {
     if (left() >= 10) add({ id: 'model', kind: 'openings', title: `Model line: ${RUNS[isoWeek(date) % RUNS.length]}`, mins: 10, why: 'An easier finish to the week: learn the plan behind a structure.', action: { type: 'run', name: RUNS[isoWeek(date) % RUNS.length] } });
   }
 
+  // A learned endgame that is due comes back on other days too, when there is room.
+  if (theme !== 'endgames' && theme !== 'play') { const d = egDue(ctx.eg, date)[0]; if (d && room() >= 8) add({ id: 'egrev-0', kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. A short review keeps the technique automatic.` : 'You cleared this chapter. A short review keeps the technique automatic.', action: { type: 'endgame', title: d.title } }); }
   // 4. Play: every day but review day, at a length that fits.
   if (theme !== 'review') {
     const n = theme === 'play' ? Math.max(1, Math.min(3, Math.floor(left() / playMins))) : 1;
@@ -2351,6 +2406,7 @@ function autoDone(t, rec) {
   if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
+  if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!(r && (r.lastWin || r.last) >= start); }
   if (t.id === 'drill') return Object.values(S.cards).filter(c => c.last >= +start).length >= (t.target || 1);
   if (t.id.startsWith('seed-')) return D.linesBoth[t.action.side] > 0;
   if (t.id.startsWith('gap-')) { const p = t.action.path; const c = new Chess(); for (const m of p) c.move(m); return (S.rep[t.action.side].get(posKey(c.fen())) || []).length > 0; }
@@ -3921,12 +3977,12 @@ else { render(); load(); }
     history: [], busy: false, over: false, hinted: false, promoted: false,
     hintLevel: 0, hintsUsed: 0, lostIt: false,
     lastFrom: null, lastTo: null, snapshot: null,
-    wins: {}
+    wins: {}, seen: {}
   };
   CHAPTERS.forEach(function (c) { S.wins[c.id] = 0; });
 
   var el = {};
-  ["chapters", "runs", "levels", "repsbox", "board", "boardwrap", "stamp", "veil", "veiltext",
+  ["eghead", "chapters", "runs", "levels", "repsbox", "board", "boardwrap", "stamp", "veil", "veiltext",
    "statusbar", "prompt", "verdict", "controls", "moves", "sheetEmpty",
    "btnNew", "btnHint", "btnBack", "promo", "promorow",
    "runbar", "runname", "runcount", "btnQuit",
@@ -3948,6 +4004,7 @@ else { render(); load(); }
       if (data.level) S.level = data.level;
       if (data.reps !== undefined) S.reps = data.reps;
       if (data.freeAll) S.freeAll = true;
+      if (data.seen) S.seen = data.seen;
     } else {                                     // saved before levels existed
       S.wins = Object.assign(S.wins, data);
     }
@@ -3966,7 +4023,7 @@ else { render(); load(); }
 
   function saveProgress() {
     var blob = JSON.stringify({ wins: S.wins, level: S.level, reps: S.reps,
-                            freeAll: S.freeAll });
+                            freeAll: S.freeAll, seen: S.seen });
     if (window.storage) { window.storage.set(PKEY, blob).catch(function () {}); return; }
     try { window.localStorage.setItem(PKEY, blob); } catch (e) {}
   }
@@ -4289,6 +4346,13 @@ else { render(); load(); }
     el.btnBack.hidden = true;
     if (good) {
       S.wins[ch.id] = (S.wins[ch.id] || 0) + 1;
+      // Once a chapter is cleared, each new day's solve doubles the gap before it comes back.
+      var sr = S.seen[ch.id] || {}, now = Date.now(); sr.lastWin = now; S.seen[ch.id] = sr;
+      if (S.wins[ch.id] >= ch.needed) {
+        if (!sr.last) sr.iv = 2;
+        else if (now - sr.last > 12 * 3600e3) sr.iv = Math.min(45, Math.max(2, (sr.iv || 1) * 2));
+        sr.last = now; S.seen[ch.id] = sr;
+      }
       saveProgress();
     }
     renderChapters(); render();
@@ -5555,26 +5619,51 @@ else { render(); load(); }
     });
   }
 
+  var DAY = 864e5;
+  function dueList() {
+    var now = Date.now();
+    return CHAPTERS.filter(function (c) {
+      if ((S.wins[c.id] || 0) < c.needed) return false;
+      var r = S.seen[c.id]; return !r || !r.last || now - r.last >= (r.iv || 2) * DAY;
+    });
+  }
+  function chapterButton(ch, i, opts) {
+    var open = unlocked(i), done = S.wins[ch.id] || 0, cleared = done >= ch.needed;
+    var b = document.createElement("button");
+    b.className = "chapter" + (open ? "" : " locked") + (S.ch === ch ? " on" : "") + (cleared ? " cleared" : "");
+    b.disabled = !open;
+    var chip, sub;
+    if (opts && opts.due) { chip = '<span class="chip due">Review</span>'; sub = ch.material; }
+    else if (!open) {
+      var prev = CHAPTERS[i - 1], left = prev.needed - (S.wins[prev.id] || 0);
+      chip = '<span class="chip lock">Locked</span>';
+      sub = "Opens after " + left + " more " + prev.title.replace(/^The /, "").toLowerCase() + (left === 1 ? "" : "s");
+    } else if (cleared) {
+      var r = S.seen[ch.id], next = r && r.last ? Math.max(0, Math.ceil((r.last + (r.iv || 2) * DAY - Date.now()) / DAY)) : 0;
+      chip = '<span class="chip ok">✓ Cleared</span>'; sub = next ? "Next review in " + next + (next === 1 ? " day" : " days") : "Due for review";
+    } else { chip = '<span class="chip">' + done + " / " + ch.needed + "</span>"; sub = ch.material; }
+    var pctDone = Math.min(100, Math.round(100 * done / ch.needed));
+    b.innerHTML = '<div class="crow"><span class="num">' + (i + 1) + '</span><span class="name">' + ch.title + '</span>' + chip + '</div>' +
+                  '<div class="meta">' + sub + '</div>' +
+                  (open && !cleared ? '<div class="pbar"><i style="width:' + pctDone + '%"></i></div>' : '');
+    if (open) b.addEventListener("click", function () { startChapter(ch); });
+    return b;
+  }
   function renderChapters() {
+    var cleared = CHAPTERS.filter(function (c) { return (S.wins[c.id] || 0) >= c.needed; }).length;
+    var due = dueList();
+    if (el.eghead) el.eghead.innerHTML =
+      '<div><p class="egeyebrow">Endgames &amp; structures</p><h2 class="egtitle">' +
+      (due.length ? due.length + (due.length === 1 ? " chapter is" : " chapters are") + " due for review" : cleared ? "You are up to date" : "Start with the queen mate") + '</h2>' +
+      '<p class="egsub">Cleared chapters come back after 2, 4, 8 days and so on, so the technique stays automatic. Your daily plan brings them in too.</p></div>' +
+      '<div class="egstats"><div><b>' + cleared + '<small> / ' + CHAPTERS.length + '</small></b><span>chapters cleared</span></div><div><b>' + due.length + '</b><span>due today</span></div></div>';
+
     el.chapters.innerHTML = "";
-    var head = document.createElement("h2");
-    head.className = "grouphead";
-    head.textContent = "Chapters";
-    el.chapters.appendChild(head);
-    var hint = document.createElement("p");
-    hint.className = "lvlname";
-    hint.textContent = "Pick any one and drill it on repeat.";
-    el.chapters.appendChild(hint);
-
-    if (!S.freeAll && CHAPTERS.some(function (c, i) { return !unlocked(i); })) {
-      var free = document.createElement("button");
-      free.className = "unlockall";
-      free.textContent = "Unlock every chapter";
-      free.title = "Skip the ladder and drill anything you like";
-      free.addEventListener("click", unlockAll);
-      el.chapters.appendChild(free);
+    if (due.length) {
+      var dh = document.createElement("h2"); dh.className = "grouphead due"; dh.textContent = "Due for review";
+      el.chapters.appendChild(dh);
+      due.forEach(function (ch) { el.chapters.appendChild(chapterButton(ch, CHAPTERS.indexOf(ch), { due: true })); });
     }
-
     var lastGroup = null;
     CHAPTERS.forEach(function (ch, i) {
       if (ch.group !== lastGroup) {
@@ -5584,30 +5673,16 @@ else { render(); load(); }
         h.textContent = ch.group;
         el.chapters.appendChild(h);
       }
-      var open = unlocked(i);
-      var b = document.createElement("button");
-      b.className = "chapter" + (open ? "" : " locked") + (S.ch === ch ? " on" : "");
-      b.disabled = !open;
-      var done = S.wins[ch.id] || 0;
-      var meta;
-      if (open) {
-        meta = done >= ch.needed ? '<span class="tally">Cleared</span>'
-                                 : "Solved " + done + " of " + ch.needed;
-      } else {
-        // Say what actually unlocks it rather than just "Locked".
-        var prev = CHAPTERS[i - 1], left = prev.needed - (S.wins[prev.id] || 0);
-        meta = "Opens after " + left + " more " +
-               prev.title.replace(/^The /, "").toLowerCase() +
-               (left === 1 ? "" : "s");
-      }
-      b.innerHTML = '<div class="num">Chapter ' + (i + 1) + '</div>' +
-                    '<div class="name">' + ch.title + '</div>' +
-                    '<div class="meta">' + ch.material + '</div>' +
-                    '<div class="meta">' + meta + '</div>';
-      if (open) b.addEventListener("click", function () { startChapter(ch); });
-      el.chapters.appendChild(b);
+      el.chapters.appendChild(chapterButton(ch, i));
     });
-
+    if (!S.freeAll && CHAPTERS.some(function (c, i) { return !unlocked(i); })) {
+      var free = document.createElement("button");
+      free.className = "unlockall";
+      free.textContent = "Unlock every chapter";
+      free.title = "Skip the ladder and drill anything you like";
+      free.addEventListener("click", unlockAll);
+      el.chapters.appendChild(free);
+    }
   }
 
   function renderSheet() {

@@ -4,6 +4,7 @@
     <p class="tagline">Positions with a known truth. Every move gets a verdict.</p>
   </header>
 
+  <div class="eghead" id="eghead"></div>
   <div class="layout">
     <div class="sidecol">
       <div class="levels" id="levels"></div>
@@ -957,12 +958,12 @@
     history: [], busy: false, over: false, hinted: false, promoted: false,
     hintLevel: 0, hintsUsed: 0, lostIt: false,
     lastFrom: null, lastTo: null, snapshot: null,
-    wins: {}
+    wins: {}, seen: {}
   };
   CHAPTERS.forEach(function (c) { S.wins[c.id] = 0; });
 
   var el = {};
-  ["chapters", "runs", "levels", "repsbox", "board", "boardwrap", "stamp", "veil", "veiltext",
+  ["eghead", "chapters", "runs", "levels", "repsbox", "board", "boardwrap", "stamp", "veil", "veiltext",
    "statusbar", "prompt", "verdict", "controls", "moves", "sheetEmpty",
    "btnNew", "btnHint", "btnBack", "promo", "promorow",
    "runbar", "runname", "runcount", "btnQuit",
@@ -984,6 +985,7 @@
       if (data.level) S.level = data.level;
       if (data.reps !== undefined) S.reps = data.reps;
       if (data.freeAll) S.freeAll = true;
+      if (data.seen) S.seen = data.seen;
     } else {                                     // saved before levels existed
       S.wins = Object.assign(S.wins, data);
     }
@@ -1002,7 +1004,7 @@
 
   function saveProgress() {
     var blob = JSON.stringify({ wins: S.wins, level: S.level, reps: S.reps,
-                            freeAll: S.freeAll });
+                            freeAll: S.freeAll, seen: S.seen });
     if (window.storage) { window.storage.set(PKEY, blob).catch(function () {}); return; }
     try { window.localStorage.setItem(PKEY, blob); } catch (e) {}
   }
@@ -1325,6 +1327,13 @@
     el.btnBack.hidden = true;
     if (good) {
       S.wins[ch.id] = (S.wins[ch.id] || 0) + 1;
+      // Once a chapter is cleared, each new day's solve doubles the gap before it comes back.
+      var sr = S.seen[ch.id] || {}, now = Date.now(); sr.lastWin = now; S.seen[ch.id] = sr;
+      if (S.wins[ch.id] >= ch.needed) {
+        if (!sr.last) sr.iv = 2;
+        else if (now - sr.last > 12 * 3600e3) sr.iv = Math.min(45, Math.max(2, (sr.iv || 1) * 2));
+        sr.last = now; S.seen[ch.id] = sr;
+      }
       saveProgress();
     }
     renderChapters(); render();
@@ -2591,26 +2600,51 @@
     });
   }
 
+  var DAY = 864e5;
+  function dueList() {
+    var now = Date.now();
+    return CHAPTERS.filter(function (c) {
+      if ((S.wins[c.id] || 0) < c.needed) return false;
+      var r = S.seen[c.id]; return !r || !r.last || now - r.last >= (r.iv || 2) * DAY;
+    });
+  }
+  function chapterButton(ch, i, opts) {
+    var open = unlocked(i), done = S.wins[ch.id] || 0, cleared = done >= ch.needed;
+    var b = document.createElement("button");
+    b.className = "chapter" + (open ? "" : " locked") + (S.ch === ch ? " on" : "") + (cleared ? " cleared" : "");
+    b.disabled = !open;
+    var chip, sub;
+    if (opts && opts.due) { chip = '<span class="chip due">Review</span>'; sub = ch.material; }
+    else if (!open) {
+      var prev = CHAPTERS[i - 1], left = prev.needed - (S.wins[prev.id] || 0);
+      chip = '<span class="chip lock">Locked</span>';
+      sub = "Opens after " + left + " more " + prev.title.replace(/^The /, "").toLowerCase() + (left === 1 ? "" : "s");
+    } else if (cleared) {
+      var r = S.seen[ch.id], next = r && r.last ? Math.max(0, Math.ceil((r.last + (r.iv || 2) * DAY - Date.now()) / DAY)) : 0;
+      chip = '<span class="chip ok">✓ Cleared</span>'; sub = next ? "Next review in " + next + (next === 1 ? " day" : " days") : "Due for review";
+    } else { chip = '<span class="chip">' + done + " / " + ch.needed + "</span>"; sub = ch.material; }
+    var pctDone = Math.min(100, Math.round(100 * done / ch.needed));
+    b.innerHTML = '<div class="crow"><span class="num">' + (i + 1) + '</span><span class="name">' + ch.title + '</span>' + chip + '</div>' +
+                  '<div class="meta">' + sub + '</div>' +
+                  (open && !cleared ? '<div class="pbar"><i style="width:' + pctDone + '%"></i></div>' : '');
+    if (open) b.addEventListener("click", function () { startChapter(ch); });
+    return b;
+  }
   function renderChapters() {
+    var cleared = CHAPTERS.filter(function (c) { return (S.wins[c.id] || 0) >= c.needed; }).length;
+    var due = dueList();
+    if (el.eghead) el.eghead.innerHTML =
+      '<div><p class="egeyebrow">Endgames &amp; structures</p><h2 class="egtitle">' +
+      (due.length ? due.length + (due.length === 1 ? " chapter is" : " chapters are") + " due for review" : cleared ? "You are up to date" : "Start with the queen mate") + '</h2>' +
+      '<p class="egsub">Cleared chapters come back after 2, 4, 8 days and so on, so the technique stays automatic. Your daily plan brings them in too.</p></div>' +
+      '<div class="egstats"><div><b>' + cleared + '<small> / ' + CHAPTERS.length + '</small></b><span>chapters cleared</span></div><div><b>' + due.length + '</b><span>due today</span></div></div>';
+
     el.chapters.innerHTML = "";
-    var head = document.createElement("h2");
-    head.className = "grouphead";
-    head.textContent = "Chapters";
-    el.chapters.appendChild(head);
-    var hint = document.createElement("p");
-    hint.className = "lvlname";
-    hint.textContent = "Pick any one and drill it on repeat.";
-    el.chapters.appendChild(hint);
-
-    if (!S.freeAll && CHAPTERS.some(function (c, i) { return !unlocked(i); })) {
-      var free = document.createElement("button");
-      free.className = "unlockall";
-      free.textContent = "Unlock every chapter";
-      free.title = "Skip the ladder and drill anything you like";
-      free.addEventListener("click", unlockAll);
-      el.chapters.appendChild(free);
+    if (due.length) {
+      var dh = document.createElement("h2"); dh.className = "grouphead due"; dh.textContent = "Due for review";
+      el.chapters.appendChild(dh);
+      due.forEach(function (ch) { el.chapters.appendChild(chapterButton(ch, CHAPTERS.indexOf(ch), { due: true })); });
     }
-
     var lastGroup = null;
     CHAPTERS.forEach(function (ch, i) {
       if (ch.group !== lastGroup) {
@@ -2620,30 +2654,16 @@
         h.textContent = ch.group;
         el.chapters.appendChild(h);
       }
-      var open = unlocked(i);
-      var b = document.createElement("button");
-      b.className = "chapter" + (open ? "" : " locked") + (S.ch === ch ? " on" : "");
-      b.disabled = !open;
-      var done = S.wins[ch.id] || 0;
-      var meta;
-      if (open) {
-        meta = done >= ch.needed ? '<span class="tally">Cleared</span>'
-                                 : "Solved " + done + " of " + ch.needed;
-      } else {
-        // Say what actually unlocks it rather than just "Locked".
-        var prev = CHAPTERS[i - 1], left = prev.needed - (S.wins[prev.id] || 0);
-        meta = "Opens after " + left + " more " +
-               prev.title.replace(/^The /, "").toLowerCase() +
-               (left === 1 ? "" : "s");
-      }
-      b.innerHTML = '<div class="num">Chapter ' + (i + 1) + '</div>' +
-                    '<div class="name">' + ch.title + '</div>' +
-                    '<div class="meta">' + ch.material + '</div>' +
-                    '<div class="meta">' + meta + '</div>';
-      if (open) b.addEventListener("click", function () { startChapter(ch); });
-      el.chapters.appendChild(b);
+      el.chapters.appendChild(chapterButton(ch, i));
     });
-
+    if (!S.freeAll && CHAPTERS.some(function (c, i) { return !unlocked(i); })) {
+      var free = document.createElement("button");
+      free.className = "unlockall";
+      free.textContent = "Unlock every chapter";
+      free.title = "Skip the ladder and drill anything you like";
+      free.addEventListener("click", unlockAll);
+      el.chapters.appendChild(free);
+    }
   }
 
   function renderSheet() {

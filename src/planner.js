@@ -93,6 +93,13 @@ const tierFor = elo => TIERS.find(t => (elo || 1000) < t.max);
 const TC = { bullet: '1|1', blitz: '5|0', rapid: '10|0', slow: '15|10', daily: '1 day' };
 const GAME_MIN = { bullet: 4, blitz: 12, rapid: 22, slow: 35, daily: 5 };
 const RUNS = ['Pawn structures', 'The minority attack', 'Playing the isolani', 'Breaking the bind', 'Attacking a pawn chain'];
+// Cleared chapters come back on a growing interval (2, 4, 8… days), most overdue first.
+function egDue(eg, date) {
+  const wins = (eg && eg.wins) || {}, seen = (eg && eg.seen) || {}, now = +date;
+  return EG_CHAPTERS.filter(([id, , need]) => (wins[id] || 0) >= need)
+    .map(([id, title]) => { const r = seen[id] || {}; return { id, title, over: r.last ? (now - r.last) / DAY_MS - (r.iv || 2) : 99, iv: r.iv || 0 }; })
+    .filter(x => x.over >= 0).sort((a, b) => b.over - a.over);
+}
 const EG_CHAPTERS = [["queenmate","The queen mate",2],["rookmate","The rook mate",2],["twobishops","Two bishops",2],["square","The square of the pawn",2],["opposition","The opposition",2],["keysquares","Key squares",2],["pawnwin","Queening the pawn",3],["distant","Distant opposition",2],["holddraw","Holding the draw",3],["triangulation","Triangulation",2],["corresponding","Corresponding squares",2],["seventh","The seventh rank",2],["rookpawn","The rook pawn exception",2],["queenvspawn","Queen against a pawn",2],["rookvspawn","Rook against a pawn",2],["philidor","Philidor: the third rank",3],["lucena","Lucena: building the bridge",3],["rookpawngeneral","Rook and pawn, in general",3],["bishopknight","Bishop and knight",1]];
 // Monday first. 'focus' becomes whatever your games say needs the most work.
 const WEEK = ['openings', 'tactics', 'endgames', 'openings', 'focus', 'play', 'review'];
@@ -179,7 +186,8 @@ function buildPlan(ctx) {
   } else if (theme === 'endgames') {
     const wins = (ctx.eg && ctx.eg.wins) || {};
     const next = EG_CHAPTERS.find(([id, , need]) => (wins[id] || 0) < need) || EG_CHAPTERS[EG_CHAPTERS.length - 1];
-    add({ id: 'eg', kind: 'endgames', title: `Endgame: ${next[1]}`, mins: 15, why: (why('endgames') ? why('endgames') + ' ' : '') + `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } });
+    egDue(ctx.eg, date).slice(0, 2).forEach((d, i) => add({ id: 'egrev-' + i, kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. Solve it twice more so it stays automatic.` : 'You cleared this chapter. Solve it twice more so the technique stays automatic.', action: { type: 'endgame', title: d.title } }));
+    add({ id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: (why('endgames') ? why('endgames') + ' ' : '') + `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } });
     if (room() >= 10) add({ id: 'struct', kind: 'endgames', title: 'Pawn structures quiz', mins: 10, why: 'Name the plan for each structure. Endgames and middlegames are won by knowing which pawns to push.', action: { type: 'run', name: 'Pawn structures' } });
   } else if (theme === 'slow') {
     const lostOnTime = ctx.recentLosses.find(g => g.end === 'time');
@@ -195,6 +203,8 @@ function buildPlan(ctx) {
     if (left() >= 10) add({ id: 'model', kind: 'openings', title: `Model line: ${RUNS[isoWeek(date) % RUNS.length]}`, mins: 10, why: 'An easier finish to the week: learn the plan behind a structure.', action: { type: 'run', name: RUNS[isoWeek(date) % RUNS.length] } });
   }
 
+  // A learned endgame that is due comes back on other days too, when there is room.
+  if (theme !== 'endgames' && theme !== 'play') { const d = egDue(ctx.eg, date)[0]; if (d && room() >= 8) add({ id: 'egrev-0', kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. A short review keeps the technique automatic.` : 'You cleared this chapter. A short review keeps the technique automatic.', action: { type: 'endgame', title: d.title } }); }
   // 4. Play: every day but review day, at a length that fits.
   if (theme !== 'review') {
     const n = theme === 'play' ? Math.max(1, Math.min(3, Math.floor(left() / playMins))) : 1;
