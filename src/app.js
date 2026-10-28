@@ -629,7 +629,7 @@ function autoDone(t, rec) {
     if (t.id === 'calc') { const p = rec.plan.tasks.find(x => x.id === 'puzzles'); return pz >= ((p && p.target) || 0) + 3; }
     if (t.id === 'rush') return !!(liStormToday() || (rec.results && rec.results.rush != null));
   }
-  if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
+  if (t.id === 'play' || t.id === 'blitz') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
   // Runs in the endgame trainer (structures course, model lines) record when they were finished.
@@ -679,7 +679,7 @@ const liStormToday = () => (S.li && S.li.stormToday && S.li.stormToday.date === 
 // What chess.com says about a task today: games played, a new Rush best, a puzzle high.
 function taskResult(t, rec) {
   const st = S.stats || {}; const base = rec.base || {};
-  if (t.id === 'play') {
+  if (t.id === 'play' || t.id === 'blitz') {
     const gs = gamesToday(); if (!gs.length) return null;
     const RES = { 1: 'Won', 0: 'Lost', 0.5: 'Drew' };
     return h('ul', { class: 'tres' }, gs.map(g => h('li', { class: g.score === 1 ? 'w' : g.score === 0 ? 'l' : 'd' },
@@ -705,7 +705,7 @@ function taskResult(t, rec) {
   if (t.id === 'puzzles' && base.tactics != null && st.tactics > base.tactics) return h('p', { class: 'tres-line w' }, `New puzzle-rating high: ${st.tactics}.`);
   return null;
 }
-const checkable = rec => rec.plan.tasks.some(t => ['play', 'rush', 'puzzles'].includes(t.id) && !isDone(rec, t));
+const checkable = rec => rec.plan.tasks.some(t => ['play', 'blitz', 'rush', 'puzzles'].includes(t.id) && !isDone(rec, t));
 const LI_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=puzzle:read&description=Pawnstorm';
 async function checkChessCom(quiet) {
   if (!(S.username || S.settings.lichessUser) || S.syncing) return;

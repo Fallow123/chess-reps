@@ -1683,6 +1683,14 @@ function buildPlan(ctx) {
   const left = () => mins - used;
   const top = weak[0];
   const why = key => (weak.find(w => w.key === key) || {}).text;
+  const slow = theme === 'slow' || (top && (top.key === 'time' || top.key === 'tilt') && theme === 'play');
+  const playKey = slow && cls !== 'daily' && cls !== 'bullet' ? 'slow' : cls;
+  const playMins = GAME_MIN[playKey] || 12;
+  // Games come first: 3 a day when the time allows them and their reviews, 2 on a normal budget, never fewer than 1.
+  // Play day adds one; review day keeps a single game so the habit does not lapse.
+  const nGames = theme === 'review' ? 1 : Math.max(1, Math.min(theme === 'play' ? 4 : 3, Math.floor(mins * (theme === 'play' ? 0.9 : 0.75) / (GAME_MIN[playKey] || 12))));
+  const reserve = nGames * playMins;
+  const room = () => left() - reserve;
 
   if (!ctx.gamesCount) add({ id: 'import', kind: 'setup', title: `Bring in your ${site.name} games`, mins: 3, why: 'The plan is generic until it has your games. Everything after this is tuned to how you actually lose.', action: { type: 'tab', tab: 'games' } });
 
@@ -1691,11 +1699,12 @@ function buildPlan(ctx) {
   const focus = L && ctx.focus && ctx.focus[0];
   add({ id: 'puzzles', kind: 'tactics', title: `Solve ${focus ? Math.min(10, nPuzzles) : nPuzzles} rated puzzles`, mins: focus ? Math.min(10, nPuzzles) : nPuzzles, target: focus ? Math.min(10, nPuzzles) : nPuzzles, why: why('tactics') || 'A daily warm-up keeps pattern recognition sharp. Go for accuracy, not speed.', action: { type: 'url', url: site.puzzles } });
   // Yesterday's review picks a theme: the tactic that cost a game, or the puzzles you keep missing.
-  if (focus) add({ id: 'theme', kind: 'tactics', title: `Practice 20 ${themeName(focus.theme)} puzzles`, mins: 15, target: 20, theme: focus.theme, why: focus.why, action: { type: 'url', url: `https://lichess.org/training/${focus.theme}` } });
+  const nTheme = room() >= 15 ? 20 : 10;
+  if (focus) add({ id: 'theme', kind: 'tactics', title: `Practice ${nTheme} ${themeName(focus.theme)} puzzles`, mins: nTheme === 20 ? 15 : 8, target: nTheme, theme: focus.theme, why: focus.why, action: { type: 'url', url: `https://lichess.org/training/${focus.theme}` } });
 
   // 2. Openings: due drills, or starting a repertoire.
   for (const side of ['w', 'b']) {
-    if (!ctx.lines[side] && ctx.gamesCount >= 10 && (theme === 'openings' || side === 'w')) {
+    if (!ctx.lines[side] && ctx.gamesCount >= 10 && (theme === 'openings' || side === 'w') && room() >= 10) {
       add({ id: 'seed-' + side, kind: 'openings', title: `Choose your first ${side === 'w' ? 'White' : 'Black'} moves`, mins: 10, why: 'In Build, look at what you already play, what the engine likes and what players at your level meet, then save the line you want as your standard.', action: { type: 'seed', side } });
     }
   }
@@ -1706,20 +1715,15 @@ function buildPlan(ctx) {
   }
 
   // Threat check: a short blunder-check habit from your own positions, every day.
-  if (ctx.threats >= 10) add({ id: 'threat', kind: 'tactics', title: 'Threat check: 10 positions', mins: 5, target: 10, why: 'Most hung pieces come from not asking what the last move threatens. Ten of your own positions, one question each.', action: { type: 'threats', n: 10 } });
+  if (ctx.threats >= 10 && room() >= 5) add({ id: 'threat', kind: 'tactics', title: 'Threat check: 10 positions', mins: 5, target: 10, why: 'Most hung pieces come from not asking what the last move threatens. Ten of your own positions, one question each.', action: { type: 'threats', n: 10 } });
 
   // Your own mistakes, as puzzles: a short set most days, a bigger one on tactics and review days.
-  if (ctx.mp && theme !== 'play') {
+  if (ctx.mp && theme !== 'play' && room() >= 5) {
     const k = Math.min(ctx.mp, theme === 'tactics' || theme === 'review' ? 10 : mins <= 20 ? 3 : 5);
     add({ id: 'mp', kind: 'tactics', title: `Fix ${k} of your own mistakes`, mins: Math.ceil(k * 1.5), target: k, why: 'Positions from your games where you went wrong. Find the move you missed; each one comes back until it sticks.', action: { type: 'mistakes' } });
   }
 
   // 3. The day's theme.
-  const slow = theme === 'slow' || (top && (top.key === 'time' || top.key === 'tilt') && theme === 'play');
-  const playKey = slow && cls !== 'daily' && cls !== 'bullet' ? 'slow' : cls;
-  const playMins = GAME_MIN[playKey] || 12;
-  const reserve = theme === 'review' ? 0 : playMins;
-  const room = () => left() - reserve;
   const gapList = ['w', 'b'].filter(s => ctx.lines[s]).flatMap(s => (ctx.gaps[s] ? ctx.gaps[s].list : []).filter(g => g.type !== 'short' && g.type !== 'dev').map(g => Object.assign({ side: s }, g)));
   const preferSide = weak.find(w => w.key === 'openings')?.side;
   gapList.sort((a, b) => (b.games.length + (b.side === preferSide ? 2 : 0)) - (a.games.length + (a.side === preferSide ? 2 : 0)));
@@ -1732,7 +1736,7 @@ function buildPlan(ctx) {
     gapList.slice(0, n).forEach((g, i) => add(gapTask(g, i)));
     if (!gapList.length && ctx.xgaps && ctx.xgaps.length) ctx.xgaps.slice(0, n).forEach((g, i) => add({ id: 'xgap-' + i, kind: 'openings', title: `Prepare your answer to ${lineText(g.path.concat(g.san))}`, mins: 8,
       why: `Players at your level play ${g.san} here ${Math.round(g.share * 100)}% of the time. You will reach this in about ${Math.max(1, Math.round(g.reach * 100))} of every 100 games as ${g.side === 'w' ? 'White' : 'Black'}.`, action: { type: 'gap', side: g.side, path: g.path.concat(g.san) } }));
-    if (!gapList.length && !(ctx.xgaps && ctx.xgaps.length)) add({ id: 'deepen', kind: 'openings', title: `Extend your main line to move ${tier.depth / 2 + 2}`, mins: 10, why: `At your level, aim to know your main lines to about move ${tier.depth / 2 + 2}. Add the most common replies one move deeper.`, action: { type: 'tab', tab: 'build' } });
+    if (!gapList.length && !(ctx.xgaps && ctx.xgaps.length) && room() >= 10) add({ id: 'deepen', kind: 'openings', title: `Extend your main line to move ${tier.depth / 2 + 2}`, mins: 10, why: `At your level, aim to know your main lines to about move ${tier.depth / 2 + 2}. Add the most common replies one move deeper.`, action: { type: 'tab', tab: 'build' } });
     if (room() >= 10) add({ id: 'model', kind: 'openings', title: `Model line: ${RUNS[isoWeek(date) % RUNS.length]}`, mins: 10, why: 'Learn what to do after the opening: the plan behind the structure your lines lead to.', action: { type: 'run', name: RUNS[isoWeek(date) % RUNS.length] } });
   } else if (theme === 'tactics') {
     const best = L ? st.storm : st.rush;
@@ -1752,7 +1756,7 @@ function buildPlan(ctx) {
     if (lostOnTime) add({ id: 'clock', kind: 'review', title: `Replay your time loss to ${lostOnTime.opp}`, mins: 10, url: lostOnTime.url,
       why: 'Find the two or three moves where you spent the most time. Were they really the critical moments? That is where the clock went.', action: { type: 'review', id: lostOnTime.id, url: lostOnTime.url } });
   } else if (theme === 'review') {
-    const losses = ctx.recentLosses.slice(0, mins >= 60 ? 3 : 2);
+    const losses = ctx.recentLosses.slice(0, Math.max(1, Math.min(3, Math.floor(room() / 10))));
     losses.forEach((g, i) => add({ id: 'review-' + i, kind: 'review', title: `Review your loss to ${g.opp}`, mins: 10, url: g.url,
       why: `Find the move where the game turned. Was it the opening, a tactic, or the clock? Write one sentence about it. (${g.date}, ${g.plies ? Math.ceil(g.plies / 2) + ' moves' : ''}${g.end === 'time' ? ', lost on time' : ''})`,
       action: { type: 'review', id: g.id, url: g.url } }));
@@ -1763,16 +1767,18 @@ function buildPlan(ctx) {
 
   // A learned endgame that is due comes back on other days too, when there is room.
   if (theme !== 'endgames' && theme !== 'play') { const d = egDue(ctx.eg, date)[0]; if (d && room() >= 8) add({ id: 'egrev-0', kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. A short review keeps the technique automatic.` : 'You cleared this chapter. A short review keeps the technique automatic.', action: { type: 'endgame', title: d.title } }); }
-  // 4. Play: every day but review day, at a length that fits.
-  if (theme !== 'review') {
-    const n = theme === 'play' ? Math.max(1, Math.min(3, Math.floor(left() / playMins))) : 1;
+  // 4. Play, every day.
+  {
+    const n = nGames;
     const intent = slow ? (top && top.key === 'tilt' ? 'Stop for the day after two losses in a row. ' : '') + 'Keep at least a third of your clock at move 20 and spend it on the critical moments.'
       : theme === 'openings' && tasks.some(t => t.kind === 'openings') ? 'Steer for the lines you worked on today, and check afterwards where you left your prep.'
       : theme === 'tactics' ? 'Before every move: checks, captures, threats, for both sides.'
       : theme === 'endgames' ? 'If it goes long, trade into an endgame you know instead of avoiding one.'
       : 'Afterwards, import the games so the gap report sees them.';
     const label = playKey === 'slow' ? 'rapid' : playKey;
-    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, target: n, cls: label, why: intent + (theme === 'play' ? ' After each loss, spend 3 minutes finding the move that lost it.' : ''), action: { type: 'url', url: site.play } });
+    add({ id: 'play', kind: 'play', title: `Play ${n} ${label} game${n > 1 ? 's' : ''} (${TC[playKey] || ''})`, mins: n * playMins, target: n, cls: label, why: intent + (n > 1 ? ' After each game, spend 3 minutes finding the move where it turned before starting the next.' : ' Afterwards, spend 3 minutes finding the move where it turned.'), action: { type: 'url', url: site.play } });
+    // Once a week, on play day, a blitz game: quick decisions and practical play under the clock.
+    if (theme === 'play' && playKey !== 'blitz' && playKey !== 'bullet') add({ id: 'blitz', kind: 'play', title: 'Play 1 blitz game (5|0)', mins: 12, target: 1, cls: 'blitz', why: 'Your weekly blitz game. Trust your first instinct when it is sound, and notice where the clock pushed you into a quick mistake.', action: { type: 'url', url: site.play } });
   }
 
   const focusNote = {
@@ -2458,7 +2464,7 @@ function autoDone(t, rec) {
     if (t.id === 'calc') { const p = rec.plan.tasks.find(x => x.id === 'puzzles'); return pz >= ((p && p.target) || 0) + 3; }
     if (t.id === 'rush') return !!(liStormToday() || (rec.results && rec.results.rush != null));
   }
-  if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
+  if (t.id === 'play' || t.id === 'blitz') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
   // Runs in the endgame trainer (structures course, model lines) record when they were finished.
@@ -2508,7 +2514,7 @@ const liStormToday = () => (S.li && S.li.stormToday && S.li.stormToday.date === 
 // What chess.com says about a task today: games played, a new Rush best, a puzzle high.
 function taskResult(t, rec) {
   const st = S.stats || {}; const base = rec.base || {};
-  if (t.id === 'play') {
+  if (t.id === 'play' || t.id === 'blitz') {
     const gs = gamesToday(); if (!gs.length) return null;
     const RES = { 1: 'Won', 0: 'Lost', 0.5: 'Drew' };
     return h('ul', { class: 'tres' }, gs.map(g => h('li', { class: g.score === 1 ? 'w' : g.score === 0 ? 'l' : 'd' },
@@ -2534,7 +2540,7 @@ function taskResult(t, rec) {
   if (t.id === 'puzzles' && base.tactics != null && st.tactics > base.tactics) return h('p', { class: 'tres-line w' }, `New puzzle-rating high: ${st.tactics}.`);
   return null;
 }
-const checkable = rec => rec.plan.tasks.some(t => ['play', 'rush', 'puzzles'].includes(t.id) && !isDone(rec, t));
+const checkable = rec => rec.plan.tasks.some(t => ['play', 'blitz', 'rush', 'puzzles'].includes(t.id) && !isDone(rec, t));
 const LI_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=puzzle:read&description=Pawnstorm';
 async function checkChessCom(quiet) {
   if (!(S.username || S.settings.lichessUser) || S.syncing) return;
