@@ -88,10 +88,18 @@ function mistakeKinds(reviews) {
     opening: { label: 'Going wrong in the opening', n: 0, cost: 0, ex: null, tip: 'These come before move 12. Your repertoire and the Gaps tab are where to fix them.' },
     endgame: { label: 'Slipping in the endgame', n: 0, cost: 0, ex: null, tip: 'These come after move 40, with few pieces left. The endgame chapters train exactly this.' },
     plan: { label: 'Drifting without a plan', n: 0, cost: 0, ex: null, tip: 'Quiet mistakes in the middlegame. When unsure, improve your worst piece; the structures quiz helps here.' } };
-  let games = 0, moves = 0, lossSum = 0; const breaks = [];
+  // Accuracy the way lichess does it: each move scored by how much winning chance it gave away,
+  // each game the mean of the plain and harmonic averages, then the games averaged.
+  const win = cp => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
+  let games = 0, moves = 0, lossSum = 0; const breaks = [], gameAcc = [];
   for (const R of reviews) {
-    games++; const ms = reviewMistakes(R);
-    for (let i = (R.g.me === 'w' ? 0 : 1); i < R.sans.length; i += 2) if (R.evals[i] != null && R.evals[i + 1] != null) { moves++; const s = R.g.me === 'w' ? 1 : -1; lossSum += Math.max(0, Math.min(500, s * clampE(R.evals[i]) - s * clampE(R.evals[i + 1]))); }
+    games++; const ms = reviewMistakes(R); const acc = [];
+    for (let i = (R.g.me === 'w' ? 0 : 1); i < R.sans.length; i += 2) if (R.evals[i] != null && R.evals[i + 1] != null) {
+      moves++; const s = R.g.me === 'w' ? 1 : -1; lossSum += Math.max(0, Math.min(500, s * clampE(R.evals[i]) - s * clampE(R.evals[i + 1])));
+      const drop = Math.max(0, win(s * clampE(R.evals[i])) - win(s * clampE(R.evals[i + 1])));
+      acc.push(Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * drop) - 3.1669 + 1)));
+    }
+    if (acc.length) { const mean = acc.reduce((a, b) => a + b, 0) / acc.length, harm = acc.length / acc.reduce((a, b) => a + 1 / Math.max(b, 1), 0); gameAcc.push((mean + harm) / 2); }
     for (const m of ms) {
       if (m.loss < 120) continue;
       const theirBest = R.best[m.i + 1] || ''; const myBest = m.best || '';
@@ -103,7 +111,7 @@ function mistakeKinds(reviews) {
   }
   const list = Object.values(kinds).filter(k => k.n).sort((a, b) => b.cost - a.cost);
   const acpl = moves ? Math.round(lossSum / moves) : null;
-  return { games, acpl, accuracy: acpl == null ? null : Math.round(Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * acpl) - 3.1669))), list, breaks: breaks.sort((a, b) => b.loss - a.loss) };
+  return { games, acpl, accuracy: gameAcc.length ? Math.round(gameAcc.reduce((a, b) => a + b, 0) / gameAcc.length) : null, list, breaks: breaks.sort((a, b) => b.loss - a.loss) };
 }
 // Winning chances from a centipawn score, the curve lichess uses.
 const winPct = cp => Math.round(50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1));
