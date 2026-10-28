@@ -10,8 +10,8 @@ function mistakePuzzles() {
   const list = [];
   for (const R of storedReviews()) for (const m of reviewMistakes(R)) {
     // Skip positions that were already lost, or still clearly won after the slip: nothing to learn there.
-    if (m.loss < 150 || !m.best || m.before < -300 || m.after >= 400) continue;
-    list.push({ id: R.g.id + ':' + m.i, g: R.g, i: m.i, sans: R.sans, san: m.san, best: m.best, before: m.before, after: m.after, loss: m.loss, reply: R.best[m.i + 1] });
+    if (!m.serious || !m.best || m.before < -300 || m.after >= 400) continue;
+    list.push({ id: R.g.id + ':' + m.i, g: R.g, i: m.i, sans: R.sans, san: m.san, best: m.best, before: m.before, after: m.after, loss: m.loss, drop: m.drop, reply: R.best[m.i + 1] });
   }
   MP_CACHE = { key, list }; return list;
 }
@@ -20,7 +20,7 @@ function mpDue() {
   const cards = mpCards(), now = Date.now();
   const all = mistakePuzzles();
   const due = all.filter(p => cards[p.id] && cards[p.id].due <= now).sort((a, b) => cards[a.id].due - cards[b.id].due);
-  const fresh = all.filter(p => !cards[p.id]).sort((a, b) => gameTime(b.g) - gameTime(a.g) || b.loss - a.loss);
+  const fresh = all.filter(p => !cards[p.id]).sort((a, b) => gameTime(b.g) - gameTime(a.g) || b.drop - a.drop);
   return due.concat(fresh);
 }
 const mpSolvedToday = () => Object.values(mpCards()).filter(c => c.last >= dayStart()).length;
@@ -132,7 +132,7 @@ function weeklySeries(n) {
       score: gs.length ? gs.reduce((s, g) => s + g.score, 0) / gs.length : null,
       rating: rated.length ? rated[rated.length - 1].myElo : null,
       accuracy: accs.length ? accs.reduce((s, x) => s + x, 0) / accs.length : null, checked: rs.length,
-      mistakes: rs.length ? rs.reduce((s, R) => s + reviewMistakes(R).filter(m => m.loss >= 120).length, 0) / rs.length : null,
+      mistakes: rs.length ? rs.reduce((s, R) => s + reviewMistakes(R).filter(m => m.serious).length, 0) / rs.length : null,
       puzzles: pz || null, puzzleWin: pz ? pw / pz : null });
   }
   return { rows, cls };
@@ -171,7 +171,7 @@ function progressSection() {
   return h('div', { class: 'wgrid' },
     tile(`${cls[0].toUpperCase() + cls.slice(1)} rating`, 'rating', v => String(Math.round(v)), 'line', 'up', 'Your rating at the end of each week.'),
     tile('Accuracy', 'accuracy', v => Math.round(v) + '%', 'line', 'up', checked ? `From ${checked} engine-checked games.` : 'Fills in as games are engine-checked.'),
-    tile('Serious mistakes a game', 'mistakes', v => v.toFixed(1), 'bar', 'down', 'Lower is better.'),
+    tile('Mistakes and blunders a game', 'mistakes', v => v.toFixed(1), 'bar', 'down', 'Lower is better.'),
     tile(onLichess() ? 'Puzzles solved' : 'Games played', onLichess() ? 'puzzles' : 'games', v => String(Math.round(v)), 'bar', 'up', onLichess() ? 'From your lichess puzzle activity.' : 'Link lichess to track puzzles too.'));
 }
 

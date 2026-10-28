@@ -106,17 +106,17 @@ function mistakeKinds(reviews) {
     for (let i = (R.g.me === 'w' ? 0 : 1); i < R.sans.length; i += 2) if (R.evals[i] != null && R.evals[i + 1] != null) { moves++; const s = R.g.me === 'w' ? 1 : -1; lossSum += Math.max(0, Math.min(500, s * clampE(R.evals[i]) - s * clampE(R.evals[i + 1]))); }
     const a = gameAccuracy(R); if (a != null) gameAcc.push(a);
     for (const m of ms) {
-      if (m.loss < 120) continue;
+      if (!m.serious) continue;
       const theirBest = R.best[m.i + 1] || ''; const myBest = m.best || '';
       const k = m.i < 24 ? 'opening' : m.i >= 80 ? 'endgame' : /x|\+/.test(theirBest) ? 'hang' : /x|\+/.test(myBest) ? 'miss' : 'plan';
-      kinds[k].n++; kinds[k].cost += m.loss;
-      breaks.push({ g: R.g, i: m.i, san: m.san, best: m.best, loss: m.loss, before: m.before, after: m.after, kind: k, sans: R.sans });
+      kinds[k].n++; kinds[k].cost += m.drop;
+      breaks.push({ g: R.g, i: m.i, san: m.san, best: m.best, loss: m.loss, drop: m.drop, before: m.before, after: m.after, kind: k, sans: R.sans });
       if (!kinds[k].ex || m.loss > kinds[k].ex.loss) kinds[k].ex = { g: R.g, i: m.i, san: m.san, best: m.best, loss: m.loss };
     }
   }
   const list = Object.values(kinds).filter(k => k.n).sort((a, b) => b.cost - a.cost);
   const acpl = moves ? Math.round(lossSum / moves) : null;
-  return { games, acpl, accuracy: gameAcc.length ? Math.round(gameAcc.reduce((a, b) => a + b, 0) / gameAcc.length) : null, list, breaks: breaks.sort((a, b) => b.loss - a.loss) };
+  return { games, acpl, accuracy: gameAcc.length ? Math.round(gameAcc.reduce((a, b) => a + b, 0) / gameAcc.length) : null, list, breaks: breaks.sort((a, b) => b.drop - a.drop) };
 }
 // Winning chances from a centipawn score, the curve lichess uses.
 const winPct = cp => Math.round(50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1));
@@ -198,7 +198,7 @@ async function dailyReview(rec, onProgress) {
       const sc = await scanGame(g); if (!sc) continue;
       const sans = []; const c = new Chess(); for (const s of fullMoves(g)) { const m = c.move(s, { sloppy: true }); if (!m) break; sans.push(m.san); }
       if (sc.evals.length !== sans.length + 1) continue;
-      const R = { g, sans, evals: sc.evals, best: sc.best }; const ms = reviewMistakes(R).filter(m => m.loss >= 150).sort((a, b) => b.loss - a.loss);
+      const R = { g, sans, evals: sc.evals, best: sc.best }; const ms = reviewMistakes(R).filter(m => m.serious).sort((a, b) => b.drop - a.drop);
       if (!ms.length) { out.losses.push({ g, text: `No single big mistake against ${g.opp}: the game slipped away bit by bit${g.end === 'time' ? ', and ended on time' : ''}.` }); if (g.end === 'time') out.bad.push(`Lost on time to ${g.opp}.`); continue; }
       const mo = motifOf(R, ms[0]);
       out.losses.push({ g, i: ms[0].i, theme: mo.theme, text: mo.text });
@@ -288,7 +288,7 @@ function renderStory() {
   const cost = h('section', { class: 'card' }, h('div', { class: 'cardhead' }, h('p', { class: 'eyebrow bad' }, 'What costs you games'), R.list.length ? h('b', { class: 'bad' }, (R.list.reduce((a, k) => a + k.n, 0) / R.games).toFixed(1) + ' a game') : null));
   if (R.list.length) {
     const max = Math.max(...R.list.map(k => k.n));
-    cost.append(h('p', { class: 'note' }, `Serious mistakes per game (moves that dropped your position by more than a pawn), from ${R.games} engine-checked games. The worst kind is first.`));
+    cost.append(h('p', { class: 'note' }, `Mistakes and blunders per game, counted the way lichess does: a move that cuts your winning chances by 20 points or more. From ${R.games} engine-checked games, the costliest kind first.`));
     for (const k of R.list) cost.append(h('div', { class: 'costrow' }, h('div', { class: 'row', style: 'justify-content:space-between' }, h('span', {}, k.label), h('b', { class: 'bad' }, (k.n / R.games).toFixed(1) + ' a game')), h('span', { class: 'costbar' }, h('i', { style: `width:${Math.max(4, 100 * k.n / max)}%` }))));
     cost.append(h('p', { class: 'ask', style: 'margin-top:14px' }, R.list[0].tip));
     cost.append(scanBtn('Check more games', 'btn quiet tiny'));

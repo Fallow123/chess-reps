@@ -224,13 +224,16 @@ async function runReview(R) {
   if (S.review === R && S.tab === 'games') render();
 }
 const clampE = v => Math.max(-1000, Math.min(1000, v));
+const winChance = cp => 50 + 50 * (2 / (1 + Math.exp(-0.00368208 * cp)) - 1);
 function reviewMistakes(R) {
   const out = []; const sgn = R.g.me === 'w' ? 1 : -1;
   for (let i = 0; i < R.sans.length; i++) {
     const mover = i % 2 === 0 ? 'w' : 'b'; if (mover !== R.g.me) continue;
     if (R.evals[i] == null || R.evals[i + 1] == null) continue;
     const before = sgn * clampE(R.evals[i]), after = sgn * clampE(R.evals[i + 1]); const loss = before - after;
-    if (loss >= 60 && R.best[i] !== R.sans[i]) out.push({ i, san: R.sans[i], loss, before, after, best: R.best[i], kind: loss >= 250 ? 'Blunder' : loss >= 120 ? 'Mistake' : 'Inaccuracy' });
+    // Judged like lichess: by how much winning chance the move gave away, so slips in won or lost positions barely count.
+    const drop = winChance(before) - winChance(after);
+    if (drop >= 10 && R.best[i] !== R.sans[i]) out.push({ i, san: R.sans[i], loss, drop, before, after, best: R.best[i], serious: drop >= 20, kind: drop >= 30 ? 'Blunder' : drop >= 20 ? 'Mistake' : 'Inaccuracy' });
   }
   return out;
 }
