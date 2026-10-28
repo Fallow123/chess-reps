@@ -2407,8 +2407,15 @@ function ensurePlan(force) {
   if (old && !force) return;
   const plan = buildPlan(planContext(new Date()));
   for (const t of plan.tasks) if (t.id === 'import' || t.id === 'import-week') t.gamesAt = S.games.length;
+  // Rebuilding (say, more time today) never undoes work: finished tasks stay exactly as they were,
+  // and the new plan only adds or changes what is still open.
   const done = {};
-  if (old) for (const t of plan.tasks) if (old.done && old.done[t.id]) done[t.id] = true;
+  if (old && old.plan) {
+    const kept = old.plan.tasks.filter(t => isDone(old, t)); const ids = new Set(kept.map(t => t.id));
+    for (const t of kept) done[t.id] = true;
+    plan.tasks = kept.filter(k => !plan.tasks.some(t => t.id === k.id)).concat(plan.tasks.map(t => ids.has(t.id) ? kept.find(k => k.id === t.id) : t));
+    plan.total = plan.tasks.reduce((a, t) => a + (t.mins || 0), 0);
+  }
   // What chess.com showed when the day began, so a new Rush best or puzzle high can tick its task.
   const base = old && old.base || statBase();
   S.plans[id] = { plan, done, base, results: old && old.results || {} };
