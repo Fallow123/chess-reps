@@ -708,17 +708,7 @@ function reviewCard(rec, allDone) {
     R.good.length ? [h('h2', { class: 'good' }, 'Went well'), h('ul', {}, R.good.map(x => h('li', {}, x)))] : null,
     R.bad.length || R.losses.length ? [h('h2', { class: 'bad' }, 'To work on'), h('ul', {}, R.bad.map(x => h('li', {}, x)), R.losses.map(l => h('li', {}, `Lost to ${l.g.opp}. ${l.text} `, l.i != null && engineOk() ? h('button', { class: 'btn quiet tiny', onclick: () => { startReview(l.g); setTimeout(() => { if (S.review) { S.review.idx = l.i; render(); } }, 50); } }, 'See it') : null)))] : null,
     R.next ? h('p', { class: 'lede', style: 'margin:6px 0 0' }, R.next) : h('p', { class: 'note' }, 'Nothing stood out to drill tomorrow. The plan keeps its weekly rhythm.'),
-    h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn quiet tiny', disabled: !!S.reviewing, onclick: () => runDayReview(rec) }, S.reviewing ? 'Reviewing…' : 'Review again'), h('span', { class: 'note' }, `Reviewed ${ago(R.at)}`)),
-    tomorrowPreview());
-}
-// A read-only look at tomorrow, built from today's review. The real plan is built after midnight.
-function tomorrowPreview() {
-  const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0);
-  const P = buildPlan(planContext(d));
-  return h('div', { class: 'tomorrow' },
-    h('div', { class: 'row', style: 'justify-content:space-between' }, h('p', { class: 'eyebrow' }, 'Tomorrow · ' + d.toLocaleDateString('en', { weekday: 'long' })), h('span', { class: 'tag dim' }, 'Unlocks at midnight')),
-    h('h3', {}, P.title), h('p', { class: 'note' }, `About ${P.total} minutes. Games you play tonight still count: the plan is rebuilt with them at midnight.`),
-    h('ol', { class: 'tlist' }, P.tasks.map(t => h('li', {}, h('span', { class: 'tkind k-' + t.kind }, KIND_LABEL[t.kind] || ''), h('span', { class: 'tt' }, t.title), h('span', { class: 'note' }, t.mins + ' min')))));
+    h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn quiet tiny', disabled: !!S.reviewing, onclick: () => runDayReview(rec) }, S.reviewing ? 'Reviewing…' : 'Review again'), h('span', { class: 'note' }, `Reviewed ${ago(R.at)}`)));
 }
 // The last two weeks: plan done, puzzles, Storm, games.
 function historySection() {
