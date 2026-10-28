@@ -280,11 +280,11 @@ function renderStory() {
 
   // What costs you, and where a game broke
   const cards = h('div', { class: 'cards' });
-  const cost = h('section', { class: 'card' }, h('div', { class: 'cardhead' }, h('p', { class: 'eyebrow bad' }, 'What costs you games'), R.list.length ? h('b', { class: 'bad' }, '≈ −' + (R.list.reduce((a, k) => a + k.cost, 0) / 100 / R.games).toFixed(1)) : null));
+  const cost = h('section', { class: 'card' }, h('div', { class: 'cardhead' }, h('p', { class: 'eyebrow bad' }, 'What costs you games'), R.list.length ? h('b', { class: 'bad' }, (R.list.reduce((a, k) => a + k.n, 0) / R.games).toFixed(1) + ' a game') : null));
   if (R.list.length) {
-    const max = R.list[0].cost;
-    cost.append(h('p', { class: 'note' }, `Pawns each kind of mistake throws away per game, from ${R.games} engine-checked games.`));
-    for (const k of R.list) cost.append(h('div', { class: 'costrow' }, h('div', { class: 'row', style: 'justify-content:space-between' }, h('span', {}, k.label), h('b', { class: 'bad' }, '−' + (k.cost / 100 / R.games).toFixed(1))), h('span', { class: 'costbar' }, h('i', { style: `width:${Math.max(4, 100 * k.cost / max)}%` }))));
+    const max = Math.max(...R.list.map(k => k.n));
+    cost.append(h('p', { class: 'note' }, `Serious mistakes per game (moves that dropped your position by more than a pawn), from ${R.games} engine-checked games. The worst kind is first.`));
+    for (const k of R.list) cost.append(h('div', { class: 'costrow' }, h('div', { class: 'row', style: 'justify-content:space-between' }, h('span', {}, k.label), h('b', { class: 'bad' }, (k.n / R.games).toFixed(1) + ' a game')), h('span', { class: 'costbar' }, h('i', { style: `width:${Math.max(4, 100 * k.n / max)}%` }))));
     cost.append(h('p', { class: 'ask', style: 'margin-top:14px' }, R.list[0].tip));
     cost.append(scanBtn('Check more games', 'btn quiet tiny'));
   } else {
