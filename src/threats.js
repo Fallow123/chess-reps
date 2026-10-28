@@ -214,12 +214,14 @@ function startLoose(n) {
 function loadLoose() {
   const d = S.lp; const p = d.queue[d.i];
   if (!p) { d.done = true; render(); return; }
-  Object.assign(d, { p, game: new Chess(p.fen), sel: new Set(), checked: false });
+  Object.assign(d, { p, game: new Chess(p.fen), sel: new Set(), checked: false, hint: null });
   S.hint = null; S.sel = null; render();
 }
 function looseClick(sq) {
   const d = S.lp; if (!d || d.done || d.checked) return;
   const pc = d.game.get(sq); if (!pc) return;
+  if (pc.type === 'p' || pc.type === 'k') { d.hint = 'Pawns and kings don’t count. Only knights, bishops, rooks and queens.'; render(); return; }
+  d.hint = null;
   if (d.sel.has(sq)) d.sel.delete(sq); else d.sel.add(sq);
   renderBoard();
 }
@@ -229,9 +231,12 @@ function looseCheck() {
   if (ok) d.right++;
   const L = lpLog(); const t = L[todayId()] = L[todayId()] || { n: 0, right: 0 }; t.n++; if (ok) t.right++; LS.set('loose-log', L);
   const missed = [...want].filter(s => !d.sel.has(s)), extra = [...d.sel].filter(s => !want.has(s));
-  const name = s => { const p = d.game.get(s); return ({ n: 'knight', b: 'bishop', r: 'rook', q: 'queen' })[p.type] + ' on ' + s; };
-  d.note = ok ? { cls: 'payoff', text: want.size ? `All ${want.size} found.` : 'Right: every piece is defended.' }
-    : { cls: 'bad', text: [missed.length ? `Missed: ${missed.map(name).join(', ')}.` : '', extra.length ? `Defended: ${extra.map(name).join(', ')}.` : ''].join(' ') };
+  const name = s => { const p = d.game.get(s); return (p.color === 'w' ? 'white ' : 'black ') + ({ n: 'knight', b: 'bishop', r: 'rook', q: 'queen', p: 'pawn', k: 'king' })[p.type] + ' on ' + s; };
+  const list = xs => xs.map(name).join(', ');
+  d.note = ok ? { cls: 'payoff', text: want.size ? `You got them all: ${list([...want])}.` : 'Right: nothing is loose here. Every piece is defended.' }
+    : { cls: 'bad', text: [`Not quite. ${want.size ? `You found ${want.size - missed.length} of ${want.size}.` : 'Nothing was loose here.'}`,
+      missed.length ? `You missed the ${list(missed)} (orange outline).` : '',
+      extra.length ? `The ${list(extra)} ${extra.length > 1 ? 'are' : 'is'} defended, so ${extra.length > 1 ? 'they don’t' : 'it doesn’t'} count (red outline).` : ''].filter(Boolean).join(' ') };
   render();
 }
 // For the board: how each square should look in this drill.
@@ -260,8 +265,10 @@ function renderLoose(panel, bar) {
   }
   panel.append(h('section', { class: 'sec' },
     h('h2', {}, `Position ${d.i + 1} of ${d.queue.length}`),
-    h('p', { class: 'who mine' }, 'Click every undefended piece, both colours.'),
+    h('p', { class: 'who mine' }, 'Click every undefended piece, both colours. Pawns and kings don’t count.'),
     h('p', { class: 'note' }, `${d.sel.size} selected. From your game against ${d.p.g.opp}, ${d.p.g.date}.`),
+    d.hint && !d.checked ? h('p', { class: 'note', style: 'color:var(--amber)' }, d.hint) : null,
+    d.checked ? h('p', { class: 'note' }, 'Green: loose and found. Orange: loose and missed. Red: clicked, but defended.') : null,
     h('p', { class: 'lnote ' + (d.note && d.checked ? d.note.cls : '') }, d.checked && d.note ? d.note.text : ''),
     h('div', { class: 'row' },
       d.checked ? h('button', { class: 'btn', onclick: () => { d.i++; d.note = null; loadLoose(); } }, d.i + 1 < d.queue.length ? 'Next' : 'See how you did')
