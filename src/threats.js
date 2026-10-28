@@ -196,7 +196,7 @@ function attackedBy(board, r, f, color) {
 function loosePieces(fen) {
   const b = new Chess(fen).board(); const out = [];
   for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
-    const p = b[r][f]; if (!p || p.type === 'p' || p.type === 'k') continue;
+    const p = b[r][f]; if (!p || p.type === 'k') continue;
     if (!attackedBy(b, r, f, p.color)) out.push('abcdefgh'[f] + (8 - r));
   }
   return out;
@@ -208,7 +208,7 @@ function startLoose(n) {
   if (all.length < 20) return toast('Import more of your games first. This drill uses positions from them.');
   const k = n || 10; const pick = all.slice().sort(() => Math.random() - 0.5);
   const queue = []; let empty = 0;
-  for (const p of pick) { const L = loosePieces(p.fen); if (!L.length && empty >= 1) continue; if (L.length > 5) continue; if (!L.length) empty++; queue.push(Object.assign({ loose: L }, p)); if (queue.length >= k) break; }
+  for (const p of pick) { const L = loosePieces(p.fen); if (!L.length && empty >= 1) continue; if (L.length > 7) continue; if (!L.length) empty++; queue.push(Object.assign({ loose: L }, p)); if (queue.length >= k) break; }
   S.lp = { queue, i: 0, done: false, right: 0 }; loadLoose();
 }
 function loadLoose() {
@@ -220,7 +220,7 @@ function loadLoose() {
 function looseClick(sq) {
   const d = S.lp; if (!d || d.done || d.checked) return;
   const pc = d.game.get(sq); if (!pc) return;
-  if (pc.type === 'p' || pc.type === 'k') { d.hint = 'Pawns and kings don’t count. Only knights, bishops, rooks and queens.'; render(); return; }
+  if (pc.type === 'k') { d.hint = 'Kings don’t count. Every other piece does, pawns included.'; render(); return; }
   d.hint = null;
   if (d.sel.has(sq)) d.sel.delete(sq); else d.sel.add(sq);
   renderBoard();
@@ -252,7 +252,7 @@ function renderLoose(panel, bar) {
     const n = gamePositions().length; const L = lpLog(); const t = L[todayId()];
     panel.append(h('section', { class: 'sec' },
       h('h3', {}, 'Loose pieces'),
-      h('p', { class: 'ask' }, 'Click every piece that is not defended by one of its own pieces, for both sides, then press Check. Kings and pawns don’t count. Loose pieces are where most tactics start, so spotting them at a glance is half of seeing the tactic.'),
+      h('p', { class: 'ask' }, 'Click every piece that is not defended by one of its own pieces, for both sides, then press Check. Pawns count too; kings don’t. Loose pieces are where most tactics start, so spotting them at a glance is half of seeing the tactic.'),
       h('div', { class: 'row' }, h('button', { class: 'btn', disabled: n < 20, onclick: () => startLoose(10) }, 'Start 10 positions'),
         h('span', { class: 'note' }, n < 20 ? 'Import some games first.' : t ? `Today: ${t.right} of ${t.n} perfect.` : 'Positions from your own games.'))));
     return;
@@ -265,7 +265,7 @@ function renderLoose(panel, bar) {
   }
   panel.append(h('section', { class: 'sec' },
     h('h2', {}, `Position ${d.i + 1} of ${d.queue.length}`),
-    h('p', { class: 'who mine' }, 'Click every undefended piece, both colours. Pawns and kings don’t count.'),
+    h('p', { class: 'who mine' }, 'Click every undefended piece, pawns included, both colours. Kings don’t count.'),
     h('p', { class: 'note' }, `${d.sel.size} selected. From your game against ${d.p.g.opp}, ${d.p.g.date}.`),
     d.hint && !d.checked ? h('p', { class: 'note', style: 'color:var(--amber)' }, d.hint) : null,
     d.checked ? h('p', { class: 'note' }, 'Green: loose and found. Orange: loose and missed. Red: clicked, but defended.') : null,

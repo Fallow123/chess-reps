@@ -169,7 +169,7 @@ function buildPlan(ctx) {
   }
 
   // Threat check: a short blunder-check habit from your own positions, every day.
-  if (ctx.threats >= 20 && room() >= 3) add({ id: 'loose', kind: 'tactics', title: 'Loose pieces: 10 positions', mins: 3, target: 10, why: 'Click every undefended piece, both sides. Loose pieces are where most tactics start; this is the two-second scan that finds them.', action: { type: 'loose', n: 10 } });
+  if (ctx.threats >= 20 && room() >= 3) add({ id: 'loose', kind: 'tactics', title: 'Loose pieces: 10 positions', mins: 4, target: 10, why: 'Click every undefended piece, pawns included, both sides. Loose pieces are where most tactics start; this is the two-second scan that finds them.', action: { type: 'loose', n: 10 } });
   if (ctx.threats >= 20 && room() >= 8) add({ id: 'threat', kind: 'tactics', title: 'Threat check: 8 positions', mins: 8, target: 8, why: 'Your opponent’s idea in positions from your own games: forks, pins, mating nets and quiet moves that win next move. One question before every move.', action: { type: 'threats', n: 8 } });
 
   // Your own mistakes, as puzzles: a short set most days, a bigger one on tactics and review days.
