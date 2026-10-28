@@ -133,10 +133,10 @@ function explorerSection() {
       const share = x.total ? n / x.total : 0; const covered = list.includes(san);
       const myScore = n ? (S.side === 'w' ? (w + d / 2) / n : (b + d / 2) / n) : 0;
       ul.append(h('li', { class: 'item' },
-        h('button', { class: 'go', onclick: () => userMove(san), title: covered ? 'Open' : 'Add to repertoire' },
+        h('button', { class: 'go', onclick: () => userMove(san), title: 'Look at ' + san },
           h('span', { class: 'san' }, san), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(100 * share)}%` })),
           h('span', { class: 'meta' }, `${Math.round(100 * share)}% · ${n.toLocaleString()} games · ${sideName(S.side)} scores ${Math.round(100 * myScore)}%`)),
-        h('span', { class: 'tag ' + (covered ? 'ok' : mine ? 'dim' : share >= 0.05 ? 'gap' : 'dim') }, covered ? 'in your prep' : mine ? '' : share >= 0.05 ? 'gap' : 'rare')));
+        covered ? h('span', { class: 'tag ok' }, 'in your prep') : saveBtn(san, mine ? '' : share >= 0.05 ? 'gap' : 'rare')));
     }
     if (!x.moves.length) ul.append(h('li', { class: 'empty' }, 'No games from this position at your level.'));
     sec.replaceChildren(h('div', { class: 'row', style: 'justify-content:space-between' }, h('h2', { style: 'margin:0' }, 'At your level on lichess'), h('span', { class: 'note' }, p.label)), ul);

@@ -1158,6 +1158,11 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 #rw .tomorrow h3 { margin: 2px 0 2px; font-size: 19px; }
 #rw .tomorrow .tlist { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 #rw .tomorrow .tlist li { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; opacity: .85; font-size: 14.5px; }
+#rw .moveline button.unsaved { color: var(--dim); text-decoration: underline dashed var(--amber); text-underline-offset: 4px; }
+#rw .moveline button.cur.unsaved { color: #111; text-decoration-color: #111; }
+#rw .savebar { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 14px; background: rgba(255,138,31,.08); box-shadow: inset 0 0 0 1px rgba(255,138,31,.4); }
+#rw .savebar > div:first-child { flex: 1; min-width: 220px; }
+#rw .item.draft { box-shadow: inset 0 0 0 1px rgba(255,138,31,.35); background: rgba(255,138,31,.04); }
 
 </style>
 
@@ -1621,7 +1626,7 @@ function buildPlan(ctx) {
   // 2. Openings: due drills, or starting a repertoire.
   for (const side of ['w', 'b']) {
     if (!ctx.lines[side] && ctx.gamesCount >= 10 && (theme === 'openings' || side === 'w')) {
-      add({ id: 'seed-' + side, kind: 'openings', title: `Start your ${side === 'w' ? 'White' : 'Black'} repertoire from your games`, mins: 5, why: 'Begin with what you already play. Then the gap report shows exactly where it needs work.', action: { type: 'seed', side } });
+      add({ id: 'seed-' + side, kind: 'openings', title: `Choose your first ${side === 'w' ? 'White' : 'Black'} moves`, mins: 10, why: 'In Build, look at what you already play, what the engine likes and what players at your level meet, then save the line you want as your standard.', action: { type: 'seed', side } });
     }
   }
   const dueAll = ctx.due.w + ctx.due.b;
@@ -1755,7 +1760,7 @@ const lineText = path => path.map((s, i) => (i % 2 === 0 ? (i / 2 + 1) + '.' : '
 const S = {
   side: 'w', tab: 'today',
   settings: { mins: 40, cls: 'auto', rush: null }, plans: {}, stats: null,
-  rep: { w: new Map(), b: new Map() },
+  rep: { w: new Map(), b: new Map() }, draft: { w: new Map(), b: new Map() },
   games: [], username: '', cards: {},
   path: [], game: new Chess(), sel: null, hint: null,
   drill: null, store: 'loading', batch: false, review: null, xgaps: { w: null, b: null }, checks: {},
@@ -1801,6 +1806,12 @@ async function load() {
   try {
     const [w, b, cards, set] = await Promise.all([get('rep/white'), get('rep/black'), get('drill/stats'), get('settings/main')]);
     S.rep.w = repFromEdges(w && w.edges); S.rep.b = repFromEdges(b && b.edges);
+    S.draft.w = repFromEdges(LS.get('draft-w')); S.draft.b = repFromEdges(LS.get('draft-b'));
+    // Prep used to be seeded from games. Those moves become drafts until you confirm them.
+    if (!LS.get('prep-v2')) {
+      for (const sd of ['w', 'b']) if (S.rep[sd].size) { S.draft[sd] = S.rep[sd]; S.rep[sd] = new Map(); saveDraft(sd); save('rep-' + sd); S.movedToDraft = true; }
+      LS.set('prep-v2', true);
+    }
     S.cards = cards && cards.cards ? JSON.parse(JSON.stringify(cards.cards)) : {};
     S.username = (set && set.username) || '';
     if (set) S.settings = { mins: set.mins || 40, cls: set.cls || 'auto', rush: set.rush || null, engine: set.engine !== false, lichessToken: set.lichessToken || '', lichessUser: set.lichessUser || '', site: set.site || 'chesscom' };
@@ -1900,14 +1911,22 @@ function clickSq(sq) {
 function userMove(san) {
   if (S.tab === 'drill') return drillMove(san);
   if (S.tab === 'gaps') S.tab = 'build';
-  const k = posKey(S.game.fen()); const rep = S.rep[S.side];
-  if (!rep.has(k)) rep.set(k, []);
-  const added = !rep.get(k).includes(san);
-  if (added) { rep.get(k).push(san); save('rep-' + S.side); }
+  // On Build, moves explore. Nothing joins your prep until you save it.
   S.game.move(san); S.path.push(san); S.hint = null;
-  refresh(); render();
-  if (added) toast(san + ' added to your ' + sideName(S.side) + ' repertoire');
+  render();
 }
+function saveDraft(sd) { LS.set('draft-' + sd, repToEdges(S.draft[sd])); }
+const inMap = (m, path, i) => { const c = new Chess(); for (let j = 0; j < i; j++) c.move(path[j]); return (m.get(posKey(c.fen())) || []).includes(path[i]); };
+const inPrep = (path, i) => inMap(S.rep[S.side], path, i);
+// Save every move of a line into your prep, and drop them from drafts.
+function saveLine(path) {
+  const rep = S.rep[S.side], dr = S.draft[S.side]; const c = new Chess(); let added = 0;
+  for (const s of path) { const k = posKey(c.fen()); if (!rep.has(k)) rep.set(k, []); if (!rep.get(k).includes(s)) { rep.get(k).push(s); added++; }
+    if (dr.has(k)) { dr.set(k, dr.get(k).filter(x => x !== s)); if (!dr.get(k).length) dr.delete(k); } c.move(s); }
+  save('rep-' + S.side); saveDraft(S.side); refresh(); render();
+  toast(added ? `Saved ${added} move${added > 1 ? 's' : ''} to your ${sideName(S.side)} prep` : 'Already in your prep');
+}
+function discardDraft(k, s) { const dr = S.draft[S.side]; dr.set(k, (dr.get(k) || []).filter(x => x !== s)); if (!dr.get(k).length) dr.delete(k); saveDraft(S.side); render(); }
 function goTo(path) { S.game = new Chess(); S.path = []; for (const s of path) { if (!S.game.move(s)) break; S.path.push(s); } S.sel = null; S.hint = null; }
 const nav = path => () => { goTo(path); render(); };
 
@@ -1923,27 +1942,35 @@ function renderBuild(panel, bar) {
     h('span', { class: 'store' }, { cloud: 'Saved to your account', local: 'Saved in this browser', loading: 'Loading…', error: 'Could not load saved data' }[S.store]));
 
   const line = h('div', { class: 'moveline' });
-  if (!S.path.length) line.append(h('span', { class: 'empty' }, 'Starting position. Play a move on the board to add it.'));
-  S.path.forEach((s, i) => { if (i % 2 === 0) line.append(h('span', { class: 'no' }, (i / 2 + 1) + '.')); line.append(h('button', { class: i === S.path.length - 1 ? 'cur' : '', onclick: nav(S.path.slice(0, i + 1)) }, s)); });
-  panel.append(h('section', { class: 'sec' }, h('h2', {}, 'Current line'), line));
+  if (!S.path.length) line.append(h('span', { class: 'empty' }, 'Starting position. Play a move or pick one below to look at it.'));
+  const saved = S.path.map((_, i) => inPrep(S.path, i)); const firstOff = saved.indexOf(false);
+  S.path.forEach((s, i) => { if (i % 2 === 0) line.append(h('span', { class: 'no' }, (i / 2 + 1) + '.')); line.append(h('button', { class: (i === S.path.length - 1 ? 'cur ' : '') + (saved[i] ? '' : 'unsaved'), onclick: nav(S.path.slice(0, i + 1)) }, s)); });
+  const lineSec = h('section', { class: 'sec' }, h('h2', {}, 'Current line'), line);
+  if (firstOff >= 0) lineSec.append(h('div', { class: 'savebar' },
+    h('div', {}, h('b', {}, `${S.path.length - firstOff} move${S.path.length - firstOff > 1 ? 's' : ''} not in your prep`), h('div', { class: 'note' }, 'You are exploring. Save the line to make it your standard; Gaps, Drill and your daily plan only use saved prep.')),
+    h('div', { class: 'row' }, h('button', { class: 'btn', onclick: () => saveLine(S.path) }, 'Save this line'), h('button', { class: 'btn quiet', onclick: nav(S.path.slice(0, firstOff)) }, 'Back to my prep'))));
+  panel.append(lineSec);
+  if (S.movedToDraft && !LS.get('draft-note')) panel.append(h('section', { class: 'card acard' }, h('b', {}, 'Your prep is now only what you save'),
+    h('p', { class: 'note' }, 'Moves that were filled in from your games are now drafts, marked below in each position. Confirm the ones you want as your standard and discard the rest. Until then, Gaps, Drill and your plan ignore them.'),
+    h('div', { class: 'row' }, h('button', { class: 'btn quiet tiny', onclick: () => { LS.set('draft-note', true); render(); } }, 'Got it'))));
 
-  const idx = D.idx.get(k);
+  const idx = D.idx.get(k); const drafts = (S.draft[S.side].get(k) || []).filter(s => !list.includes(s));
   const ul = h('ul', { class: 'list' });
-  for (const s of list) {
-    const st = idx && idx.get(s);
-    ul.append(h('li', { class: 'item' },
-      h('button', { class: 'go', onclick: nav(S.path.concat(s)) }, h('span', { class: 'san' }, s),
-        h('span', { class: 'meta' }, st ? `${st.n} of your games · you scored ${pct(st.pts, st.scored)}` : 'Not seen in your games yet')),
-      h('button', { class: 'btn quiet tiny danger', 'aria-label': 'Remove ' + s, onclick: () => { rep.set(k, list.filter(x => x !== s)); save('rep-' + S.side); refresh(); render(); toast(s + ' removed, with everything after it'); } }, 'Remove')));
-  }
-  if (!list.length) ul.append(h('li', { class: 'empty' }, mine ? 'No move prepared here. Play one on the board.' : 'No replies prepared. Your line ends here.'));
-  if (!rep.size && S.games.filter(g => g.me === S.side).length >= 5) panel.append(h('section', { class: 'sec' }, h('h3', {}, 'Start from your own games'),
-    h('p', { class: 'ask' }, `Your ${sideName(S.side)} repertoire is empty. Build a first draft from what you already play: your most common move in each position, and every reply you have met at least twice, to about move ${depthTarget() / 2}.`),
-    h('button', { class: 'btn', onclick: () => seedRep(S.side) }, 'Build it from my games')));
+  const statText = s => { const st = idx && idx.get(s); return st ? `${st.n} of your games · you scored ${pct(st.pts, st.scored)}` : 'Not seen in your games yet'; };
+  for (const s of list) ul.append(h('li', { class: 'item' },
+    h('button', { class: 'go', onclick: nav(S.path.concat(s)) }, h('span', { class: 'san' }, s), h('span', { class: 'meta' }, statText(s))),
+    h('span', { class: 'tag ok' }, list[0] === s && mine ? 'main' : 'saved'),
+    h('button', { class: 'btn quiet tiny danger', 'aria-label': 'Remove ' + s, onclick: () => { rep.set(k, list.filter(x => x !== s)); save('rep-' + S.side); refresh(); render(); toast(s + ' removed, with everything after it'); } }, 'Remove')));
+  for (const s of drafts) ul.append(h('li', { class: 'item draft' },
+    h('button', { class: 'go', onclick: nav(S.path.concat(s)) }, h('span', { class: 'san' }, s), h('span', { class: 'meta' }, statText(s))),
+    h('span', { class: 'tag warn' }, 'draft'),
+    h('button', { class: 'btn tiny', onclick: () => saveLine(S.path.concat(s)) }, 'Confirm'),
+    h('button', { class: 'btn quiet tiny', onclick: () => discardDraft(k, s) }, 'Discard')));
+  if (!list.length && !drafts.length) ul.append(h('li', { class: 'empty' }, mine ? 'No move saved here. Look at the suggestions below, play the one you want, then save the line.' : 'No replies saved. Save the ones you expect to meet, starting with the most common.'));
   const afterMoves = () => { if (S.settings.engine !== false || !engineOk()) panel.append(engineSection()); panel.append(explorerSection()); };
   panel.append(h('section', { class: 'sec' },
     h('h3', {}, mine ? 'Your move' : 'Their replies'),
-    h('p', { class: 'ask' }, mine ? 'Keep one main move per position. A second one is a sideline, and drills will ask for both.' : 'Add every reply you meet at your level. The list below shows what your opponents actually play here.'),
+    h('p', { class: 'ask' }, mine ? 'Your saved move here. Keep one main move; a second one is a sideline, and drills ask for both.' : 'The replies you have prepared for. Save every reply you meet often at your level.'),
     ul));
   afterMoves();
 
@@ -1954,10 +1981,10 @@ function renderBuild(panel, bar) {
     for (const [s, e] of rows) {
       const covered = list.includes(s);
       u2.append(h('li', { class: 'item' },
-        h('button', { class: 'go', onclick: () => covered ? nav(S.path.concat(s))() : userMove(s), title: covered ? 'Open' : 'Add to repertoire' },
+        h('button', { class: 'go', onclick: () => userMove(s), title: 'Look at ' + s },
           h('span', { class: 'san' }, s), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(100 * e.n / top)}%` })),
           h('span', { class: 'meta' }, `${e.n}× · you scored ${pct(e.pts, e.scored)}`)),
-        h('span', { class: 'tag ' + (covered ? 'ok' : mine ? 'warn' : 'gap') }, covered ? 'in your prep' : mine ? 'off your prep' : 'gap, tap to add')));
+        covered ? h('span', { class: 'tag ok' }, 'in your prep') : saveBtn(s, mine ? '' : 'gap')));
     }
     panel.append(h('section', { class: 'sec' }, h('h2', {}, 'In your games from here'), u2));
   }
@@ -1974,6 +2001,8 @@ function renderBuild(panel, bar) {
     h('div', { class: 'row', style: 'margin-top:10px' }, h('button', { class: 'btn', onclick: () => bulkAdd(ta.value) }, 'Add lines')),
     h('div', { style: 'margin-top:14px' }, clearRow)));
 }
+// Save one suggested move from here, along with the line that leads to it.
+function saveBtn(san, tag) { return h('span', { class: 'row', style: 'gap:8px;flex-wrap:nowrap' }, tag ? h('span', { class: 'tag ' + (tag === 'gap' ? 'gap' : 'dim') }, tag) : null, h('button', { class: 'btn quiet tiny', onclick: () => saveLine(S.path.concat(san)) }, '+ Save')); }
 function bulkAdd(text) {
   const rep = S.rep[S.side]; let added = 0, lines = 0;
   const rows = /\[\w+ "/.test(text) ? splitPgn(text) : text.split(/\n+/);
@@ -2053,7 +2082,7 @@ function renderGaps(panel, bar) {
   }
   if (!box.children.length) box.append(h('p', { class: 'empty' }, S.games.length ? 'No gaps. Every game stayed in your prep until it ran out.' : 'No open ends in your prep yet.'));
   panel.append(box);
-  bar.append(h('span', { class: 'note' }, 'Fix it opens the position in Build. Play your answer on the board.'));
+  bar.append(h('span', { class: 'note' }, 'Fix it opens the position in Build. Play your answer, then save the line.'));
 }
 
 // ---------- Games ----------
@@ -2347,7 +2376,7 @@ function runAction(t) {
   if (a.type === 'tab') { S.tab = a.tab; render(); }
   else if (a.type === 'review') { const g = S.games.find(x => x.id === a.id); if (g) startReview(g); else { S.tab = 'games'; render(); } }
   else if (a.type === 'gap') { S.tab = 'build'; goTo(a.path); render(); }
-  else if (a.type === 'seed') { S.tab = 'build'; goTo([]); seedRep(a.side); }
+  else if (a.type === 'seed') { S.tab = 'build'; goTo([]); render(); }
   else if (a.type === 'endgame' || a.type === 'run') {
     S.tab = 'endgames'; render();
     const sel = a.type === 'endgame' ? '#app .chapter' : '#app .run';
@@ -2356,14 +2385,7 @@ function runAction(t) {
     window.scrollTo({ top: 0 });
   }
 }
-function seedRep(side) {
-  const seeded = seedFromGames(S.games, side, depthTarget());
-  const rep = S.rep[side]; let added = 0;
-  for (const [k, list] of seeded) { if (!rep.has(k)) rep.set(k, []); for (const s of list) if (!rep.get(k).includes(s)) { rep.get(k).push(s); added++; } }
-  save('rep-' + side); refresh(); render();
-  toast(added ? `Added ${added} moves from your games to your ${sideName(side)} repertoire` : 'Not enough games yet to build from. Import more first.');
-}
-const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Build it', endgame: 'Start chapter', run: 'Start' };
+const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start' };
 const KIND_LABEL = { tactics: 'Tactics', openings: 'Openings', endgames: 'Endgames', play: 'Play', review: 'Review', setup: 'Setup' };
 
 const onLichess = () => !!(S.settings && S.settings.lichessUser);
@@ -2698,10 +2720,10 @@ function explorerSection() {
       const share = x.total ? n / x.total : 0; const covered = list.includes(san);
       const myScore = n ? (S.side === 'w' ? (w + d / 2) / n : (b + d / 2) / n) : 0;
       ul.append(h('li', { class: 'item' },
-        h('button', { class: 'go', onclick: () => userMove(san), title: covered ? 'Open' : 'Add to repertoire' },
+        h('button', { class: 'go', onclick: () => userMove(san), title: 'Look at ' + san },
           h('span', { class: 'san' }, san), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(100 * share)}%` })),
           h('span', { class: 'meta' }, `${Math.round(100 * share)}% · ${n.toLocaleString()} games · ${sideName(S.side)} scores ${Math.round(100 * myScore)}%`)),
-        h('span', { class: 'tag ' + (covered ? 'ok' : mine ? 'dim' : share >= 0.05 ? 'gap' : 'dim') }, covered ? 'in your prep' : mine ? '' : share >= 0.05 ? 'gap' : 'rare')));
+        covered ? h('span', { class: 'tag ok' }, 'in your prep') : saveBtn(san, mine ? '' : share >= 0.05 ? 'gap' : 'rare')));
     }
     if (!x.moves.length) ul.append(h('li', { class: 'empty' }, 'No games from this position at your level.'));
     sec.replaceChildren(h('div', { class: 'row', style: 'justify-content:space-between' }, h('h2', { style: 'margin:0' }, 'At your level on lichess'), h('span', { class: 'note' }, p.label)), ul);

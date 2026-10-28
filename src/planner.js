@@ -143,7 +143,7 @@ function buildPlan(ctx) {
   // 2. Openings: due drills, or starting a repertoire.
   for (const side of ['w', 'b']) {
     if (!ctx.lines[side] && ctx.gamesCount >= 10 && (theme === 'openings' || side === 'w')) {
-      add({ id: 'seed-' + side, kind: 'openings', title: `Start your ${side === 'w' ? 'White' : 'Black'} repertoire from your games`, mins: 5, why: 'Begin with what you already play. Then the gap report shows exactly where it needs work.', action: { type: 'seed', side } });
+      add({ id: 'seed-' + side, kind: 'openings', title: `Choose your first ${side === 'w' ? 'White' : 'Black'} moves`, mins: 10, why: 'In Build, look at what you already play, what the engine likes and what players at your level meet, then save the line you want as your standard.', action: { type: 'seed', side } });
     }
   }
   const dueAll = ctx.due.w + ctx.due.b;
