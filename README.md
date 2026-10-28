@@ -7,7 +7,7 @@ A personal chess training app that runs entirely in the browser.
 - **Gaps**: replies you have not prepared for, from your own games and from what players at your rating play on lichess, plus an engine check of your own moves.
 - **Drill**: spaced-repetition drills of your repertoire lines.
 - **Games**: import from chess.com and review any game with the engine.
-- **Endgames & structures**: the Endgame reps trainer (tablebase-graded endgames, pawn structure quiz, model lines).
+- **Endgames & structures**: the endgame trainer (tablebase-graded endgames, pawn structure quiz, model lines).
 
 Your data stays in your browser (use Download a backup on the Games tab). Nothing about you is stored in this repository.
 

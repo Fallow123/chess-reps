@@ -1701,6 +1701,9 @@ function buildPlan(ctx) {
     add({ id: 'drill', kind: 'openings', title: `Drill ${k} opening line${k > 1 ? 's' : ''}`, mins: Math.ceil(k * 1.2), target: k, why: `${dueAll} line${dueAll > 1 ? 's are' : ' is'} due. Lines you recall every few days hold up under the clock.`, action: { type: 'tab', tab: 'drill', side: ctx.due.w >= ctx.due.b ? 'w' : 'b' } });
   }
 
+  // Threat check: a short blunder-check habit from your own positions, every day.
+  if (ctx.threats >= 10) add({ id: 'threat', kind: 'tactics', title: 'Threat check: 10 positions', mins: 5, target: 10, why: 'Most hung pieces come from not asking what the last move threatens. Ten of your own positions, one question each.', action: { type: 'threats', n: 10 } });
+
   // Your own mistakes, as puzzles: a short set most days, a bigger one on tactics and review days.
   if (ctx.mp && theme !== 'play') {
     const k = Math.min(ctx.mp, theme === 'tactics' || theme === 'review' ? 10 : mins <= 20 ? 3 : 5);
@@ -1838,7 +1841,7 @@ const S = {
   rep: { w: new Map(), b: new Map() }, draft: { w: new Map(), b: new Map() },
   games: [], username: '', cards: {},
   path: [], game: new Chess(), sel: null, hint: null,
-  drill: null, mp: null, drillMode: 'lines', store: 'loading', batch: false, review: null, xgaps: { w: null, b: null }, checks: {},
+  drill: null, mp: null, th: null, drillMode: 'lines', store: 'loading', batch: false, review: null, xgaps: { w: null, b: null }, checks: {},
 };
 let db = null;
 
@@ -1946,15 +1949,17 @@ function pieceEl(p) {
   return d;
 }
 const mpOn = () => S.tab === 'drill' && S.drillMode === 'mistakes';
-const boardGame = () => (mpOn() ? (S.mp && !S.mp.done ? S.mp.game : new Chess()) : S.tab === 'drill' && S.drill && !S.drill.done ? S.drill.game : S.tab === 'games' && S.review ? reviewGame() : S.game);
+const thOn = () => S.tab === 'drill' && S.drillMode === 'threats';
+const boardGame = () => (thOn() ? (S.th && !S.th.done ? S.th.game : new Chess()) : mpOn() ? (S.mp && !S.mp.done ? S.mp.game : new Chess()) : S.tab === 'drill' && S.drill && !S.drill.done ? S.drill.game : S.tab === 'games' && S.review ? reviewGame() : S.game);
 function canMove() {
+  if (thOn()) { const d = S.th; return !!(d && !d.done && !d.finished); }
   if (mpOn()) { const d = S.mp; return !!(d && !d.done && !d.finished && !d.checking && d.game.turn() === d.p.g.me); }
   if (S.tab === 'drill') { const d = S.drill; return d && !d.done && !d.finished && !d.busy && d.game.turn() === S.side; }
   return S.tab === 'build' || S.tab === 'gaps';
 }
 function renderBoard() {
   const g = boardGame(); const b = $('#rw-board'); b.replaceChildren();
-  const flip = (S.tab === 'games' && S.review ? S.review.g.me : mpOn() && S.mp && !S.mp.done ? S.mp.p.g.me : S.side) === 'b'; const hist = g.history({ verbose: true }); const last = hist[hist.length - 1];
+  const flip = (S.tab === 'games' && S.review ? S.review.g.me : thOn() && S.th && !S.th.done ? S.th.p.me : mpOn() && S.mp && !S.mp.done ? S.mp.p.g.me : S.side) === 'b'; const hist = g.history({ verbose: true }); const last = thOn() && S.th && S.th.p && !S.th.done ? S.th.p.last : hist[hist.length - 1];
   const targets = S.sel ? g.moves({ square: S.sel, verbose: true }) : [];
   const live = canMove();
   for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
@@ -1986,6 +1991,7 @@ function clickSq(sq) {
   renderBoard();
 }
 function userMove(san) {
+  if (thOn()) return threatAnswer(san);
   if (mpOn()) return mpMove(san);
   if (S.tab === 'drill') return drillMove(san);
   if (S.tab === 'gaps') S.tab = 'build';
@@ -2338,8 +2344,9 @@ function finishLine() {
 }
 function renderDrill(panel, bar) {
   const nMp = mpDue().length;
-  panel.append(h('div', { class: 'seg', style: 'margin-bottom:14px' }, [['lines', 'Opening lines'], ['mistakes', 'My mistakes' + (nMp ? ` (${nMp})` : '')]].map(([v, l]) => h('button', { 'aria-pressed': String(S.drillMode === v), onclick: () => { if (S.drillMode === v) return; S.drillMode = v; S.drill = null; S.mp = null; S.hint = null; S.sel = null; render(); } }, l))));
+  panel.append(h('div', { class: 'seg', style: 'margin-bottom:14px' }, [['lines', 'Opening lines'], ['mistakes', 'My mistakes' + (nMp ? ` (${nMp})` : '')], ['threats', 'Threat check']].map(([v, l]) => h('button', { 'aria-pressed': String(S.drillMode === v), onclick: () => { if (S.drillMode === v) return; S.drillMode = v; S.drill = null; S.mp = null; S.th = null; S.hint = null; S.sel = null; render(); } }, l))));
   if (S.drillMode === 'mistakes') return renderMistakes(panel, bar);
+  if (S.drillMode === 'threats') return renderThreats(panel, bar);
   const d = S.drill; const sn = sideName(S.side);
   if (!d) {
     const branch = S.path.length ? allLines(S.rep[S.side], S.path) : [];
@@ -2391,7 +2398,7 @@ const todayId = () => ymd(new Date());
 function egProgress() { try { return JSON.parse(localStorage.getItem('endgame-reps-progress')) || {}; } catch { return {}; } }
 function planContext(date) {
   return { date, profile: D.profile, weak: D.weak, gaps: D.gapsBoth, ends: {}, lines: D.linesBoth, due: D.dueBoth, eg: egProgress(),
-    focus: lastFocus(date), mp: mpDue().length,
+    focus: lastFocus(date), mp: mpDue().length, threats: threatPositions().yes.length,
     xgaps: (S.xgaps.w || []).concat(S.xgaps.b || []).sort((a, b) => b.reach - a.reach),
     settings: Object.assign({}, S.settings, { rush: (S.stats && S.stats.rush) || S.settings.rush, storm: S.li && S.li.storm, site: onLichess() ? 'lichess' : 'chesscom' }), gamesCount: S.games.length, recentLosses: D.recentLosses || [] };
 }
@@ -2442,6 +2449,7 @@ function autoDone(t, rec) {
   if (t.id === 'play') return gamesToday().filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'rush') return (rec.results && rec.results.rush != null) || (base.rush != null && st.rush > base.rush);
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
+  if (t.id === 'threat') return thDoneToday() >= (t.target || 10);
   if (t.id === 'mp') return mpSolvedToday() >= (t.target || 1);
   if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!(r && (r.lastWin || r.last) >= start); }
   if (t.id === 'drill') return Object.values(S.cards).filter(c => c.last >= +start).length >= (t.target || 1);
@@ -2466,6 +2474,7 @@ function runAction(t) {
   if (a.type === 'tab') { S.tab = a.tab; render(); }
   else if (a.type === 'review') { const g = S.games.find(x => x.id === a.id); if (g) startReview(g); else { S.tab = 'games'; render(); } }
   else if (a.type === 'gap') { S.tab = 'build'; goTo(a.path); render(); }
+  else if (a.type === 'threats') { S.tab = 'drill'; S.drillMode = 'threats'; S.drill = null; S.mp = null; S.th = null; render(); startThreats(a.n || 10); }
   else if (a.type === 'mistakes') { S.tab = 'drill'; S.drillMode = 'mistakes'; S.drill = null; S.mp = null; render(); const due = mpDue(); if (due.length) startMp(due); }
   else if (a.type === 'seed') { S.tab = 'build'; goTo([]); render(); }
   else if (a.type === 'endgame' || a.type === 'run') {
@@ -2476,7 +2485,7 @@ function runAction(t) {
     window.scrollTo({ top: 0 });
   }
 }
-const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start', mistakes: 'Start' };
+const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start', mistakes: 'Start', threats: 'Start' };
 const KIND_LABEL = { tactics: 'Tactics', openings: 'Openings', endgames: 'Endgames', play: 'Play', review: 'Review', setup: 'Setup' };
 
 const onLichess = () => !!(S.settings && S.settings.lichessUser);
@@ -2512,7 +2521,7 @@ function taskResult(t, rec) {
   return null;
 }
 const checkable = rec => rec.plan.tasks.some(t => ['play', 'rush', 'puzzles'].includes(t.id) && !isDone(rec, t));
-const LI_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=puzzle:read&description=Chess+Reps';
+const LI_TOKEN_URL = 'https://lichess.org/account/oauth/token/create?scopes[]=puzzle:read&description=Pawnstorm';
 async function checkChessCom(quiet) {
   if (!(S.username || S.settings.lichessUser) || S.syncing) return;
   S.syncing = true; if (S.tab === 'today') renderToday();
@@ -3104,7 +3113,7 @@ function matchLegend(vec) {
   return { first: ranked[0].L, second: ranked[1].L, fit: Math.round(100 * Math.max(0, 1 - ranked[0].d / 1.6)) };
 }
 
-// The Reps Score: five parts, each 0..100, each from something you can change.
+// The Pawnstorm Score: five parts, each 0..100, each from something you can change.
 function repsScore(p, games, gapsBoth, lines) {
   if (!p) return null;
   const L = p.losses; const pool = Math.max(1, p.pool);
@@ -3289,7 +3298,7 @@ function renderStory() {
   const games = myGames(); const p = D.profile;
   if (!p || games.length < 20) {
     box.append(h('section', { class: 'story-hero' }, h('p', { class: 'eyebrow' }, 'Your chess story'), h('h3', { class: 'big' }, 'Every player has a story. Yours needs games.'),
-      h('p', { class: 'ask' }, `Import at least 20 games and this page tells it: which legend you play like, your Reps Score, your rating journey, the openings you live by, and the mistake that costs you the most.${games.length ? ` You have ${games.length} so far.` : ''}`),
+      h('p', { class: 'ask' }, `Import at least 20 games and this page tells it: which legend you play like, your Pawnstorm Score, your rating journey, the openings you live by, and the mistake that costs you the most.${games.length ? ` You have ${games.length} so far.` : ''}`),
       h('button', { class: 'btn', onclick: () => { S.tab = 'games'; render(); } }, 'Import games')));
     return;
   }
@@ -3315,7 +3324,7 @@ function renderStory() {
     h('p', { class: 'rsub' }, `${site} · ${main}${now ? ' ' + now : ''}`),
     h('p', { class: 'chip' }, 'You play like ', h('b', {}, M.first.name)),
     h('div', { class: 'rstats' },
-      h('div', {}, h('b', {}, String(RS.total)), h('span', {}, 'Reps Score')),
+      h('div', {}, h('b', {}, String(RS.total)), h('span', {}, 'Pawnstorm Score')),
       h('div', {}, h('b', {}, R.accuracy != null ? R.accuracy + '%' : '–'), h('span', {}, R.accuracy != null ? `accuracy · ${R.games} games` : 'accuracy · scan below')),
       h('div', {}, h('b', {}, peak ? String(peak) : '–'), h('span', {}, 'peak ' + main)),
       h('div', {}, h('b', {}, String(pool.length)), h('span', {}, 'games'))),
@@ -3365,7 +3374,7 @@ function renderStory() {
     h('p', { class: 'note' }, `Amber is you, grey is ${M.first.name.split(' ').pop()}.`)));
 
   // Score
-  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Your Reps Score'),
+  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Your Pawnstorm Score'),
     h('div', { class: 'scorewrap' }, h('div', { class: 'scorebig' }, String(RS.total), h('small', {}, 'out of 100')),
       h('div', { class: 'scoreparts' }, RS.parts.map(x => h('div', { class: 'spart' }, h('div', { class: 'row', style: 'justify-content:space-between' }, h('span', {}, x.key), h('b', {}, String(x.v))), h('span', { class: 'meter wide' }, h('i', { style: `width:${x.v}%` })), h('span', { class: 'note' }, x.why))))),
     h('p', { class: 'ask' }, `Your lowest part is ${RS.parts.slice().sort((a, b) => a.v - b.v)[0].key.toLowerCase()}. That is where your Today plan leans.`)));
@@ -3632,6 +3641,126 @@ function weekCard(title) {
     R.next ? h('p', { class: 'lede', style: 'margin:6px 0 0' }, 'Next week leans on this: ' + R.next) : null);
 }
 
+// ---------- Threat check ----------
+// Positions from your own games, right after your opponent moved: what do they threaten now?
+// Found by passing the move back to them (a "null move") and looking for mate, or material they could win.
+function nullMove(fen) { const f = fen.split(' '); f[1] = f[1] === 'w' ? 'b' : 'w'; f[3] = '-'; return f.join(' '); }
+function threatsIn(fen) {
+  let c; try { c = new Chess(nullMove(fen)); } catch { return []; }
+  if (!c.fen || c.in_check()) return [];
+  const out = [];
+  for (const m of c.moves({ verbose: true })) {
+    if (m.san.endsWith('#')) { out.push({ san: m.san, from: m.from, to: m.to, kind: 'mate', gain: 100 }); continue; }
+    if (!m.captured && !m.promotion) continue;
+    const raw = (m.captured ? VAL[m.captured] : 0) + (m.promotion ? 8 : 0);
+    if (raw < 2) continue;
+    // Can the defender take back on that square? Only worth asking when the trade itself is not already winning.
+    let back = true;
+    if (raw - VAL[m.piece] < 2 || m.promotion) { c.move(m.san); back = c.moves({ verbose: true }).some(x => x.to === m.to); c.undo(); }
+    const gain = back ? raw - VAL[m.piece] : raw;
+    if (gain >= 2) out.push({ san: m.san, from: m.from, to: m.to, kind: m.promotion && !m.captured ? 'queen' : 'win', gain, piece: m.captured });
+  }
+  return out.sort((a, b) => b.gain - a.gain);
+}
+let TH_CACHE = null;
+function threatPositions() {
+  const games = myGames().filter(g => g.full);
+  const key = games.length + ':' + (games.length ? games[games.length - 1].id : '');
+  if (TH_CACHE && TH_CACHE.key === key) return TH_CACHE.list;
+  // Scanning games takes a moment, so the result is kept until new games arrive.
+  const saved = LS.get('threat-cache'); const byId = new Map(games.map(g => [g.id, g]));
+  if (saved && saved.key === key) { const back = x => Object.assign({}, x, { g: byId.get(x.gid) || { opp: '?', date: '' } }); TH_CACHE = { key, list: { yes: saved.yes.map(back), no: saved.no.map(back) } }; return TH_CACHE.list; }
+  const yes = [], no = [];
+  for (const g of games.slice(-40)) {
+    const c = new Chess(); const sans = []; for (const s of fullMoves(g)) { const m = c.move(s, { sloppy: true }); if (!m) break; sans.push(m.san); }
+    const r = new Chess(); let prevCaps = new Set();
+    for (let i = 0; i < sans.length; i++) {
+      const mover = i % 2 === 0 ? 'w' : 'b';
+      if (mover !== g.me) prevCaps = new Set(r.moves({ verbose: true }).map(m => m.from + m.to));
+      const mv = r.move(sans[i]);
+      // Their move is played; it is your turn. Only middle stretches of the game, never while in check.
+      if (mover === g.me || i < 12 || i > 90 || r.in_check() || r.game_over()) continue;
+      const fen = r.fen(); const t = threatsIn(fen); const fresh = t.some(x => !prevCaps.has(x.from + x.to));
+      const item = { id: g.id + ':' + i, fen, me: g.me, last: { from: mv.from, to: mv.to, san: mv.san }, g, i, threats: t };
+      if (fresh) yes.push(item); else if (!t.length) no.push(item);
+    }
+  }
+  TH_CACHE = { key, list: { yes, no } };
+  const slim = x => ({ id: x.id, fen: x.fen, me: x.me, last: x.last, gid: x.g.id, i: x.i, threats: x.threats });
+  LS.set('threat-cache', { key, yes: yes.map(slim), no: no.slice(-80).map(slim) });
+  return TH_CACHE.list;
+}
+const thLog = () => LS.get('threat-log') || {};
+const thDoneToday = () => (thLog()[todayId()] || {}).n || 0;
+function startThreats(n) {
+  const { yes, no } = threatPositions();
+  if (yes.length < 3) return toast('Import more of your games first. Threat check uses positions from them.');
+  // A fresh mix each time, about one in four with nothing to fear: spotting "no threat" is the other half of the habit.
+  const pick = (arr, k) => arr.slice().sort(() => Math.random() - 0.5).slice(0, k);
+  const k = n || 10; const nNo = Math.min(no.length, Math.round(k / 4));
+  const queue = pick(yes, k - nNo).concat(pick(no, nNo)).sort(() => Math.random() - 0.5);
+  S.th = { queue, i: 0, done: false, right: 0 };
+  loadThreat();
+}
+function loadThreat() {
+  const d = S.th; const p = d.queue[d.i];
+  if (!p) { d.done = true; render(); return; }
+  Object.assign(d, { p, game: new Chess(nullMove(p.fen)), tries: 0, finished: false, note: null });
+  S.hint = null; S.sel = null; render();
+}
+function logThreat(ok) {
+  const L = thLog(); const t = L[todayId()] = L[todayId()] || { n: 0, right: 0 }; t.n++; if (ok) t.right++; LS.set('threat-log', L);
+}
+function threatAnswer(san) {
+  const d = S.th; const p = d.p; if (d.finished) return;
+  const hit = san && p.threats.find(t => t.san === san);
+  const best = p.threats[0];
+  const say = t => t.kind === 'mate' ? `${t.san} is mate` : t.kind === 'queen' ? `${t.san} makes a new queen` : `${t.san} wins your ${({ p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen' })[t.piece]}`;
+  if (san === null) {
+    if (!p.threats.length) { d.finished = true; d.right++; logThreat(true); d.note = { cls: 'payoff', text: 'Right: nothing serious. You are free to play your own plan here.' }; }
+    else { d.tries++; S.hint = { from: best.from, to: best.to }; d.finished = true; logThreat(false); d.note = { cls: 'bad', text: `There is a threat: ${say(best)}.` }; }
+  } else if (hit) {
+    d.finished = true; if (!d.tries) d.right++; logThreat(!d.tries); S.hint = { from: hit.from, to: hit.to };
+    d.note = { cls: 'payoff', text: `Yes: ${say(hit)}.${p.threats.length > 1 && hit !== best ? ` Also watch ${best.san}.` : ''}` };
+  } else {
+    d.tries++;
+    if (d.tries >= 2 || !p.threats.length) { d.finished = true; logThreat(false); if (best) S.hint = { from: best.from, to: best.to };
+      d.note = { cls: 'bad', text: best ? `The threat was ${say(best)}.` : 'There was no real threat here. Nothing of yours could be won.' }; }
+    else d.note = { cls: 'miss', text: `${san} does not win anything. Look at what their last move, ${p.last.san}, attacks.` };
+  }
+  render();
+}
+function renderThreats(panel, bar) {
+  const d = S.th;
+  if (!d) {
+    const { yes } = threatPositions(); const L = thLog(); const t = L[todayId()];
+    const week = Object.entries(L).filter(([k]) => k >= ymd(new Date(Date.now() - 6 * 864e5))).reduce((a, [, v]) => ({ n: a.n + v.n, right: a.right + v.right }), { n: 0, right: 0 });
+    panel.append(h('section', { class: 'sec' },
+      h('h3', {}, 'Threat check'),
+      h('p', { class: 'ask' }, 'Before every move, ask what your opponent’s last move threatens. Each position is from your own games, right after they moved. Play the move they would make if it were their turn, or say there is nothing serious.'),
+      h('div', { class: 'row' }, h('button', { class: 'btn', disabled: yes.length < 3, onclick: () => startThreats(10) }, 'Start 10 positions'),
+        h('span', { class: 'note' }, yes.length < 3 ? 'Import some games first.' : t ? `Today: ${t.right} of ${t.n} right.` : `${yes.length} positions from your games.`)),
+      week.n ? h('p', { class: 'note', style: 'margin-top:10px' }, `This week: ${week.right} of ${week.n} right (${Math.round(100 * week.right / week.n)}%).`) : null));
+    return;
+  }
+  if (d.done) {
+    panel.append(h('section', { class: 'sec' }, h('h3', {}, `${d.right} of ${d.queue.length} right`),
+      h('p', { class: 'ask' }, d.right >= d.queue.length * 0.8 ? 'Sharp. Take this habit into your games: one look at their move before you play yours.' : 'The misses are the pieces you would have left hanging in a game. One check of their last move, every move, is the fix.'),
+      h('div', { class: 'row', style: 'margin-top:14px' }, h('button', { class: 'btn', onclick: () => startThreats(10) }, 'Another 10'), h('button', { class: 'btn quiet', onclick: () => { S.th = null; S.hint = null; render(); } }, 'Done'))));
+    return;
+  }
+  const p = d.p;
+  panel.append(h('section', { class: 'sec' },
+    h('h2', {}, `Position ${d.i + 1} of ${d.queue.length}`),
+    h('p', { class: 'who theirs' }, `Your opponent just played ${p.last.san}. What do they threaten?`),
+    h('p', { class: 'note' }, `Move it for them on the board, or say nothing serious. From your game against ${p.g.opp}, ${p.g.date}.`),
+    h('p', { class: 'lnote ' + (d.note ? d.note.cls : '') }, d.note ? d.note.text : ''),
+    h('div', { class: 'row' },
+      d.finished ? h('button', { class: 'btn', onclick: () => { d.i++; loadThreat(); } }, d.i + 1 < d.queue.length ? 'Next position' : 'See how you did')
+        : h('button', { class: 'btn quiet', onclick: () => threatAnswer(null) }, 'Nothing serious'),
+      h('button', { class: 'btn quiet', onclick: () => { S.th = null; S.hint = null; render(); } }, 'Leave'))));
+}
+
 // ---------- Shell ----------
 const TABS = ['today', 'story', 'build', 'gaps', 'drill', 'games', 'endgames', 'settings'];
 function render() {
@@ -3639,7 +3768,7 @@ function render() {
   const eg = S.tab === 'endgames';
   $('#rw').hidden = eg; $('#app').hidden = !eg; const flat = S.tab === 'today' || S.tab === 'story' || S.tab === 'settings';
   const noBoard = S.tab === 'games' && !S.review; $('#rw-grid').classList.toggle('noboard', noBoard);
-  $('#sidepick').hidden = eg || flat || noBoard || mpOn();
+  $('#sidepick').hidden = eg || flat || noBoard || (S.tab === 'drill' && S.drillMode !== 'lines');
   $('#rw-grid').hidden = flat; $('#rw-today').hidden = S.tab !== 'today'; $('#rw-story').hidden = S.tab !== 'story'; $('#rw-settings').hidden = S.tab !== 'settings';
   if (eg) return;
   if (S.tab === 'today') return renderToday();

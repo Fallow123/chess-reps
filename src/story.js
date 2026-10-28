@@ -65,7 +65,7 @@ function matchLegend(vec) {
   return { first: ranked[0].L, second: ranked[1].L, fit: Math.round(100 * Math.max(0, 1 - ranked[0].d / 1.6)) };
 }
 
-// The Reps Score: five parts, each 0..100, each from something you can change.
+// The Pawnstorm Score: five parts, each 0..100, each from something you can change.
 function repsScore(p, games, gapsBoth, lines) {
   if (!p) return null;
   const L = p.losses; const pool = Math.max(1, p.pool);
@@ -250,7 +250,7 @@ function renderStory() {
   const games = myGames(); const p = D.profile;
   if (!p || games.length < 20) {
     box.append(h('section', { class: 'story-hero' }, h('p', { class: 'eyebrow' }, 'Your chess story'), h('h3', { class: 'big' }, 'Every player has a story. Yours needs games.'),
-      h('p', { class: 'ask' }, `Import at least 20 games and this page tells it: which legend you play like, your Reps Score, your rating journey, the openings you live by, and the mistake that costs you the most.${games.length ? ` You have ${games.length} so far.` : ''}`),
+      h('p', { class: 'ask' }, `Import at least 20 games and this page tells it: which legend you play like, your Pawnstorm Score, your rating journey, the openings you live by, and the mistake that costs you the most.${games.length ? ` You have ${games.length} so far.` : ''}`),
       h('button', { class: 'btn', onclick: () => { S.tab = 'games'; render(); } }, 'Import games')));
     return;
   }
@@ -276,7 +276,7 @@ function renderStory() {
     h('p', { class: 'rsub' }, `${site} · ${main}${now ? ' ' + now : ''}`),
     h('p', { class: 'chip' }, 'You play like ', h('b', {}, M.first.name)),
     h('div', { class: 'rstats' },
-      h('div', {}, h('b', {}, String(RS.total)), h('span', {}, 'Reps Score')),
+      h('div', {}, h('b', {}, String(RS.total)), h('span', {}, 'Pawnstorm Score')),
       h('div', {}, h('b', {}, R.accuracy != null ? R.accuracy + '%' : '–'), h('span', {}, R.accuracy != null ? `accuracy · ${R.games} games` : 'accuracy · scan below')),
       h('div', {}, h('b', {}, peak ? String(peak) : '–'), h('span', {}, 'peak ' + main)),
       h('div', {}, h('b', {}, String(pool.length)), h('span', {}, 'games'))),
@@ -326,7 +326,7 @@ function renderStory() {
     h('p', { class: 'note' }, `Amber is you, grey is ${M.first.name.split(' ').pop()}.`)));
 
   // Score
-  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Your Reps Score'),
+  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Your Pawnstorm Score'),
     h('div', { class: 'scorewrap' }, h('div', { class: 'scorebig' }, String(RS.total), h('small', {}, 'out of 100')),
       h('div', { class: 'scoreparts' }, RS.parts.map(x => h('div', { class: 'spart' }, h('div', { class: 'row', style: 'justify-content:space-between' }, h('span', {}, x.key), h('b', {}, String(x.v))), h('span', { class: 'meter wide' }, h('i', { style: `width:${x.v}%` })), h('span', { class: 'note' }, x.why))))),
     h('p', { class: 'ask' }, `Your lowest part is ${RS.parts.slice().sort((a, b) => a.v - b.v)[0].key.toLowerCase()}. That is where your Today plan leans.`)));

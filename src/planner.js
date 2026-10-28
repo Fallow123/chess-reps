@@ -159,6 +159,9 @@ function buildPlan(ctx) {
     add({ id: 'drill', kind: 'openings', title: `Drill ${k} opening line${k > 1 ? 's' : ''}`, mins: Math.ceil(k * 1.2), target: k, why: `${dueAll} line${dueAll > 1 ? 's are' : ' is'} due. Lines you recall every few days hold up under the clock.`, action: { type: 'tab', tab: 'drill', side: ctx.due.w >= ctx.due.b ? 'w' : 'b' } });
   }
 
+  // Threat check: a short blunder-check habit from your own positions, every day.
+  if (ctx.threats >= 10) add({ id: 'threat', kind: 'tactics', title: 'Threat check: 10 positions', mins: 5, target: 10, why: 'Most hung pieces come from not asking what the last move threatens. Ten of your own positions, one question each.', action: { type: 'threats', n: 10 } });
+
   // Your own mistakes, as puzzles: a short set most days, a bigger one on tactics and review days.
   if (ctx.mp && theme !== 'play') {
     const k = Math.min(ctx.mp, theme === 'tactics' || theme === 'review' ? 10 : mins <= 20 ? 3 : 5);
