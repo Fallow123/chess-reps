@@ -179,3 +179,10 @@ body, #app, .toast, .shell button, .shell input, .shell textarea, #app button { 
 /* Structures course: lesson text */
 #app .why .lsn { display: block; margin: 0 0 10px; line-height: 1.55; }
 #app .why .lsn b { color: var(--bone); }
+
+/* Where your games go wrong: two cards of equal height */
+#rw .story-ch .cards { margin-top: 16px; align-items: stretch; }
+#rw .story-ch .cards .card { display: flex; flex-direction: column; }
+#rw .story-ch .cards .card > .row:last-child { margin-top: auto !important; padding-top: 12px; }
+#rw .story-ch .cards .costrow { margin: 6px 0; }
+#rw .story-ch .cards .miniboard { max-width: 320px; width: 100%; margin: 8px auto 0; grid-template-rows: repeat(8, 1fr); }

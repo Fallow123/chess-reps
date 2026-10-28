@@ -316,7 +316,6 @@ function renderStory() {
     draw(); cards.append(brk);
   }
   if (cards.children.length === 1) cards.classList.add('one');
-  box.append(cards);
 
   // Style
   box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'You play like ', h('em', {}, M.first.name)),
@@ -351,6 +350,11 @@ function renderStory() {
   box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'The openings you live by'),
     h('p', { class: 'lede' }, [weapon ? `Your weapon is the ${weapon.name} as ${sideName(weapon.side)}, where you score ${pc(weapon.score)}. ` : '', krypto && krypto !== weapon ? `Your kryptonite is the ${krypto.name} as ${sideName(krypto.side)}: ${pc(krypto.score)}.` : ''].join('')),
     h('div', { class: 'two' }, h('div', {}, h('h2', {}, 'As White'), opList('w')), h('div', {}, h('h2', {}, 'As Black'), opList('b')))));
+
+  // Where games go wrong
+  box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Where your games go wrong'),
+    h('p', { class: 'lede' }, R.list.length ? `${R.list[0].label}, mostly. Here is what each kind of mistake costs you, and the moments where games turned.` : 'Let the engine check your games and this chapter shows what costs you points, and the exact moves where games turned.'),
+    cards));
 
   // How games end
   const wins = pool.filter(g => g.score === 1), losses = pool.filter(g => g.score === 0);
