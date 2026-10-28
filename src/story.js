@@ -257,6 +257,9 @@ function renderStory() {
   const pool = games.slice().sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 300);
   const F = storyFeatures(pool); const M = matchLegend(F.vec); const RS = repsScore(p, pool, D.gapsBoth, D.linesBoth);
   const who = S.username || 'You'; const main = p.main; const series = ratingSeries(games, main);
+  // A game records the rating from before it was played; lichess's profile has the rating now.
+  const liveR = mySite() === 'lichess' && S.li && S.li.ratings && S.li.ratings[main];
+  if (liveR && series.length && series[series.length - 1][1] !== liveR) series.push([Date.now(), liveR]);
   const peak = series.length ? Math.max(...series.map(s => s[1])) : null; const now = series.length ? series[series.length - 1][1] : null; const first = series.length ? series[0][1] : null;
   const upset = pool.filter(g => g.score === 1 && g.oppElo && g.myElo).sort((a, b) => (b.oppElo - b.myElo) - (a.oppElo - a.myElo))[0];
   let best = 0, run = 0; for (const g of games.slice().sort((a, b) => gameTime(a) - gameTime(b))) { run = g.score === 1 ? run + 1 : 0; best = Math.max(best, run); }

@@ -20,7 +20,7 @@ const S = {
   rep: { w: new Map(), b: new Map() }, draft: { w: new Map(), b: new Map() },
   games: [], username: '', cards: {},
   path: [], game: new Chess(), sel: null, hint: null,
-  drill: null, mp: null, th: null, drillMode: 'lines', store: 'loading', batch: false, review: null, xgaps: { w: null, b: null }, checks: {},
+  drill: null, mp: null, th: null, lp: null, drillMode: 'lines', store: 'loading', batch: false, review: null, xgaps: { w: null, b: null }, checks: {},
 };
 let db = null;
 
@@ -132,16 +132,18 @@ function pieceEl(p) {
 }
 const mpOn = () => S.tab === 'drill' && S.drillMode === 'mistakes';
 const thOn = () => S.tab === 'drill' && S.drillMode === 'threats';
-const boardGame = () => (thOn() ? (S.th && !S.th.done ? S.th.game : new Chess()) : mpOn() ? (S.mp && !S.mp.done ? S.mp.game : new Chess()) : S.tab === 'drill' && S.drill && !S.drill.done ? S.drill.game : S.tab === 'games' && S.review ? reviewGame() : S.game);
+const lpOn = () => S.tab === 'drill' && S.drillMode === 'loose';
+const boardGame = () => (lpOn() ? (S.lp && !S.lp.done && S.lp.game ? S.lp.game : new Chess()) : thOn() ? (S.th && !S.th.done && S.th.game && !S.th.loading ? S.th.game : new Chess()) : mpOn() ? (S.mp && !S.mp.done ? S.mp.game : new Chess()) : S.tab === 'drill' && S.drill && !S.drill.done ? S.drill.game : S.tab === 'games' && S.review ? reviewGame() : S.game);
 function canMove() {
-  if (thOn()) { const d = S.th; return !!(d && !d.done && !d.finished); }
+  if (lpOn()) return false;
+  if (thOn()) { const d = S.th; return !!(d && !d.done && !d.finished && !d.loading && !d.checking); }
   if (mpOn()) { const d = S.mp; return !!(d && !d.done && !d.finished && !d.checking && d.game.turn() === d.p.g.me); }
   if (S.tab === 'drill') { const d = S.drill; return d && !d.done && !d.finished && !d.busy && d.game.turn() === S.side; }
   return S.tab === 'build' || S.tab === 'gaps';
 }
 function renderBoard() {
   const g = boardGame(); const b = $('#rw-board'); b.replaceChildren();
-  const flip = (S.tab === 'games' && S.review ? S.review.g.me : thOn() && S.th && !S.th.done ? S.th.p.me : mpOn() && S.mp && !S.mp.done ? S.mp.p.g.me : S.side) === 'b'; const hist = g.history({ verbose: true }); const last = thOn() && S.th && S.th.p && !S.th.done ? S.th.p.last : hist[hist.length - 1];
+  const flip = (S.tab === 'games' && S.review ? S.review.g.me : lpOn() && S.lp && S.lp.p && !S.lp.done ? S.lp.p.me : thOn() && S.th && S.th.p && !S.th.done && !S.th.loading ? S.th.p.me : mpOn() && S.mp && !S.mp.done ? S.mp.p.g.me : S.side) === 'b'; const hist = g.history({ verbose: true }); const last = thOn() && S.th && S.th.p && !S.th.done && !S.th.loading ? S.th.p.last : lpOn() && S.lp && S.lp.p && !S.lp.done ? S.lp.p.last : hist[hist.length - 1];
   const targets = S.sel ? g.moves({ square: S.sel, verbose: true }) : [];
   const live = canMove();
   for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
@@ -152,6 +154,7 @@ function renderBoard() {
     if (last && last.to === sq) cls.push('to');
     if (S.sel === sq) cls.push('sel');
     if (S.hint && (S.hint.from === sq || S.hint.to === sq)) cls.push('hint');
+    if (lpOn()) { const mk = looseMark(sq); if (mk) cls.push(mk); if (p && S.lp && !S.lp.checked && !S.lp.done) cls.push('pickable'); }
     const t = targets.find(m => m.to === sq); if (t) cls.push('target', 'pickable'); if (t && p) cls.push('occupied');
     if (live && p && p.color === g.turn()) cls.push('pickable');
     const btn = h('button', { class: cls.join(' '), 'aria-label': sq + (p ? ' ' + (p.color === 'w' ? 'white ' : 'black ') + ({ k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' })[p.type] : ''), onclick: () => clickSq(sq) });
@@ -162,6 +165,7 @@ function renderBoard() {
   }
 }
 function clickSq(sq) {
+  if (lpOn()) return looseClick(sq);
   if (!canMove()) return;
   const g = boardGame();
   if (S.sel) {
@@ -526,9 +530,10 @@ function finishLine() {
 }
 function renderDrill(panel, bar) {
   const nMp = mpDue().length;
-  panel.append(h('div', { class: 'seg', style: 'margin-bottom:14px' }, [['lines', 'Opening lines'], ['mistakes', 'My mistakes' + (nMp ? ` (${nMp})` : '')], ['threats', 'Threat check']].map(([v, l]) => h('button', { 'aria-pressed': String(S.drillMode === v), onclick: () => { if (S.drillMode === v) return; S.drillMode = v; S.drill = null; S.mp = null; S.th = null; S.hint = null; S.sel = null; render(); } }, l))));
+  panel.append(h('div', { class: 'seg', style: 'margin-bottom:14px' }, [['lines', 'Opening lines'], ['mistakes', 'My mistakes' + (nMp ? ` (${nMp})` : '')], ['threats', 'Threat check'], ['loose', 'Loose pieces']].map(([v, l]) => h('button', { 'aria-pressed': String(S.drillMode === v), onclick: () => { if (S.drillMode === v) return; S.drillMode = v; S.drill = null; S.mp = null; S.th = null; S.lp = null; S.batch = false; S.hint = null; S.sel = null; render(); } }, l))));
   if (S.drillMode === 'mistakes') return renderMistakes(panel, bar);
   if (S.drillMode === 'threats') return renderThreats(panel, bar);
+  if (S.drillMode === 'loose') return renderLoose(panel, bar);
   const d = S.drill; const sn = sideName(S.side);
   if (!d) {
     const branch = S.path.length ? allLines(S.rep[S.side], S.path) : [];
@@ -634,7 +639,8 @@ function autoDone(t, rec) {
   if (t.id === 'puzzles') return base.tactics != null && st.tactics > base.tactics;
   // Runs in the endgame trainer (structures course, model lines) record when they were finished.
   if (t.action && t.action.type === 'run') { const r = (egProgress().runs || {})[t.action.name]; return !!(r && r >= start); }
-  if (t.id === 'threat') return thDoneToday() >= (t.target || 10);
+  if (t.id === 'threat') return thDoneToday() >= (t.target || 8);
+  if (t.id === 'loose') return lpDoneToday() >= (t.target || 10);
   if (t.id === 'mp') return mpSolvedToday() >= (t.target || 1);
   if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!(r && (r.lastWin || r.last) >= start); }
   if (t.id === 'drill') return Object.values(S.cards).filter(c => c.last >= +start).length >= (t.target || 1);
@@ -659,7 +665,8 @@ function runAction(t) {
   if (a.type === 'tab') { S.tab = a.tab; render(); }
   else if (a.type === 'review') { const g = S.games.find(x => x.id === a.id); if (g) startReview(g); else { S.tab = 'games'; render(); } }
   else if (a.type === 'gap') { S.tab = 'build'; goTo(a.path); render(); }
-  else if (a.type === 'threats') { S.tab = 'drill'; S.drillMode = 'threats'; S.drill = null; S.mp = null; S.th = null; render(); startThreats(a.n || 10); }
+  else if (a.type === 'threats') { S.tab = 'drill'; S.drillMode = 'threats'; S.drill = null; S.mp = null; S.th = null; render(); startThreats(a.n || 8); }
+  else if (a.type === 'loose') { S.tab = 'drill'; S.drillMode = 'loose'; S.drill = null; S.mp = null; S.lp = null; render(); startLoose(a.n || 10); }
   else if (a.type === 'mistakes') { S.tab = 'drill'; S.drillMode = 'mistakes'; S.drill = null; S.mp = null; render(); const due = mpDue(); if (due.length) startMp(due); }
   else if (a.type === 'seed') { S.tab = 'build'; goTo([]); render(); }
   else if (a.type === 'endgame' || a.type === 'run') {
@@ -670,7 +677,7 @@ function runAction(t) {
     window.scrollTo({ top: 0 });
   }
 }
-const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start', mistakes: 'Start', threats: 'Start' };
+const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start', mistakes: 'Start', threats: 'Start', loose: 'Start' };
 const KIND_LABEL = { tactics: 'Tactics', openings: 'Openings', endgames: 'Endgames', play: 'Play', review: 'Review', setup: 'Setup' };
 
 const onLichess = () => !!(S.settings && S.settings.lichessUser);
