@@ -235,6 +235,7 @@ function buildPlan(ctx) {
     review: 'Today is a review day: learn from this week’s losses and reset for next week.',
   }[theme];
   const reason = top && FOCUS_THEME[top.key] === theme ? ' ' + top.text : '';
-  return { date: ymd(date), theme, title: THEME[theme], note: focusNote + reason, tier: tier.name, tierNote: tier.note, cls, mins, total: used, tasks };
+  const fromReview = focus ? ` Yesterday’s review picked ${themeName(focus.theme)} as today’s focus: see the 20-puzzle task.` : '';
+  return { date: ymd(date), theme, title: THEME[theme], note: focusNote + reason + fromReview, tier: tier.name, tierNote: tier.note, cls, mins, total: used, tasks };
 }
 function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }

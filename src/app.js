@@ -604,7 +604,8 @@ function ensurePlan(force) {
   }
   // What chess.com showed when the day began, so a new Rush best or puzzle high can tick its task.
   const base = old && old.base || statBase();
-  S.plans[id] = { plan, done, base, results: old && old.results || {} };
+  // Keep everything else the day already has, above all its review: that is what picks tomorrow's focus.
+  S.plans[id] = Object.assign({}, old, { plan, done, base, results: old && old.results || {} });
   savePlan(id);
 }
 const statBase = () => S.stats ? { rush: S.stats.rush || 0, tactics: S.stats.tactics || 0 } : { rush: null, tactics: null };
@@ -717,7 +718,9 @@ async function checkChessCom(quiet) {
 const engineReady = () => engineOk() && location.protocol !== 'file:';
 async function runDayReview(rec) {
   S.reviewing = 'Reading your day…'; if (S.tab === 'today') renderToday();
-  try { rec.review = await dailyReview(rec, msg => { S.reviewing = msg; const e = $('#rw-revprog'); if (e) e.textContent = msg; }); savePlan(todayId()); }
+  // The plan can be rebuilt while the engine works, and the day can roll over: save the review on the day it belongs to.
+  const day = rec.plan.date || todayId();
+  try { const review = await dailyReview(rec, msg => { S.reviewing = msg; const e = $('#rw-revprog'); if (e) e.textContent = msg; }); rec.review = review; if (S.plans[day]) S.plans[day].review = review; savePlan(day); }
   catch { toast('The review did not finish. Try again.'); }
   S.reviewing = null; if (S.tab === 'today') renderToday();
 }
