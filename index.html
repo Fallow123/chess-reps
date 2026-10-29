@@ -1712,7 +1712,10 @@ function buildPlan(ctx) {
   const { date, profile: p, weak, settings: st } = ctx; const L = st.site === 'lichess';
   const site = SITE[L ? 'lichess' : 'chesscom'];
   const mins = st.mins || 40;
-  const cls = st.cls && st.cls !== 'auto' ? st.cls : (p ? p.main : 'rapid');
+  const auto = !st.cls || st.cls === 'auto';
+  // On a 20-minute day, Auto picks a blitz game so the plan fits; a class you chose yourself is kept.
+  const short = mins <= 20 && auto && !['blitz', 'bullet', 'daily'].includes(p ? p.main : 'rapid');
+  const cls = short ? 'blitz' : !auto ? st.cls : (p ? p.main : 'rapid');
   const tier = tierFor(p && p.elo);
   let theme = weekThemes(weak)[weekdayIdx(date)];
   const tasks = []; let used = 0;
@@ -1721,7 +1724,7 @@ function buildPlan(ctx) {
   const top = weak[0];
   const why = key => (weak.find(w => w.key === key) || {}).text;
   const slow = theme === 'slow' || (top && (top.key === 'time' || top.key === 'tilt') && theme === 'play');
-  const playKey = slow && cls !== 'daily' && cls !== 'bullet' ? 'slow' : cls;
+  const playKey = slow && !short && cls !== 'daily' && cls !== 'bullet' ? 'slow' : cls;
   const playMins = GAME_MIN[playKey] || 12;
   // Games come first: 3 a day when the time allows them and their reviews, 2 on a normal budget, never fewer than 1.
   // Play day adds one; review day keeps a single game so the habit does not lapse.
@@ -1848,7 +1851,7 @@ function buildPlan(ctx) {
     review: 'Today is a review day: learn from this week’s losses and reset for next week.',
   }[theme];
   const reason = top && FOCUS_THEME[top.key] === theme ? ' ' + top.text : '';
-  const fromReview = focus ? ` Yesterday’s review picked ${themeName(focus.theme)} as today’s focus: see the 20-puzzle task.` : '';
+  const fromReview = focus ? ` Yesterday’s review picked ${themeName(focus.theme)} as today’s focus: see the ${(tasks.find(t => t.id === 'theme') || {}).target || 20}-puzzle task.` : '';
   // Fit the time you chose: drop the lowest-priority tasks (added last) until it fits.
   // The game, the review's focus task and setup stay; with no focus task, the puzzle warm-up stays.
   // From 40 minutes, the day's own work stays too: the first task of the day's theme.
@@ -1860,7 +1863,7 @@ function buildPlan(ctx) {
     if (i < 0) break;
     used -= tasks[i].mins; tasks.splice(i, 1);
   }
-  const over = used > mins + 2 ? ` Today runs about ${used} minutes: a ${playMins}-minute game plus the must-do tasks don’t fit in ${mins}, so everything else was left out.` : '';
+  const over = used > mins + 2 ? ` Today runs about ${used} minutes: a ${playMins}-minute game plus the must-do tasks don’t fit in ${mins}, so everything else was left out.${mins <= 20 && !auto ? ' Set Games to play to Auto and a 20-minute day uses one blitz game instead.' : ''}` : short ? ' A short day, so today’s game is blitz.' : '';
   return { date: ymd(date), theme, title: THEME[theme], note: focusNote + reason + fromReview + over, tier: tier.name, tierNote: tier.note, cls, mins, total: used, tasks };
 }
 function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
