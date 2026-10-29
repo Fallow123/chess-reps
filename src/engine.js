@@ -328,15 +328,16 @@ async function syncLichess(user) {
   L.puzzleErr = null;
   if (S.settings.lichessToken) {
     try {
-      const H = liHistory(); const since = L.puzzlesSynced ? Math.min(dayStart(), L.puzzlesSynced - 864e5) : Date.now() - 30 * 864e5;
+      const H = liHistory(); const since = L.puzzlesSynced && L.themeDays ? Math.min(dayStart(), L.puzzlesSynced - 864e5) : Date.now() - 30 * 864e5;
       const pr = await fetch(`https://lichess.org/api/puzzle/activity?since=${since}&max=2000`, { headers: liHeaders() });
       if (pr.status === 401 || pr.status === 403) L.puzzleErr = 'scope';
       else if (pr.ok) {
         const all = (await pr.text()).split('\n').filter(Boolean).map(x => { try { const o = JSON.parse(x); return { win: o.win, rating: o.puzzle && o.puzzle.rating, at: o.date, themes: (o.puzzle && o.puzzle.themes) || [] }; } catch { return null; } }).filter(Boolean);
         L.puzzlesToday = { date: todayId(), list: all.filter(x => x.at >= dayStart()) };
         const by = {}; for (const x of all) { const k = ymd(new Date(x.at)); (by[k] = by[k] || []).push(x); }
-        for (const [k, xs] of Object.entries(by)) H[k] = Object.assign(H[k] || {}, { puzzles: xs.length, won: xs.filter(x => x.win).length, prating: Math.round(xs.reduce((a, x) => a + (x.rating || 0), 0) / xs.length) });
-        LS.set('li-days', H); L.puzzlesSynced = Date.now(); L.tokenOk = true;
+        for (const [k, xs] of Object.entries(by)) H[k] = Object.assign(H[k] || {}, { puzzles: xs.length, won: xs.filter(x => x.win).length, prating: Math.round(xs.reduce((a, x) => a + (x.rating || 0), 0) / xs.length),
+          themes: xs.reduce((o, x) => { for (const th of x.themes) o[th] = (o[th] || 0) + 1; return o; }, {}) });
+        LS.set('li-days', H); L.puzzlesSynced = Date.now(); L.themeDays = true; L.tokenOk = true;
         try { const db = await (await fetch('https://lichess.org/api/puzzle/dashboard/30', { headers: liHeaders() })).json();
           L.themes = Object.entries(db.themes || {}).map(([k, v]) => ({ theme: k, nb: v.results.nb, first: v.results.firstWins, perf: v.results.performance })); } catch {}
       }

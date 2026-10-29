@@ -647,6 +647,7 @@ function autoDone(t, rec) {
   if (t.id.startsWith('seed-')) return D.linesBoth[t.action.side] > 0;
   if (t.id.startsWith('gap-')) { const p = t.action.path; const c = new Chess(); for (const m of p) c.move(m); return (S.rep[t.action.side].get(posKey(c.fen())) || []).length > 0; }
   if (t.id === 'import' || t.id === 'import-week') return S.games.length > (t.gamesAt || 0);
+  if (t.action && t.action.type === 'review' && t.action.id) return storedReviews().some(R => R.g && R.g.id === t.action.id);
   return false;
 }
 // Ticks that came from lichess are written down as they happen, so past days keep them.
@@ -660,18 +661,31 @@ function isDone(rec, t) {
     clearTimeout(autoSaveT); autoSaveT = setTimeout(() => savePlan(rec.plan.date), 400);
     return true;
   }
-  return autoDonePast(t, rec.plan.date);
+  // Rebuilt ticks are written down too, so they survive later timestamps being overwritten.
+  if (!autoDonePast(t, rec.plan.date, rec)) return false;
+  rec.auto = rec.auto || {}; rec.auto[t.id] = true;
+  clearTimeout(autoSaveT); autoSaveT = setTimeout(() => savePlan(rec.plan.date), 400);
+  return true;
 }
 // For days before this fix: rebuild what we can from lichess history, games and the drill logs.
-function autoDonePast(t, k) {
-  const x = (LS.get('li-days') || {})[k] || {};
+function autoDonePast(t, k, rec) {
+  const x = (LS.get('li-days') || {})[k] || {}; const on = ts => !!ts && ymd(new Date(ts)) === k;
   const gs = S.games.filter(g => ymd(new Date(gameTime(g))) === k);
+  const pz = rec && rec.plan.tasks.find(y => y.id === 'puzzles');
   if (t.id === 'puzzles') return (x.puzzles || 0) >= (t.target || 10);
-  if (t.id === 'calc') return (x.puzzles || 0) >= 13;
+  if (t.id === 'theme') return ((x.themes || {})[t.theme] || 0) >= (t.target || 20);
+  if (t.id === 'calc') return (x.puzzles || 0) >= ((pz && pz.target) || 10) + 3;
   if (t.id === 'rush') return !!x.storm;
   if (t.id === 'play' || t.id === 'blitz') return gs.filter(g => !t.cls || g.cls === t.cls).length >= (t.target || 1);
   if (t.id === 'threat') return ((thLog()[k] || {}).n || 0) >= (t.target || 8);
   if (t.id === 'loose') return ((lpLog()[k] || {}).n || 0) >= (t.target || 10);
+  // Best effort from "last done" timestamps: these count when the last time was that day.
+  if (t.action && t.action.type === 'run') return on((egProgress().runs || {})[t.action.name]);
+  if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!r && (on(r.lastWin) || on(r.last)); }
+  if (t.id === 'mp') return Object.values(mpCards()).filter(c => on(c.last)).length >= (t.target || 1);
+  if (t.id === 'drill') return Object.values(S.cards).filter(c => on(c.last)).length >= (t.target || 1);
+  // Lasting states: once done they stay done.
+  if (t.id.startsWith('seed-') || t.id.startsWith('gap-') || t.id === 'import' || t.id === 'import-week' || (t.action && t.action.type === 'review')) return autoDone(t, rec || { plan: { tasks: [] } });
   return false;
 }
 function ratio(rec) { const ts = rec.plan.tasks; return ts.length ? ts.filter(t => isDone(rec, t)).length / ts.length : 0; }
