@@ -1849,7 +1849,19 @@ function buildPlan(ctx) {
   }[theme];
   const reason = top && FOCUS_THEME[top.key] === theme ? ' ' + top.text : '';
   const fromReview = focus ? ` Yesterday’s review picked ${themeName(focus.theme)} as today’s focus: see the 20-puzzle task.` : '';
-  return { date: ymd(date), theme, title: THEME[theme], note: focusNote + reason + fromReview, tier: tier.name, tierNote: tier.note, cls, mins, total: used, tasks };
+  // Fit the time you chose: drop the lowest-priority tasks (added last) until it fits.
+  // The game, the review's focus task and setup stay; with no focus task, the puzzle warm-up stays.
+  // From 40 minutes, the day's own work stays too: the first task of the day's theme.
+  const dayKind = { openings: 'openings', endgames: 'endgames', review: 'review', slow: 'review', tactics: 'tactics', play: 'play' }[theme];
+  const dayTask = mins >= 40 ? tasks.find(t => t.kind === dayKind && !['play', 'puzzles', 'theme'].includes(t.id)) : null;
+  const keep = t => t === dayTask || t.id === 'play' || t.id === 'import' || t.id === 'theme' || (t.id === 'puzzles' && !tasks.some(x => x.id === 'theme'));
+  while (used > mins + 2) {
+    let i = tasks.length - 1; while (i >= 0 && keep(tasks[i])) i--;
+    if (i < 0) break;
+    used -= tasks[i].mins; tasks.splice(i, 1);
+  }
+  const over = used > mins + 2 ? ` Today runs about ${used} minutes: a ${playMins}-minute game plus the must-do tasks don’t fit in ${mins}, so everything else was left out.` : '';
+  return { date: ymd(date), theme, title: THEME[theme], note: focusNote + reason + fromReview + over, tier: tier.name, tierNote: tier.note, cls, mins, total: used, tasks };
 }
 function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
