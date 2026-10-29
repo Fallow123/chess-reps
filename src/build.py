@@ -45,12 +45,24 @@ markup = markup.replace('<div id="app">', '<div id="app" hidden>', 1)
 egcss = eg[eg.index('<style>') + 7: eg.index('</style>')]
 egcss = scope(egcss, '#app')
 egjs = eg[eg.index('<script>') + 8: eg.rindex('</script>')]
+# Wait for the cloud pull before reading saved progress.
+assert egjs.count('loadProgress().then(') == 1
+egjs = egjs.replace('loadProgress().then(', 'PawnCloud.ready.then(loadProgress).then(')
 
 piece = rd('piece.js').replace('var PIECE', 'const PIECE')
 app = rd('app.js').replace('/*PIECE*/', piece.strip())
 rwcss = scope(rd('rw.css'), '#rw')
 
 head = '''<title>Pawnstorm</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Pawnstorm">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -127,6 +139,9 @@ shell = '''
 ''' + markup + '''
 </div>
 <div class="toast" id="toast" hidden></div>
+<script>
+''' + rd('cloud.js') + '''
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.js"></script>
 <script>
 ''' + rd('logic.js') + rd('planner.js') + '''

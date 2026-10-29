@@ -421,6 +421,30 @@ function renderSettings() {
   box.append(h('p', { class: 'eyebrow' }, 'Settings'), h('h3', { class: 'plantitle' }, 'Your accounts and preferences'));
   const field = (label, inp, extra) => h('label', { class: 'field' }, h('span', { class: 'note' }, label), inp, extra || null);
 
+  // Sign in + sync, install
+  const C = PawnCloud.status();
+  const delRow = h('div', { class: 'row' });
+  const cloudBtns = !C.configured ? [] : C.user
+    ? [h('button', { class: 'btn quiet', disabled: C.busy, onclick: () => PawnCloud.sync().then(ch => { if (!ch) toast(PawnCloud.status().error || 'Everything is in sync'); }) }, C.busy ? 'Syncing…' : 'Sync now'),
+       h('button', { class: 'btn quiet', onclick: async () => { await PawnCloud.signOut(); toast('Signed out. Your data stays on this device.'); } }, 'Sign out')]
+    : [h('button', { class: 'btn', onclick: () => PawnCloud.signIn() }, 'Sign in with lichess')];
+  if (C.user) delRow.append(h('button', { class: 'btn quiet tiny danger', onclick: () => delRow.replaceChildren(h('span', { class: 'note' }, 'Delete your Pawnstorm data from the cloud? This device keeps its copy.'),
+    h('button', { class: 'btn tiny', onclick: async () => { try { await PawnCloud.deleteCloud(); toast('Cloud copy deleted and signed out'); } catch { toast('Could not delete just now. Try again.'); } } }, 'Delete'), h('button', { class: 'btn quiet tiny', onclick: renderSettings }, 'Keep it')) }, 'Delete my cloud data…'));
+  const sync = h('section', { class: 'card acard' },
+    h('div', { class: 'cardhead' }, h('div', { class: 'row' }, h('b', { class: 'aname' }, 'Sync between devices')), h('span', { class: 'tag ' + (C.user ? (C.error ? 'warn' : 'ok') : 'dim') }, C.user ? (C.error ? 'Not syncing' : 'On') : 'Off')),
+    h('p', { class: 'ask' }, C.user ? `Signed in as ${C.user}. Your prep, plans, history, drills and endgame progress follow you to every device where you sign in.`
+      : C.configured ? 'Sign in with your lichess account to keep your prep, plans, history, drills and endgame progress the same on your phone and computer. What is on this device is kept and merged.'
+      : 'Sync is not set up on this site yet.'),
+    C.error ? h('p', { class: 'tag warn', style: 'white-space:normal' }, C.error) : C.user ? h('p', { class: 'note' }, `Last synced ${ago(C.last)}. Your lichess API token below stays on this device.`) : null,
+    cloudBtns.length ? h('div', { class: 'row', style: 'margin-top:12px' }, ...cloudBtns) : null,
+    C.user ? h('div', { style: 'margin-top:10px' }, delRow) : null);
+  const inst = h('section', { class: 'card acard' },
+    h('div', { class: 'cardhead' }, h('div', { class: 'row' }, h('b', { class: 'aname' }, 'Pawnstorm on your phone')), h('span', { class: 'tag ' + (C.installed ? 'ok' : 'dim') }, C.installed ? 'Installed' : 'Not installed here')),
+    h('p', { class: 'ask' }, C.installed ? 'You are using the installed app. It opens full screen from its own icon and works offline; sync and lichess need a connection.'
+      : 'Install Pawnstorm to open it full screen from its own icon. On Android in Chrome: open the ⋮ menu and tap Install app (or Add to Home screen). On iPhone in Safari: tap Share, then Add to Home Screen.'),
+    C.canInstall ? h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn', onclick: () => PawnCloud.install() }, 'Install on this device')) : null);
+  box.append(h('div', { class: 'cards' }, sync, inst));
+
   // lichess
   const L = S.li || {}; const liU = S.settings.lichessUser;
   const liName = h('input', { type: 'text', id: 'set-liuser', value: liU || '', placeholder: 'e.g. Jon-Fallow', autocomplete: 'off' });
@@ -947,6 +971,7 @@ function render() {
   liveEval();
 }
 // Arrow keys step through the line: Build follows your prep forward, game review steps move by move.
+addEventListener('pawncloud', () => { if (S.tab === 'settings') renderSettings(); });
 document.addEventListener('keydown', e => {
   if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' || e.altKey || e.ctrlKey || e.metaKey) return;
   if (/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return;
@@ -964,4 +989,4 @@ $('#brand-home').addEventListener('click', e => { e.preventDefault(); $('#tab-to
 for (const s of ['w', 'b']) $('#side-' + s).addEventListener('click', () => { if (S.side === s) return; S.side = s; S.drill = null; goTo([]); refresh(); render(); });
 
 if (typeof Chess === 'undefined') $('#rw-panel').append(h('p', { class: 'lnote bad' }, 'The move generator did not load. Reload the page to try again.'));
-else { render(); load(); }
+else PawnCloud.ready.then(() => { render(); load(); });
