@@ -798,14 +798,20 @@ function historySection() {
   const maxP = Math.max(1, ...rows.map(o => o.x.puzzles || 0));
   const tb = h('tbody');
   for (const { d, r, x, gs, dr } of rows) {
-    const empty = !r && !x.puzzles && !x.storm && !gs.length && !dr;
-    tb.append(h('tr', { class: empty ? 'off' : '' },
+    const empty = !r && !x.puzzles && !x.storm && !gs.length && !dr; const k = ymd(d); const past = k !== todayId();
+    tb.append(h('tr', { class: (empty ? 'off' : '') + (r && past ? ' click' : ''), title: r && past ? 'Show this day’s tasks' : '', onclick: r && past ? () => { S.histOpen = S.histOpen === k ? null : k; renderToday(); } : null },
       h('td', {}, d.toLocaleDateString('en', { weekday: 'short', day: 'numeric' })),
       h('td', {}, r ? [h('span', { class: 'bar' }, h('i', { style: `width:${Math.round(100 * ratio(r))}%` })), Math.round(100 * ratio(r)) + '%'] : h('span', { class: 'note' }, '–')),
       h('td', { class: x.puzzles ? '' : 'dim' }, x.puzzles ? [h('span', { class: 'pbar' }, h('i', { style: `width:${Math.round(100 * x.puzzles / maxP)}%` })), h('b', {}, String(x.puzzles)), h('span', { class: 'note' }, ` · ${x.won || 0} right`)] : '–'),
       h('td', { class: x.storm ? '' : 'dim' }, x.storm ? [h('b', {}, String(x.storm)), x.stormRuns > 1 ? h('span', { class: 'note' }, ` ×${x.stormRuns}`) : null] : '–'),
       h('td', { class: gs.length ? '' : 'dim' }, gs.length ? wld(gs) : '–'),
       h('td', { class: dr ? '' : 'dim' }, dr ? String(dr) : '–')));
+    // A past day's tasks, to tick what you did that the app could not see.
+    if (r && S.histOpen === k) tb.append(h('tr', { class: 'histday' }, h('td', { colspan: 6 },
+      h('ul', { class: 'histtasks' }, r.plan.tasks.map(t => { const done = isDone(r, t); const auto = done && !(r.done && r.done[t.id]);
+        return h('li', {}, h('button', { class: 'tick', 'aria-pressed': String(done), disabled: auto, title: auto ? 'Ticked automatically' : '',
+          onclick: e => { e.stopPropagation(); r.done = r.done || {}; if (r.done[t.id]) delete r.done[t.id]; else r.done[t.id] = true; savePlan(k); renderToday(); } }, done ? '✓' : ''), h('span', {}, t.title || t.id)); })),
+      h('p', { class: 'note' }, 'Tick anything you did that day that Pawnstorm could not see. A day counts toward your streak at 60%.'))));
   }
   const sum = f => rows.reduce((a, o) => a + (f(o) || 0), 0);
   const tp = sum(o => o.x.puzzles), tw = sum(o => o.x.won), ts = sum(o => o.x.stormRuns || (o.x.storm ? 1 : 0)), tg = rows.flatMap(o => o.gs), td = sum(o => o.dr);
@@ -815,7 +821,7 @@ function historySection() {
     h('td', {}, ts ? `${ts} run${ts > 1 ? 's' : ''}` : '–'), h('td', {}, tg.length ? wld(tg) : '–'), h('td', {}, td ? String(td) : '–')));
   return h('section', { class: 'sec' }, h('h2', {}, 'Your last two weeks'),
     h('table', { class: 'hist' }, h('thead', {}, h('tr', {}, ['Day', 'Plan', 'Puzzles', 'Storm', 'Games', 'Drills'].map(t => h('th', {}, t)))), tb, tf),
-    h('p', { class: 'note' }, 'Puzzles: how many you did, and how many you got right first time. Storm is the day’s best score, ×runs when you played more than one. Drills are threat checks and loose-piece rounds.'));
+    h('p', { class: 'note' }, 'Puzzles: how many you did, and how many you got right first time. Storm is the day’s best score, ×runs when you played more than one. Drills are threat checks and loose-piece rounds. Click a past day to see and tick its tasks.'));
 }
 function renderToday() {
   const box = $('#rw-today'); box.replaceChildren();
