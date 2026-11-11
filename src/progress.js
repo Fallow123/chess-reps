@@ -117,7 +117,8 @@ function renderMistakes(panel, bar) {
 const weekStart = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return +d; };
 // One row per week for the last n weeks: games, score, rating, accuracy, mistakes, puzzles.
 function weeklySeries(n) {
-  const games = S.games.filter(g => srcOf(g) === mySite());
+  // Every game counts; the rating line follows your main site and time control.
+  const games = S.games;
   const cls = (D.profile && D.profile.main) || 'rapid';
   const rev = new Map(storedReviews().map(R => [R.g.id, R]));
   const H = LS.get('li-days') || {};
@@ -125,7 +126,7 @@ function weeklySeries(n) {
   for (let k = n - 1; k >= 0; k--) {
     const a = new Date(w0); a.setDate(a.getDate() - 7 * k); const b = new Date(a); b.setDate(b.getDate() + 7);
     const gs = games.filter(g => gameTime(g) >= +a && gameTime(g) < +b).sort((x, y) => gameTime(x) - gameTime(y));
-    const rated = gs.filter(g => g.cls === cls && g.myElo); const rs = gs.map(g => rev.get(g.id)).filter(Boolean);
+    const rated = gs.filter(g => g.cls === cls && g.myElo && srcOf(g) === mySite()); const rs = gs.map(g => rev.get(g.id)).filter(Boolean);
     const accs = rs.map(gameAccuracy).filter(x => x != null);
     let pz = 0, pw = 0; for (const d = new Date(a); d < b; d.setDate(d.getDate() + 1)) { const x = H[ymd(d)]; if (x && x.puzzles) { pz += x.puzzles; pw += x.won || 0; } }
     rows.push({ start: +a, label: a.toLocaleDateString('en', { month: 'short', day: 'numeric' }), games: gs.length,

@@ -1608,8 +1608,10 @@ function computeProfile(games) {
   const end = gameTime(all[all.length - 1]);
   const recent = all.filter(g => gameTime(g) > end - 30 * DAY_MS);
   const classes = {};
+  // One rating line per site and time control: lichess and chess.com ratings are never mixed.
   for (const g of all) {
-    const c = classes[g.cls || 'other'] || (classes[g.cls || 'other'] = { n: 0, recent: 0, games: [], first: null, last: null, peak: 0 });
+    const site = g.src || (/lichess\.org/.test(g.url || '') ? 'lichess' : 'chesscom'), cls = g.cls || 'other', key = site + ':' + cls;
+    const c = classes[key] || (classes[key] = { site, cls, n: 0, recent: 0, games: [], first: null, last: null, peak: 0 });
     c.n++; c.games.push(g);
     if (g.myElo) { c.last = g.myElo; c.peak = Math.max(c.peak, g.myElo); }
   }
@@ -1621,8 +1623,9 @@ function computeProfile(games) {
     c.trend = c.first && c.last ? c.last - c.first : 0;
     delete c.games;
   }
-  const playable = Object.entries(classes).filter(([k]) => k !== 'other' && k !== 'daily');
-  const main = (playable.length ? playable : Object.entries(classes)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)[0][0];
+  const playable = Object.entries(classes).filter(([, c]) => c.cls !== 'other' && c.cls !== 'daily');
+  const mainKey = (playable.length ? playable : Object.entries(classes)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)[0][0];
+  const main = classes[mainKey].cls, mainSite = classes[mainKey].site;
 
   const pool = all;
   const losses = pool.filter(g => g.score === 0);
@@ -1653,7 +1656,7 @@ function computeProfile(games) {
   const overall = scoreOf(pool);
   const tiltScore = after2.length >= 4 ? scoreOf(after2) : null;
 
-  return { classes, main, elo: classes[main] && classes[main].last, pool: pool.length, recent: recent.length, end, losses: L, wonOnTime,
+  return { classes, main, mainSite, mainKey, elo: classes[mainKey].last, sites: { lichess: all.filter(g => (g.src || '') === 'lichess').length, chesscom: all.filter(g => (g.src || '') !== 'lichess').length }, pool: pool.length, recent: recent.length, end, losses: L, wonOnTime,
     color, openings, overall, tilt: { after2: after2.length, score: tiltScore, worstRun, perDay }, activeDays: days.size };
 }
 
@@ -2024,9 +2027,11 @@ const lineId = l => hashStr(S.side + ':' + l.join(' '));
 const depthTarget = () => tierFor(D.profile && D.profile.elo).depth;
 // Ratings differ between sites, so the profile reads the main site's games when there are enough.
 const srcOf = g => g.src || (g.url && g.url.includes('lichess.org') ? 'lichess' : 'chesscom');
-// One sample everywhere: your last 100 games on one site, the one you play on most lately. Ratings are never mixed across sites.
-const SAMPLE = 100;
+// One sample everywhere: your last 150 games on both sites and every time control.
+// Ratings stay per site and time control; "your site" is the one with the time control you play most lately.
+const SAMPLE = 150;
 function mySite() {
+  if (D.profile && D.profile.mainSite) return D.profile.mainSite;
   const want = onLichess() ? 'lichess' : 'chesscom', other = want === 'lichess' ? 'chesscom' : 'lichess';
   const n = s => S.games.filter(g => srcOf(g) === s).length;
   if (n(other) < 20) return want; if (n(want) < 20) return other;
@@ -2034,7 +2039,7 @@ function mySite() {
   const recent = s => S.games.filter(g => srcOf(g) === s && gameTime(g) > Date.now() - 30 * 864e5).length;
   return recent(other) > recent(want) ? other : want;
 }
-function myGames() { const site = mySite(); return S.games.filter(g => srcOf(g) === site).sort((a, b) => gameTime(a) - gameTime(b)).slice(-SAMPLE); }
+function myGames() { return S.games.slice().sort((a, b) => gameTime(a) - gameTime(b)).slice(-SAMPLE); }
 function refresh() {
   const rep = S.rep[S.side];
   D.idx = gameIndex(S.games, S.side);
@@ -2043,12 +2048,12 @@ function refresh() {
   D.lines = allLines(rep);
   const now = Date.now();
   D.due = D.lines.filter(l => { const c = S.cards[lineId(l)]; return !c || c.due <= now; });
-  const live = mySite() === 'lichess' && S.li && S.li.ratings || null;
-  const sig = S.games.length + ':' + ((S.games[S.games.length - 1] || {}).id || '') + mySite() + JSON.stringify(live);
+  const live = onLichess() && S.li && S.li.ratings || null;
+  const sig = S.games.length + ':' + ((S.games[S.games.length - 1] || {}).id || '') + JSON.stringify(live);
   if (D.pKey !== sig) {
     D.pKey = sig; const mg = myGames(); D.profile = computeProfile(mg);
     // A game's PGN carries the rating from before it was played. lichess's profile has the rating now.
-    if (D.profile && live) { for (const [k, c] of Object.entries(D.profile.classes)) if (live[k]) { c.last = live[k]; c.peak = Math.max(c.peak, live[k]); c.trend = c.first ? c.last - c.first : 0; } D.profile.elo = D.profile.classes[D.profile.main] && D.profile.classes[D.profile.main].last; }
+    if (D.profile && live) { for (const c of Object.values(D.profile.classes)) if (c.site === 'lichess' && live[c.cls]) { c.last = live[c.cls]; c.peak = Math.max(c.peak, live[c.cls]); c.trend = c.first ? c.last - c.first : 0; } D.profile.elo = D.profile.classes[D.profile.mainKey].last; }
     D.recentLosses = mg.filter(g => g.score === 0).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 5);
   }
   D.gapsBoth = { w: analyzeGaps(S.rep.w, S.games, 'w', depthTarget()), b: analyzeGaps(S.rep.b, S.games, 'b', depthTarget()) };
@@ -2844,13 +2849,14 @@ function renderToday() {
     sec.append(h('p', { class: 'empty' }, `No games yet. Import ${S.username || 'your'} games and this fills in: ratings, how you lose, and what to work on first.`), h('button', { class: 'btn tiny', onclick: () => { S.tab = 'games'; render(); } }, 'Import games'));
   } else {
     const rows = h('div', { class: 'ratings' });
-    for (const [k, c] of Object.entries(p.classes).filter(([k]) => k !== 'other').sort((a, b) => b[1].n - a[1].n)) {
-      rows.append(h('div', { class: 'rating' + (k === p.main ? ' main' : '') }, h('span', { class: 'note' }, k), h('b', {}, c.last ? String(c.last) : '–'),
+    const both = p.sites.lichess && p.sites.chesscom;
+    for (const [k, c] of Object.entries(p.classes).filter(([k, c]) => c.cls !== 'other' && (c.n >= 3 || k === p.mainKey)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)) {
+      rows.append(h('div', { class: 'rating' + (k === p.mainKey ? ' main' : '') }, h('span', { class: 'note' }, both ? `${c.cls} · ${c.site === 'lichess' ? 'lichess' : 'chess.com'}` : c.cls), h('b', {}, c.last ? String(c.last) : '–'),
         h('span', { class: 'trend ' + (c.trend > 0 ? 'up' : c.trend < 0 ? 'down' : '') }, c.trend ? (c.trend > 0 ? '+' : '−') + Math.abs(c.trend) : '±0'), h('span', { class: 'note' }, c.recent ? `${c.recent} game${c.recent > 1 ? 's' : ''} in 30 days · scored ${pc(c.score)}` : `none in 30 days · scored ${pc(c.score)} before`)));
     }
     if (onLichess() && S.li.puzzle) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.li.puzzle)), h('span'), h('span', { class: 'note' }, S.li.storm ? `lichess puzzles · Storm best ${S.li.storm}` : 'lichess puzzles')));
     else if (S.stats && S.stats.tactics) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.stats.tactics)), h('span'), h('span', { class: 'note' }, 'tactics rating')));
-    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} ${mySite() === 'lichess' ? 'lichess' : 'chess.com'} games. ${mySite() === 'lichess' ? 'Ratings are your current lichess ratings, refreshed on every sync. ' : ''}Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
+    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} games${both ? ` (${p.sites.lichess} lichess, ${p.sites.chesscom} chess.com)` : ''}, every time control. Each rating is for one site and time control, never mixed. ${onLichess() ? 'lichess ratings are your current ones, refreshed on every sync. ' : ''}Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
     const wl = h('ul', { class: 'list weak' });
     const NAMES = { time: 'The clock', tactics: 'Tactics', endgames: 'Endgames', openings: 'Openings', tilt: 'Playing on tilt' };
     for (const w of D.weak) wl.append(h('li', { class: 'item' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'wname' }, NAMES[w.key]), h('div', { class: 'meta' }, w.text)), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(100 * w.score)}%` }))));
@@ -3501,7 +3507,7 @@ function renderStory() {
   }
   const pool = games.slice().sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 300);
   const F = storyFeatures(pool); const M = matchLegend(F.vec); const RS = repsScore(p, pool, D.gapsBoth, D.linesBoth);
-  const who = S.username || 'You'; const main = p.main; const series = ratingSeries(games, main);
+  const who = S.username || 'You'; const main = p.main; const series = ratingSeries(games.filter(g => srcOf(g) === p.mainSite), main);
   // A game records the rating from before it was played; lichess's profile has the rating now.
   const liveR = mySite() === 'lichess' && S.li && S.li.ratings && S.li.ratings[main];
   if (liveR && series.length && series[series.length - 1][1] !== liveR) series.push([Date.now(), liveR]);
@@ -3749,7 +3755,8 @@ function renderMistakes(panel, bar) {
 const weekStart = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return +d; };
 // One row per week for the last n weeks: games, score, rating, accuracy, mistakes, puzzles.
 function weeklySeries(n) {
-  const games = S.games.filter(g => srcOf(g) === mySite());
+  // Every game counts; the rating line follows your main site and time control.
+  const games = S.games;
   const cls = (D.profile && D.profile.main) || 'rapid';
   const rev = new Map(storedReviews().map(R => [R.g.id, R]));
   const H = LS.get('li-days') || {};
@@ -3757,7 +3764,7 @@ function weeklySeries(n) {
   for (let k = n - 1; k >= 0; k--) {
     const a = new Date(w0); a.setDate(a.getDate() - 7 * k); const b = new Date(a); b.setDate(b.getDate() + 7);
     const gs = games.filter(g => gameTime(g) >= +a && gameTime(g) < +b).sort((x, y) => gameTime(x) - gameTime(y));
-    const rated = gs.filter(g => g.cls === cls && g.myElo); const rs = gs.map(g => rev.get(g.id)).filter(Boolean);
+    const rated = gs.filter(g => g.cls === cls && g.myElo && srcOf(g) === mySite()); const rs = gs.map(g => rev.get(g.id)).filter(Boolean);
     const accs = rs.map(gameAccuracy).filter(x => x != null);
     let pz = 0, pw = 0; for (const d = new Date(a); d < b; d.setDate(d.getDate() + 1)) { const x = H[ymd(d)]; if (x && x.puzzles) { pz += x.puzzles; pw += x.won || 0; } }
     rows.push({ start: +a, label: a.toLocaleDateString('en', { month: 'short', day: 'numeric' }), games: gs.length,

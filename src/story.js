@@ -256,7 +256,7 @@ function renderStory() {
   }
   const pool = games.slice().sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 300);
   const F = storyFeatures(pool); const M = matchLegend(F.vec); const RS = repsScore(p, pool, D.gapsBoth, D.linesBoth);
-  const who = S.username || 'You'; const main = p.main; const series = ratingSeries(games, main);
+  const who = S.username || 'You'; const main = p.main; const series = ratingSeries(games.filter(g => srcOf(g) === p.mainSite), main);
   // A game records the rating from before it was played; lichess's profile has the rating now.
   const liveR = mySite() === 'lichess' && S.li && S.li.ratings && S.li.ratings[main];
   if (liveR && series.length && series[series.length - 1][1] !== liveR) series.push([Date.now(), liveR]);

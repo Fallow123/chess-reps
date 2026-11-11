@@ -25,8 +25,10 @@ function computeProfile(games) {
   const end = gameTime(all[all.length - 1]);
   const recent = all.filter(g => gameTime(g) > end - 30 * DAY_MS);
   const classes = {};
+  // One rating line per site and time control: lichess and chess.com ratings are never mixed.
   for (const g of all) {
-    const c = classes[g.cls || 'other'] || (classes[g.cls || 'other'] = { n: 0, recent: 0, games: [], first: null, last: null, peak: 0 });
+    const site = g.src || (/lichess\.org/.test(g.url || '') ? 'lichess' : 'chesscom'), cls = g.cls || 'other', key = site + ':' + cls;
+    const c = classes[key] || (classes[key] = { site, cls, n: 0, recent: 0, games: [], first: null, last: null, peak: 0 });
     c.n++; c.games.push(g);
     if (g.myElo) { c.last = g.myElo; c.peak = Math.max(c.peak, g.myElo); }
   }
@@ -38,8 +40,9 @@ function computeProfile(games) {
     c.trend = c.first && c.last ? c.last - c.first : 0;
     delete c.games;
   }
-  const playable = Object.entries(classes).filter(([k]) => k !== 'other' && k !== 'daily');
-  const main = (playable.length ? playable : Object.entries(classes)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)[0][0];
+  const playable = Object.entries(classes).filter(([, c]) => c.cls !== 'other' && c.cls !== 'daily');
+  const mainKey = (playable.length ? playable : Object.entries(classes)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)[0][0];
+  const main = classes[mainKey].cls, mainSite = classes[mainKey].site;
 
   const pool = all;
   const losses = pool.filter(g => g.score === 0);
@@ -70,7 +73,7 @@ function computeProfile(games) {
   const overall = scoreOf(pool);
   const tiltScore = after2.length >= 4 ? scoreOf(after2) : null;
 
-  return { classes, main, elo: classes[main] && classes[main].last, pool: pool.length, recent: recent.length, end, losses: L, wonOnTime,
+  return { classes, main, mainSite, mainKey, elo: classes[mainKey].last, sites: { lichess: all.filter(g => (g.src || '') === 'lichess').length, chesscom: all.filter(g => (g.src || '') !== 'lichess').length }, pool: pool.length, recent: recent.length, end, losses: L, wonOnTime,
     color, openings, overall, tilt: { after2: after2.length, score: tiltScore, worstRun, perDay }, activeDays: days.size };
 }
 

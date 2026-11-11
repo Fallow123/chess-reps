@@ -101,9 +101,11 @@ const lineId = l => hashStr(S.side + ':' + l.join(' '));
 const depthTarget = () => tierFor(D.profile && D.profile.elo).depth;
 // Ratings differ between sites, so the profile reads the main site's games when there are enough.
 const srcOf = g => g.src || (g.url && g.url.includes('lichess.org') ? 'lichess' : 'chesscom');
-// One sample everywhere: your last 100 games on one site, the one you play on most lately. Ratings are never mixed across sites.
-const SAMPLE = 100;
+// One sample everywhere: your last 150 games on both sites and every time control.
+// Ratings stay per site and time control; "your site" is the one with the time control you play most lately.
+const SAMPLE = 150;
 function mySite() {
+  if (D.profile && D.profile.mainSite) return D.profile.mainSite;
   const want = onLichess() ? 'lichess' : 'chesscom', other = want === 'lichess' ? 'chesscom' : 'lichess';
   const n = s => S.games.filter(g => srcOf(g) === s).length;
   if (n(other) < 20) return want; if (n(want) < 20) return other;
@@ -111,7 +113,7 @@ function mySite() {
   const recent = s => S.games.filter(g => srcOf(g) === s && gameTime(g) > Date.now() - 30 * 864e5).length;
   return recent(other) > recent(want) ? other : want;
 }
-function myGames() { const site = mySite(); return S.games.filter(g => srcOf(g) === site).sort((a, b) => gameTime(a) - gameTime(b)).slice(-SAMPLE); }
+function myGames() { return S.games.slice().sort((a, b) => gameTime(a) - gameTime(b)).slice(-SAMPLE); }
 function refresh() {
   const rep = S.rep[S.side];
   D.idx = gameIndex(S.games, S.side);
@@ -120,12 +122,12 @@ function refresh() {
   D.lines = allLines(rep);
   const now = Date.now();
   D.due = D.lines.filter(l => { const c = S.cards[lineId(l)]; return !c || c.due <= now; });
-  const live = mySite() === 'lichess' && S.li && S.li.ratings || null;
-  const sig = S.games.length + ':' + ((S.games[S.games.length - 1] || {}).id || '') + mySite() + JSON.stringify(live);
+  const live = onLichess() && S.li && S.li.ratings || null;
+  const sig = S.games.length + ':' + ((S.games[S.games.length - 1] || {}).id || '') + JSON.stringify(live);
   if (D.pKey !== sig) {
     D.pKey = sig; const mg = myGames(); D.profile = computeProfile(mg);
     // A game's PGN carries the rating from before it was played. lichess's profile has the rating now.
-    if (D.profile && live) { for (const [k, c] of Object.entries(D.profile.classes)) if (live[k]) { c.last = live[k]; c.peak = Math.max(c.peak, live[k]); c.trend = c.first ? c.last - c.first : 0; } D.profile.elo = D.profile.classes[D.profile.main] && D.profile.classes[D.profile.main].last; }
+    if (D.profile && live) { for (const c of Object.values(D.profile.classes)) if (c.site === 'lichess' && live[c.cls]) { c.last = live[c.cls]; c.peak = Math.max(c.peak, live[c.cls]); c.trend = c.first ? c.last - c.first : 0; } D.profile.elo = D.profile.classes[D.profile.mainKey].last; }
     D.recentLosses = mg.filter(g => g.score === 0).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 5);
   }
   D.gapsBoth = { w: analyzeGaps(S.rep.w, S.games, 'w', depthTarget()), b: analyzeGaps(S.rep.b, S.games, 'b', depthTarget()) };
@@ -921,13 +923,14 @@ function renderToday() {
     sec.append(h('p', { class: 'empty' }, `No games yet. Import ${S.username || 'your'} games and this fills in: ratings, how you lose, and what to work on first.`), h('button', { class: 'btn tiny', onclick: () => { S.tab = 'games'; render(); } }, 'Import games'));
   } else {
     const rows = h('div', { class: 'ratings' });
-    for (const [k, c] of Object.entries(p.classes).filter(([k]) => k !== 'other').sort((a, b) => b[1].n - a[1].n)) {
-      rows.append(h('div', { class: 'rating' + (k === p.main ? ' main' : '') }, h('span', { class: 'note' }, k), h('b', {}, c.last ? String(c.last) : '–'),
+    const both = p.sites.lichess && p.sites.chesscom;
+    for (const [k, c] of Object.entries(p.classes).filter(([k, c]) => c.cls !== 'other' && (c.n >= 3 || k === p.mainKey)).sort((a, b) => b[1].recent - a[1].recent || b[1].n - a[1].n)) {
+      rows.append(h('div', { class: 'rating' + (k === p.mainKey ? ' main' : '') }, h('span', { class: 'note' }, both ? `${c.cls} · ${c.site === 'lichess' ? 'lichess' : 'chess.com'}` : c.cls), h('b', {}, c.last ? String(c.last) : '–'),
         h('span', { class: 'trend ' + (c.trend > 0 ? 'up' : c.trend < 0 ? 'down' : '') }, c.trend ? (c.trend > 0 ? '+' : '−') + Math.abs(c.trend) : '±0'), h('span', { class: 'note' }, c.recent ? `${c.recent} game${c.recent > 1 ? 's' : ''} in 30 days · scored ${pc(c.score)}` : `none in 30 days · scored ${pc(c.score)} before`)));
     }
     if (onLichess() && S.li.puzzle) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.li.puzzle)), h('span'), h('span', { class: 'note' }, S.li.storm ? `lichess puzzles · Storm best ${S.li.storm}` : 'lichess puzzles')));
     else if (S.stats && S.stats.tactics) rows.append(h('div', { class: 'rating' }, h('span', { class: 'note' }, 'puzzles'), h('b', {}, String(S.stats.tactics)), h('span'), h('span', { class: 'note' }, 'tactics rating')));
-    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} ${mySite() === 'lichess' ? 'lichess' : 'chess.com'} games. ${mySite() === 'lichess' ? 'Ratings are your current lichess ratings, refreshed on every sync. ' : ''}Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
+    sec.append(rows, h('p', { class: 'note' }, `Based on your last ${p.pool} games${both ? ` (${p.sites.lichess} lichess, ${p.sites.chesscom} chess.com)` : ''}, every time control. Each rating is for one site and time control, never mixed. ${onLichess() ? 'lichess ratings are your current ones, refreshed on every sync. ' : ''}Trend is the change over the last 30 days you played. ${tierFor(p.elo).note}`));
     const wl = h('ul', { class: 'list weak' });
     const NAMES = { time: 'The clock', tactics: 'Tactics', endgames: 'Endgames', openings: 'Openings', tilt: 'Playing on tilt' };
     for (const w of D.weak) wl.append(h('li', { class: 'item' }, h('div', { style: 'flex:1;min-width:0' }, h('div', { class: 'wname' }, NAMES[w.key]), h('div', { class: 'meta' }, w.text)), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(100 * w.score)}%` }))));
