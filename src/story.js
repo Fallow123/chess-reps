@@ -19,6 +19,49 @@ const LEGENDS = [
     blurb: 'Steady and positional. You squeeze slowly and keep control instead of forcing matters.', lesson: 'Karpov improved his worst piece, move after move. When you have no plan, do that.' },
   { name: 'Hikaru Nakamura', tag: 'Speed king', v: [0.6, 0.95, 0.5, 0.5, 0.4, 0.4, 0.5],
     blurb: 'You play fast and often. Intuition and pace are your weapons, and the clock is part of your game.', lesson: 'Speed builds instinct, but slower games build understanding. One rapid game a day pays off in blitz.' },
+  // Every world champion, then a few of the most famous players who never held the title.
+  { name: 'Wilhelm Steinitz', tag: 'The first world champion', v: [0.35, 0.2, 0.65, 0.85, 0.8, 0.35, 0.45],
+    blurb: 'You trust solid positions and small, lasting advantages. You defend first and strike once the position allows it.', lesson: 'Steinitz taught that you attack only when the position earns it. Before you launch, list what you are better at.' },
+  { name: 'Emanuel Lasker', tag: 'The practical fighter', v: [0.55, 0.3, 0.75, 0.65, 0.5, 0.25, 0.5],
+    blurb: 'You fight for the result, not the perfect move. You are tough in bad positions and play the opponent as much as the board.', lesson: 'Lasker won by making the game hard for the other side. In worse positions, look for the move that sets the most problems.' },
+  { name: 'Alexander Alekhine', tag: 'The attacking artist', v: [0.85, 0.35, 0.45, 0.4, 0.55, 0.3, 0.55],
+    blurb: 'You build complications on purpose and calculate your way through them. Your attacks come from deep preparation.', lesson: 'Alekhine’s combinations grew out of better piece placement. Improve your pieces first; the tactics follow.' },
+  { name: 'Max Euwe', tag: 'The teacher', v: [0.45, 0.25, 0.55, 0.65, 0.65, 0.2, 0.55],
+    blurb: 'Logical and well prepared. You play principled chess, know your theory and rarely lose your way.', lesson: 'Euwe studied systematically. One short session a day on your own openings beats a long one once a week.' },
+  { name: 'Mikhail Botvinnik', tag: 'The patriarch', v: [0.5, 0.2, 0.7, 0.75, 0.8, 0.15, 0.5],
+    blurb: 'Disciplined and prepared. You stick to openings you understand deeply and play a clear plan from them.', lesson: 'Botvinnik analysed his own games without mercy. Review every loss before you play the next game.' },
+  { name: 'Vasily Smyslov', tag: 'The harmony of the pieces', v: [0.3, 0.3, 0.85, 0.75, 0.6, 0.15, 0.7],
+    blurb: 'Natural and calm. Your pieces find good squares, and you are happy to trade into endings you know.', lesson: 'Smyslov said to play the position, not the opponent. When unsure, put your worst piece on a better square.' },
+  { name: 'Boris Spassky', tag: 'The universal player', v: [0.6, 0.4, 0.55, 0.6, 0.45, 0.2, 0.5],
+    blurb: 'You can attack, defend or grind, depending on the position. Varied openings, no fixed recipe.', lesson: 'Spassky’s strength was adapting. Ask what the position needs, not what you usually play.' },
+  { name: 'Vladimir Kramnik', tag: 'The Berlin Wall', v: [0.3, 0.35, 0.7, 0.9, 0.7, 0.1, 0.65],
+    blurb: 'Very solid and very well prepared. You neutralise your opponent’s ideas and win with technique.', lesson: 'Kramnik made his openings unbreakable. Fix the line where you lose most before adding new ones.' },
+  { name: 'Viswanathan Anand', tag: 'The Tiger of Madras', v: [0.6, 0.85, 0.45, 0.6, 0.55, 0.25, 0.5],
+    blurb: 'Fast, sharp and well prepared. You see tactics quickly and play quick, confident moves.', lesson: 'Anand’s speed came from pattern knowledge. Daily puzzles keep your intuition sharp.' },
+  { name: 'Veselin Topalov', tag: 'The risk taker', v: [0.85, 0.45, 0.4, 0.35, 0.55, 0.25, 0.45],
+    blurb: 'You play for a win every game. Sacrifices for the initiative do not scare you.', lesson: 'Topalov’s sacrifices were prepared at home. Check your attacking ideas with the engine after each game.' },
+  { name: 'Ding Liren', tag: 'The quiet calculator', v: [0.45, 0.4, 0.7, 0.8, 0.6, 0.15, 0.6],
+    blurb: 'Calm and precise. You rarely lose, and when the position opens up you calculate well.', lesson: 'Ding’s calm under pressure came from deep calculation. Take your time on the critical move, not the easy ones.' },
+  { name: 'Gukesh Dommaraju', tag: 'The youngest champion', v: [0.65, 0.45, 0.7, 0.65, 0.6, 0.2, 0.5],
+    blurb: 'Ambitious and tireless. You keep pressing in long games and are ready to sit for hours.', lesson: 'Gukesh wins by staying focused for longer than his opponents. Keep calculating until the very end of the game.' },
+  { name: 'Aron Nimzowitsch', tag: 'My System', v: [0.3, 0.2, 0.6, 0.8, 0.6, 0.15, 0.4],
+    blurb: 'You like blockades, restraint and unusual setups. You hold back your opponent before you act.', lesson: 'Nimzowitsch prevented before he attacked. Ask what your opponent wants to play, then stop it.' },
+  { name: 'Akiba Rubinstein', tag: 'The endgame master', v: [0.35, 0.2, 0.9, 0.7, 0.75, 0.1, 0.75],
+    blurb: 'Pure technique. You trade into endings and win them slowly, especially rook endings.', lesson: 'Rubinstein’s rook endings are still the model. Master the basic rook endgames and you will win many more of them.' },
+  { name: 'David Bronstein', tag: 'The creative genius', v: [0.75, 0.6, 0.4, 0.4, 0.3, 0.3, 0.45],
+    blurb: 'Inventive and unpredictable. You change openings often and look for original ideas.', lesson: 'Bronstein valued ideas over results. Keep your creativity, but give each opening enough games to learn it.' },
+  { name: 'Viktor Korchnoi', tag: 'Viktor the Terrible', v: [0.55, 0.35, 0.75, 0.75, 0.6, 0.2, 0.55],
+    blurb: 'A stubborn fighter. You grab material, defend tough positions and never give up.', lesson: 'Korchnoi defended positions others resigned. When you are worse, find the toughest defence and make them prove it.' },
+  { name: 'Bent Larsen', tag: 'The optimist', v: [0.7, 0.4, 0.5, 0.45, 0.3, 0.3, 0.45],
+    blurb: 'You choose offbeat openings and play for complicated, unbalanced positions.', lesson: 'Larsen played for the win with both colours. Choose openings that give you a fight and that you understand.' },
+  { name: 'Judit Polgár', tag: 'The attacking prodigy', v: [0.9, 0.5, 0.35, 0.35, 0.55, 0.25, 0.55],
+    blurb: 'Direct and aggressive. You go after the king and you calculate sharp lines with confidence.', lesson: 'Polgár’s attacks rested on precise calculation. Train hard puzzles slowly as well as fast ones.' },
+  { name: 'Vasyl Ivanchuk', tag: 'The genius of every opening', v: [0.6, 0.55, 0.55, 0.55, 0.15, 0.25, 0.5],
+    blurb: 'You play everything. Your first move changes from game to game, and you are at home in any structure.', lesson: 'Ivanchuk knows every opening deeply. If you play many, make sure you know each one well.' },
+  { name: 'Fabiano Caruana', tag: 'The preparation machine', v: [0.55, 0.45, 0.6, 0.7, 0.8, 0.15, 0.5],
+    blurb: 'Deeply prepared and accurate. You play main lines and outplay people with better understanding.', lesson: 'Caruana’s edge is home preparation. Extend your main lines a few moves past where you usually leave them.' },
+  { name: 'Alexei Shirov', tag: 'Fire on board', v: [0.95, 0.45, 0.3, 0.25, 0.5, 0.3, 0.5],
+    blurb: 'Fire on board. You sacrifice material for activity and love positions where everything hangs.', lesson: 'Shirov’s sacrifices worked because he calculated far. Check the defender’s best reply before you sacrifice.' },
 ];
 const FEATURE_NAMES = ['Attack', 'Speed', 'Grind', 'Solidity', 'Loyalty', 'Early queen', 'Trades'];
 
@@ -62,7 +105,7 @@ function storyFeatures(games) {
 function matchLegend(vec) {
   const d = L => Math.sqrt(L.v.reduce((a, x, i) => a + (x - vec[i]) ** 2, 0));
   const ranked = LEGENDS.map(L => ({ L, d: d(L) })).sort((a, b) => a.d - b.d);
-  return { first: ranked[0].L, second: ranked[1].L, fit: Math.round(100 * Math.max(0, 1 - ranked[0].d / 1.6)) };
+  return { ranked, first: ranked[0].L, second: ranked[1].L, fit: Math.round(100 * Math.max(0, 1 - ranked[0].d / 1.6)) };
 }
 
 // The Pawnstorm Score: five parts, each 0..100, each from something you can change.
@@ -325,7 +368,10 @@ function renderStory() {
     h('p', { class: 'lede' }, `${M.first.tag}. ${M.first.blurb}`),
     h('p', { class: 'ask' }, `A ${M.fit}% match on style, with a touch of ${M.second.name}. Based on how you actually move in your last ${pool.length} games: ${F.raw.checksPer10.toFixed(1)} checks in every 10 moves, your queen out early in ${Math.round(F.raw.earlyQ * 100)}% of games, ${F.raw.wins ? Math.round(100 * F.raw.longWins / F.raw.wins) : 0}% of wins after move 40.`),
     h('div', { class: 'traits' }, FEATURE_NAMES.map((n, i) => h('div', { class: 'trait' }, h('span', { class: 'note' }, n), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(F.vec[i] * 100)}%` })), h('span', { class: 'meter ghost' }, h('i', { style: `width:${Math.round(M.first.v[i] * 100)}%` }))))),
-    h('p', { class: 'note' }, `Amber is you, grey is ${M.first.name.split(' ').pop()}.`)));
+    h('p', { class: 'note' }, `Amber is you, grey is ${M.first.name.split(' ').pop()}.`),
+    h('h2', { style: 'margin-top:18px' }, `Your closest five, out of ${LEGENDS.length} players`),
+    h('ul', { class: 'list' }, M.ranked.slice(0, 5).map(({ L, d }) => h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, L.name), h('span', { class: 'note' }, L.tag), h('span', { class: 'tag dim' }, Math.round(100 * Math.max(0, 1 - d / 1.6)) + '%')))),
+    h('p', { class: 'note' }, 'Every world champion from Steinitz to Gukesh, plus Morphy, Nimzowitsch, Rubinstein, Bronstein, Korchnoi, Larsen, Polgár, Ivanchuk, Shirov, Caruana and Nakamura. The match compares seven style traits read from your moves; it is a fun mirror, not a rating.')));
 
   // Score
   box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Your Pawnstorm Score'),
