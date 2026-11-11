@@ -343,7 +343,7 @@ async function syncLichess(user) {
       }
     } catch {}
   } else L.puzzleErr = 'token';
-  L.fetched = Date.now(); LS.set('li', L);
+  L.owner = L.owner || user.toLowerCase(); L.fetched = Date.now(); LS.set('li', L);
   return pgn;
 }
 async function autoSync() {

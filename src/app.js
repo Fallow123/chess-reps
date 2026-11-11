@@ -56,6 +56,17 @@ async function clearGames() {
   } catch { return toast('Could not remove the games. Try again.'); }
   S.games = []; refresh(); render(); toast('Imported games removed');
 }
+// Drop games that are not yours any more (say, after linking a different chess.com account) and store the rest.
+async function removeGames(drop) {
+  const keep = S.games.filter(g => !drop(g)); if (keep.length === S.games.length) return 0;
+  const n = S.games.length - keep.length;
+  if (db) { const snap = await db.collection('games').limit(1000).get(); for (const d of snap.docs) await db.doc('games/' + d.id).delete(); }
+  else LS.set('games', {});
+  S.games = keep; if (keep.length) await saveGames(keep);
+  refresh(); return n;
+}
+// Games from an account other than the one linked now. Older games have no owner recorded, so they go too and the sync brings yours back.
+const notFrom = (src, user) => g => srcOf(g) === src && g.who !== String(user || '').toLowerCase();
 async function load() {
   S.xgaps = { w: LS.get('xgaps-w'), b: LS.get('xgaps-b') }; S.li = LS.get('li') || {};
   try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch { db = null; }
@@ -90,12 +101,15 @@ const lineId = l => hashStr(S.side + ':' + l.join(' '));
 const depthTarget = () => tierFor(D.profile && D.profile.elo).depth;
 // Ratings differ between sites, so the profile reads the main site's games when there are enough.
 const srcOf = g => g.src || (g.url && g.url.includes('lichess.org') ? 'lichess' : 'chesscom');
-// One sample everywhere: your last 100 games on one site. Ratings are never mixed across sites.
+// One sample everywhere: your last 100 games on one site, the one you play on most lately. Ratings are never mixed across sites.
 const SAMPLE = 100;
 function mySite() {
   const want = onLichess() ? 'lichess' : 'chesscom', other = want === 'lichess' ? 'chesscom' : 'lichess';
   const n = s => S.games.filter(g => srcOf(g) === s).length;
-  return n(want) >= 20 || n(other) < 20 ? want : other;
+  if (n(other) < 20) return want; if (n(want) < 20) return other;
+  // Both sites have enough games: your story follows the one you have played more on lately.
+  const recent = s => S.games.filter(g => srcOf(g) === s && gameTime(g) > Date.now() - 30 * 864e5).length;
+  return recent(other) > recent(want) ? other : want;
 }
 function myGames() { const site = mySite(); return S.games.filter(g => srcOf(g) === site).sort((a, b) => gameTime(a) - gameTime(b)).slice(-SAMPLE); }
 function refresh() {
@@ -107,8 +121,9 @@ function refresh() {
   const now = Date.now();
   D.due = D.lines.filter(l => { const c = S.cards[lineId(l)]; return !c || c.due <= now; });
   const live = mySite() === 'lichess' && S.li && S.li.ratings || null;
-  if (D.pKey !== S.games.length + mySite() + JSON.stringify(live)) {
-    D.pKey = S.games.length + mySite() + JSON.stringify(live); const mg = myGames(); D.profile = computeProfile(mg);
+  const sig = S.games.length + ':' + ((S.games[S.games.length - 1] || {}).id || '') + mySite() + JSON.stringify(live);
+  if (D.pKey !== sig) {
+    D.pKey = sig; const mg = myGames(); D.profile = computeProfile(mg);
     // A game's PGN carries the rating from before it was played. lichess's profile has the rating now.
     if (D.profile && live) { for (const [k, c] of Object.entries(D.profile.classes)) if (live[k]) { c.last = live[k]; c.peak = Math.max(c.peak, live[k]); c.trend = c.first ? c.last - c.first : 0; } D.profile.elo = D.profile.classes[D.profile.main] && D.profile.classes[D.profile.main].last; }
     D.recentLosses = mg.filter(g => g.score === 0).sort((a, b) => gameTime(b) - gameTime(a)).slice(0, 5);
@@ -413,7 +428,14 @@ function renderGames(panel, bar) {
 // ---------- Settings ----------
 async function linkLichess(u, token) {
   S.settings.lichessUser = u; if (token != null) { S.settings.lichessToken = token; XCACHE.clear(); } save('settings');
-  try { const t = await syncLichess(u); await importText(t, u, true, 'lichess'); refresh(); ensurePlan(true); return true; }
+  try {
+    // A different lichess account: drop the old one's games and fetch the new one's history from scratch.
+    const lo = u.toLowerCase(); let gone = 0;
+    if (S.li && S.li.owner && S.li.owner !== lo) { gone = await removeGames(g => srcOf(g) === 'lichess'); S.li = {}; LS.set('li-days', {}); }
+    const t = await syncLichess(u); S.li.owner = lo; LS.set('li', S.li); await importText(t, u, true, 'lichess'); refresh(); ensurePlan(true);
+    if (gone) toast(`Removed ${gone} games from your previous lichess account.`);
+    return true;
+  }
   catch (e) { if (e.message === 'nouser') { S.settings.lichessUser = ''; save('settings'); toast(`lichess has no player called ${u}`); } else toast('Could not reach lichess just now. Try Sync in a minute.'); return false; }
 }
 function renderSettings() {
@@ -446,7 +468,7 @@ function renderSettings() {
     S.username ? h('p', { class: 'note' }, `${S.games.filter(g => srcOf(g) === 'chesscom').length} games${S.stats && S.stats.rush ? ` · Rush best ${S.stats.rush}` : ''} · synced ${ago(S.lastSync)}`) : null,
     h('div', { class: 'row', style: 'margin-top:12px' },
       h('button', { class: 'btn' + (S.username ? ' quiet' : ''), disabled: !!S.syncing, onclick: async () => { const u = ccName.value.trim(); if (!u) return toast('Enter your chess.com username'); S.username = u; save('settings'); S.syncing = true; renderSettings();
-        try { const t = await syncChessCom(u, { months: MONTHS }); await importText(t, u, true); toast('chess.com linked and synced'); } catch (e) { toast(e.message === 'nouser' ? `chess.com has no player called ${u}` : 'Could not reach chess.com just now'); }
+        try { const t = await syncChessCom(u, { months: MONTHS }); const gone = await removeGames(notFrom('chesscom', u)); await importText(t, u, true); toast(gone ? `chess.com linked and synced. Removed ${gone} games from your previous account.` : 'chess.com linked and synced'); } catch (e) { toast(e.message === 'nouser' ? `chess.com has no player called ${u}` : 'Could not reach chess.com just now'); }
         S.syncing = false; render(); } }, S.username ? 'Save and sync' : 'Link chess.com'),
       S.username ? h('button', { class: 'btn quiet', onclick: () => { S.username = ''; save('settings'); render(); toast('chess.com unlinked. Your games stay here.'); } }, 'Unlink') : null));
   box.append(h('div', { class: 'cards' }, li, cc));
@@ -758,7 +780,7 @@ async function checkChessCom(quiet) {
   const before = S.games.length; const failed = [];
   const rec = S.plans[todayId()]; const fixBase = () => { if (rec && !(rec.base && rec.base.rush != null) && S.stats) { rec.base = statBase(); savePlan(todayId()); } };
   fixBase();
-  if (S.username) try { const pgn = await syncChessCom(S.username, { months: S.games.some(g => srcOf(g) === 'chesscom') ? 1 : 3 }); fixBase(); await importText(pgn, S.username, true); } catch { failed.push('chess.com'); }
+  if (S.username) try { const pgn = await syncChessCom(S.username, { months: S.games.some(g => srcOf(g) === 'chesscom' && g.who === S.username.toLowerCase()) ? 1 : MONTHS }); fixBase(); await removeGames(notFrom('chesscom', S.username)); await importText(pgn, S.username, true); } catch { failed.push('chess.com'); }
   if (S.settings.lichessUser) try { const pgn = await syncLichess(S.settings.lichessUser); await importText(pgn, S.settings.lichessUser, true, 'lichess'); } catch { failed.push('lichess'); }
   const n = S.games.length - before;
   if (!quiet) toast(failed.length ? `Could not reach ${failed.join(' or ')} just now` : n ? `Found ${n} new game${n > 1 ? 's' : ''}` : 'No new games since the last check');

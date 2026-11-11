@@ -78,7 +78,7 @@ function importPgn(text, me, maxPly = 40) {
     // lichess says only "Normal": tell mate from resignation by the last move.
     if (end === 'other' && /normal/i.test(h.Termination || '')) end = g.toks.some(t => t.includes('#')) ? 'mate' : res === 0.5 ? 'draw' : 'resign';
     const id = hashStr((h.Link || '') + (h.UTCDate || h.Date || '') + (h.UTCTime || h.StartTime || '') + h.White + h.Black + g.moves.join(' '));
-    out.push({ id, me: color, opp: (color === 'w' ? h.Black : h.White) || '?',
+    out.push({ id, me: color, who: lo, opp: (color === 'w' ? h.Black : h.White) || '?',
       oppElo: +(color === 'w' ? h.BlackElo : h.WhiteElo) || null, myElo: +(color === 'w' ? h.WhiteElo : h.BlackElo) || null,
       date: (h.UTCDate || h.Date || '').replace(/\./g, '-'), time: h.UTCTime || h.StartTime || '',
       tc: h.TimeControl || '', cls: lichessClass(h.Event) || timeClass(h.TimeControl), end, plies: g.plies, src: url.includes('lichess.org') ? 'lichess' : 'chesscom',
