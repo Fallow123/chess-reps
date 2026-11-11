@@ -369,9 +369,7 @@ function renderStory() {
     h('p', { class: 'ask' }, `A ${M.fit}% match on style, with a touch of ${M.second.name}. Based on how you actually move in your last ${pool.length} games: ${F.raw.checksPer10.toFixed(1)} checks in every 10 moves, your queen out early in ${Math.round(F.raw.earlyQ * 100)}% of games, ${F.raw.wins ? Math.round(100 * F.raw.longWins / F.raw.wins) : 0}% of wins after move 40.`),
     h('div', { class: 'traits' }, FEATURE_NAMES.map((n, i) => h('div', { class: 'trait' }, h('span', { class: 'note' }, n), h('span', { class: 'meter' }, h('i', { style: `width:${Math.round(F.vec[i] * 100)}%` })), h('span', { class: 'meter ghost' }, h('i', { style: `width:${Math.round(M.first.v[i] * 100)}%` }))))),
     h('p', { class: 'note' }, `Amber is you, grey is ${M.first.name.split(' ').pop()}.`),
-    h('h2', { style: 'margin-top:18px' }, `Your closest five, out of ${LEGENDS.length} players`),
-    h('ul', { class: 'list' }, M.ranked.slice(0, 5).map(({ L, d }) => h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, L.name), h('span', { class: 'note' }, L.tag), h('span', { class: 'tag dim' }, Math.round(100 * Math.max(0, 1 - d / 1.6)) + '%')))),
-    h('p', { class: 'note' }, 'Every world champion from Steinitz to Gukesh, plus Morphy, Nimzowitsch, Rubinstein, Bronstein, Korchnoi, Larsen, Polgár, Ivanchuk, Shirov, Caruana and Nakamura. The match compares seven style traits read from your moves; it is a fun mirror, not a rating.')));
+    h('p', { class: 'note' }, `Runners-up out of ${LEGENDS.length} players, every world champion included: ` + M.ranked.slice(1, 3).map(({ L, d }) => `${L.name} (${Math.round(100 * Math.max(0, 1 - d / 1.6))}%)`).join(' and ') + '.')));
 
   // Score
   box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'Your Pawnstorm Score'),
