@@ -1587,6 +1587,21 @@ const gameTime = g => Date.parse((g.date || '1970-01-01') + 'T' + (g.time || '00
 const scoreOf = arr => { const s = arr.filter(g => g.score != null); return s.length ? s.reduce((a, g) => a + g.score, 0) / s.length : null; };
 const pc = x => x == null ? 'n/a' : Math.round(100 * x) + '%';
 
+// The opening as you see it: your own system when your moves show one, otherwise the opening's name,
+// with "vs" when the name belongs to your opponent's choice (a defence you meet as White, a White system you meet as Black).
+const BLACK_LINES = /defen[cs]e|countergambit|englund|budapest|latvian|elephant|benko|indian game|pirc|modern|alekhine|dutch|grunfeld|benoni|owen|nimzowitsch defense|scandinavian/i;
+const WHITE_LINES = /opening|attack|system|london|jobava|colle|trompowsky|catalan|ruy lopez|italian|scotch|vienna|king'?s gambit|queen'?s gambit|evans|danish|smith-morra|blackmar|ponziani|bishop'?s/i;
+function lineName(g) {
+  const sans = (g.moves || '').split(' ').map(x => x.replace(/[+#?!]/g, ''));
+  const mine = sans.filter((_, i) => (i % 2 === 0) === (g.me === 'w')).slice(0, 8);
+  const has = m => mine.includes(m);
+  if (g.me === 'w' && has('d4') && has('Bf4') && has('Nc3') && !has('c4')) return 'Jobava London';
+  if (g.me === 'w' && has('d4') && has('Bf4') && !has('c4')) return 'London System';
+  const name = g.opening || 'Unknown';
+  if (name === 'Unknown') return name;
+  const theirs = g.me === 'w' ? BLACK_LINES.test(name) && !/queen'?s gambit declined|queen'?s gambit accepted/i.test(name) : !BLACK_LINES.test(name) && WHITE_LINES.test(name);
+  return theirs ? 'vs ' + name : name;
+}
 function computeProfile(games) {
   const all = games.slice().sort((a, b) => gameTime(a) - gameTime(b));
   if (!all.length) return null;
@@ -1623,7 +1638,7 @@ function computeProfile(games) {
     nw: pool.filter(g => g.me === 'w').length, nb: pool.filter(g => g.me === 'b').length };
 
   const op = new Map();
-  for (const g of pool) { const k = g.me + '|' + (g.opening || 'Unknown'); if (!op.has(k)) op.set(k, { side: g.me, name: g.opening || 'Unknown', games: [] }); op.get(k).games.push(g); }
+  for (const g of pool) { const name = lineName(g); const k = g.me + '|' + name; if (!op.has(k)) op.set(k, { side: g.me, name, games: [] }); op.get(k).games.push(g); }
   const openings = [...op.values()].map(o => ({ side: o.side, name: o.name, n: o.games.length, score: scoreOf(o.games) })).filter(o => o.n >= 3).sort((a, b) => b.n - a.n);
 
   // Tilt: how you score in the game right after two losses in a row on the same day.
@@ -3577,11 +3592,12 @@ function renderStory() {
     h('p', { class: 'lede' }, 'The last 12 weeks. Hover a point or bar to see the week.'), progressSection(), weekCard('This week so far')));
 
   // Openings
+  const opPhrase = o => o.name.startsWith('vs ') ? `playing ${sideName(o.side)} against the ${o.name.slice(3)}` : `the ${o.name} as ${sideName(o.side)}`;
   const ops = p.openings; const bySide = s => ops.filter(o => o.side === s && o.n >= 4);
   const weapon = ops.filter(o => o.n >= 5).sort((a, b) => b.score - a.score)[0]; const krypto = ops.filter(o => o.n >= 5).sort((a, b) => a.score - b.score)[0];
   const opList = s => { const ul = h('ul', { class: 'list' }); for (const o of bySide(s).slice(0, 4)) ul.append(h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, o.name), h('span', { class: 'note' }, o.n + ' games'), h('span', { class: 'tag ' + (o.score >= 0.55 ? 'ok' : o.score < 0.45 ? 'gap' : 'dim') }, pc(o.score)))); if (!ul.children.length) ul.append(h('li', { class: 'empty' }, 'Not enough games yet.')); return ul; };
   box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'The openings you live by'),
-    h('p', { class: 'lede' }, [weapon ? `Your weapon is the ${weapon.name} as ${sideName(weapon.side)}, where you score ${pc(weapon.score)}. ` : '', krypto && krypto !== weapon ? `Your kryptonite is the ${krypto.name} as ${sideName(krypto.side)}: ${pc(krypto.score)}.` : ''].join('')),
+    h('p', { class: 'lede' }, [weapon ? `Your weapon: ${opPhrase(weapon)}, where you score ${pc(weapon.score)}. ` : '', krypto && krypto !== weapon ? `Your kryptonite: ${opPhrase(krypto)}, at ${pc(krypto.score)}.` : ''].join('')),
     h('div', { class: 'two' }, h('div', {}, h('h2', {}, 'As White'), opList('w')), h('div', {}, h('h2', {}, 'As Black'), opList('b')))));
 
   // Where games go wrong

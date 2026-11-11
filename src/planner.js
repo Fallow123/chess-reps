@@ -4,6 +4,21 @@ const gameTime = g => Date.parse((g.date || '1970-01-01') + 'T' + (g.time || '00
 const scoreOf = arr => { const s = arr.filter(g => g.score != null); return s.length ? s.reduce((a, g) => a + g.score, 0) / s.length : null; };
 const pc = x => x == null ? 'n/a' : Math.round(100 * x) + '%';
 
+// The opening as you see it: your own system when your moves show one, otherwise the opening's name,
+// with "vs" when the name belongs to your opponent's choice (a defence you meet as White, a White system you meet as Black).
+const BLACK_LINES = /defen[cs]e|countergambit|englund|budapest|latvian|elephant|benko|indian game|pirc|modern|alekhine|dutch|grunfeld|benoni|owen|nimzowitsch defense|scandinavian/i;
+const WHITE_LINES = /opening|attack|system|london|jobava|colle|trompowsky|catalan|ruy lopez|italian|scotch|vienna|king'?s gambit|queen'?s gambit|evans|danish|smith-morra|blackmar|ponziani|bishop'?s/i;
+function lineName(g) {
+  const sans = (g.moves || '').split(' ').map(x => x.replace(/[+#?!]/g, ''));
+  const mine = sans.filter((_, i) => (i % 2 === 0) === (g.me === 'w')).slice(0, 8);
+  const has = m => mine.includes(m);
+  if (g.me === 'w' && has('d4') && has('Bf4') && has('Nc3') && !has('c4')) return 'Jobava London';
+  if (g.me === 'w' && has('d4') && has('Bf4') && !has('c4')) return 'London System';
+  const name = g.opening || 'Unknown';
+  if (name === 'Unknown') return name;
+  const theirs = g.me === 'w' ? BLACK_LINES.test(name) && !/queen'?s gambit declined|queen'?s gambit accepted/i.test(name) : !BLACK_LINES.test(name) && WHITE_LINES.test(name);
+  return theirs ? 'vs ' + name : name;
+}
 function computeProfile(games) {
   const all = games.slice().sort((a, b) => gameTime(a) - gameTime(b));
   if (!all.length) return null;
@@ -40,7 +55,7 @@ function computeProfile(games) {
     nw: pool.filter(g => g.me === 'w').length, nb: pool.filter(g => g.me === 'b').length };
 
   const op = new Map();
-  for (const g of pool) { const k = g.me + '|' + (g.opening || 'Unknown'); if (!op.has(k)) op.set(k, { side: g.me, name: g.opening || 'Unknown', games: [] }); op.get(k).games.push(g); }
+  for (const g of pool) { const name = lineName(g); const k = g.me + '|' + name; if (!op.has(k)) op.set(k, { side: g.me, name, games: [] }); op.get(k).games.push(g); }
   const openings = [...op.values()].map(o => ({ side: o.side, name: o.name, n: o.games.length, score: scoreOf(o.games) })).filter(o => o.n >= 3).sort((a, b) => b.n - a.n);
 
   // Tilt: how you score in the game right after two losses in a row on the same day.

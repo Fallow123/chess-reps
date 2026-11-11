@@ -347,11 +347,12 @@ function renderStory() {
     h('p', { class: 'lede' }, 'The last 12 weeks. Hover a point or bar to see the week.'), progressSection(), weekCard('This week so far')));
 
   // Openings
+  const opPhrase = o => o.name.startsWith('vs ') ? `playing ${sideName(o.side)} against the ${o.name.slice(3)}` : `the ${o.name} as ${sideName(o.side)}`;
   const ops = p.openings; const bySide = s => ops.filter(o => o.side === s && o.n >= 4);
   const weapon = ops.filter(o => o.n >= 5).sort((a, b) => b.score - a.score)[0]; const krypto = ops.filter(o => o.n >= 5).sort((a, b) => a.score - b.score)[0];
   const opList = s => { const ul = h('ul', { class: 'list' }); for (const o of bySide(s).slice(0, 4)) ul.append(h('li', { class: 'item' }, h('span', { class: 'meta', style: 'flex:1;color:var(--bone)' }, o.name), h('span', { class: 'note' }, o.n + ' games'), h('span', { class: 'tag ' + (o.score >= 0.55 ? 'ok' : o.score < 0.45 ? 'gap' : 'dim') }, pc(o.score)))); if (!ul.children.length) ul.append(h('li', { class: 'empty' }, 'Not enough games yet.')); return ul; };
   box.append(h('section', { class: 'story-ch' }, chno(), h('h3', {}, 'The openings you live by'),
-    h('p', { class: 'lede' }, [weapon ? `Your weapon is the ${weapon.name} as ${sideName(weapon.side)}, where you score ${pc(weapon.score)}. ` : '', krypto && krypto !== weapon ? `Your kryptonite is the ${krypto.name} as ${sideName(krypto.side)}: ${pc(krypto.score)}.` : ''].join('')),
+    h('p', { class: 'lede' }, [weapon ? `Your weapon: ${opPhrase(weapon)}, where you score ${pc(weapon.score)}. ` : '', krypto && krypto !== weapon ? `Your kryptonite: ${opPhrase(krypto)}, at ${pc(krypto.score)}.` : ''].join('')),
     h('div', { class: 'two' }, h('div', {}, h('h2', {}, 'As White'), opList('w')), h('div', {}, h('h2', {}, 'As Black'), opList('b')))));
 
   // Where games go wrong
