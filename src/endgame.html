@@ -249,8 +249,8 @@
   .boardwrap { position: relative; width: var(--board); }
   .board {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-rows: repeat(8, minmax(0, 1fr));
     aspect-ratio: 1; width: 100%;
     border: 7px solid var(--panel-2);
     box-shadow: 0 0 0 1px var(--rule), 0 12px 40px rgba(0,0,0,.8);
@@ -424,9 +424,9 @@
   .dgms { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 16px; margin: 6px 0 16px; }
   .dgm { margin: 0; }
   .dgm figcaption { font-size: 13.5px; color: var(--dim); margin-top: 8px; line-height: 1.5; }
-  .mini { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; max-width: 340px;
+  .mini { position: relative; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr)); aspect-ratio: 1; width: 100%; max-width: 340px;
           border: 5px solid var(--panel-2); border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px var(--rule); }
-  .msq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
+  .msq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; }
   .msq.light { background: var(--maple); }
   .msq.dark { background: var(--dark-sq); }
   .msq.hl::after { content: ""; position: absolute; inset: 0; background: rgba(255,138,31,.42); }
