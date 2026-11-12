@@ -129,6 +129,9 @@ shell = '''
 <div class="toast" id="toast" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.js"></script>
 <script>
+''' + rd('egcourse.js') + '''
+</script>
+<script>
 ''' + rd('logic.js') + rd('planner.js') + '''
 </script>
 <script>

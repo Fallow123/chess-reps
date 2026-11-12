@@ -5,8 +5,10 @@
   </header>
 
   <div class="eghead" id="eghead"></div>
+  <div class="egmodes" id="egmodes" role="tablist" aria-label="Endgame sections"></div>
   <div class="layout">
     <div class="sidecol">
+      <nav class="cnav" id="cnav" hidden aria-label="Course lessons"></nav>
       <div class="levels" id="levels"></div>
       <div class="levels" id="repsbox"></div>
       <nav class="chapters" id="chapters"></nav>
@@ -14,9 +16,11 @@
     </div>
 
     <main class="stage">
+      <div class="cpanel" id="cpanel" hidden></div>
       <div class="runbar" id="runbar" hidden>
         <span class="runname" id="runname"></span>
         <span class="runcount" id="runcount"></span>
+        <button class="btn quiet tiny" id="btnSkip" hidden>Skip</button>
         <button class="btn quiet tiny" id="btnQuit">Leave run</button>
       </div>
 
@@ -366,6 +370,88 @@
   }
   .promorow button:hover { filter: brightness(1.06); }
 
+
+  /* ---- the endgame course ---- */
+  .egmodes { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 20px; padding: 4px; border-radius: 12px;
+             background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); width: fit-content; max-width: 100%; }
+  .egmodes button { font: inherit; font-size: 14px; font-weight: 600; border: 0; border-radius: 9px; padding: 8px 16px;
+                    background: none; color: var(--dim); cursor: pointer; }
+  .egmodes button:hover { color: var(--bone); }
+  .egmodes button[aria-selected="true"] { background: var(--amber); color: #111; }
+  .egmodes button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .cnav { display: flex; flex-direction: column; gap: 6px; }
+  .ctools { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chapter.exam .num { color: var(--amber); }
+  .pips { display: inline-flex; gap: 3px; flex: none; }
+  .pips i { width: 7px; height: 7px; border-radius: 50%; background: var(--panel-3); box-shadow: inset 0 0 0 1px var(--rule); }
+  .pips i.on { background: var(--sage); box-shadow: none; }
+
+  .layout.reading .sheet { display: none; }
+  .layout.reading .stage { grid-column: span 2; align-items: stretch; }
+  .cpanel { width: 100%; max-width: 820px; margin: 0 auto; }
+  .chero { padding: 22px 24px; border-radius: 18px; margin-bottom: 18px;
+           background: linear-gradient(135deg, #1B6B4A 0%, #0E4A33 60%, #0A3626 100%); color: #F3F1EA; }
+  .ctitle { margin: 4px 0 6px; font-family: var(--display); font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .csub { margin: 0 0 6px; font-size: 14.5px; opacity: .85; max-width: 68ch; }
+  .cstats { display: flex; flex-wrap: wrap; margin-top: 14px; border-radius: 12px; background: rgba(0,0,0,.22); }
+  .cstats > div { flex: 1 1 110px; padding: 12px 16px; text-align: center; }
+  .cstats > div + div { border-left: 1px solid rgba(255,255,255,.1); }
+  .cstats b { display: block; font-family: var(--display); font-size: 26px; line-height: 1.1; }
+  .cstats b small { font-size: 14px; opacity: .6; }
+  .cstats span { font-size: 12.5px; opacity: .75; }
+  .cnext { display: grid; gap: 10px; margin-bottom: 8px; }
+  .ccard { padding: 16px 18px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); }
+  .ccard.due { box-shadow: inset 0 0 0 1.5px var(--amber); }
+  .ck { margin: 0 0 2px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); }
+  .cv { margin: 0 0 12px; font-size: 15px; }
+  .chead { font-family: var(--display); font-size: 18px; margin: 22px 0 10px; }
+  .cstages { display: grid; gap: 8px; }
+  .cstage { display: flex; gap: 14px; align-items: flex-start; text-align: left; width: 100%; font: inherit; color: var(--bone);
+            padding: 14px 16px; border: 0; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); cursor: pointer; }
+  .cstage:hover:not([disabled]) { background: var(--panel-2); }
+  .cstage.locked { opacity: .5; cursor: default; }
+  .cstage .snum { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+                  font-family: var(--display); font-weight: 700; background: var(--panel-3); color: var(--dim); }
+  .cstage.passed .snum { background: rgba(92,201,138,.18); color: var(--sage); }
+  .cstage .sbody { flex: 1; min-width: 0; display: block; }
+  .cstage .stitle { display: block; font-weight: 600; font-size: 16px; }
+  .cstage .ssub { display: block; font-size: 13px; color: var(--dim); margin: 2px 0 0; }
+  .cstage .pbar { display: block; margin: 8px 0 0; }
+  .cstage .smeta { display: block; font-size: 12px; color: var(--dim); margin-top: 4px; }
+  .cmeta { margin: 0 0 14px; font-size: 13.5px; color: var(--dim); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ctext p { margin: 0 0 12px; font-size: 16px; line-height: 1.65; max-width: 68ch; }
+  .ctext b { color: #fff; font-weight: 600; }
+  .dgms { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 16px; margin: 6px 0 16px; }
+  .dgm { margin: 0; }
+  .dgm figcaption { font-size: 13.5px; color: var(--dim); margin-top: 8px; line-height: 1.5; }
+  .mini { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; max-width: 340px;
+          border: 5px solid var(--panel-2); border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px var(--rule); }
+  .msq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
+  .msq.light { background: var(--maple); }
+  .msq.dark { background: var(--dark-sq); }
+  .msq.hl::after { content: ""; position: absolute; inset: 0; background: rgba(255,138,31,.42); }
+  .msq .piece { position: relative; z-index: 1; }
+  .mini .arrows { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+  .mini .arrows line { stroke: rgba(255,138,31,.9); stroke-width: .16; stroke-linecap: round; }
+  .mini .arrows path { fill: rgba(255,138,31,.9); }
+  .crules { padding: 14px 18px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--rule); margin: 0 0 14px; }
+  .crules ul { margin: 6px 0 0; padding-left: 20px; }
+  .crules li { margin: 4px 0; font-size: 15px; }
+  .cpractice { padding: 16px 18px; border-radius: 14px; background: var(--panel-2); margin: 0 0 14px; }
+  .cnote { margin: -6px 0 12px; font-size: 13.5px; color: var(--dim); }
+  .cbtns, .cnav2 { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cnav2 { justify-content: space-between; margin-top: 6px; }
+  .bstage { margin-top: 26px; }
+  .bhead { font-family: var(--display); font-size: 22px; margin: 0 0 4px; color: var(--amber); }
+  .blesson { padding: 16px 0; border-top: 1px solid var(--rule); }
+  .btitle { font-family: var(--display); font-size: 18px; margin: 0 0 10px; }
+  .summary .btn + .btn { margin-left: 8px; }
+  @media (max-width: 1100px) { .layout.reading .stage { grid-column: auto; } }
+  @media print {
+    .sidecol, .egmodes, .eghead { display: none !important; }
+    .layout.reading .stage { grid-column: 1 / -1; }
+  }
+
   @media (max-width: 900px) {
     .layout { grid-template-columns: minmax(0,1fr); }
     .stage { order: 1; }
@@ -593,6 +679,7 @@
   ];
 
   function currentLevel() {
+    if (S.lvOverride) return LEVELS[S.lvOverride - 1];
     for (var i = 0; i < LEVELS.length; i++) if (LEVELS[i].n === S.level) return LEVELS[i];
     return LEVELS[2];
   }
@@ -958,7 +1045,8 @@
     history: [], busy: false, over: false, hinted: false, promoted: false,
     hintLevel: 0, hintsUsed: 0, lostIt: false,
     lastFrom: null, lastTo: null, snapshot: null,
-    wins: {}, seen: {}, structs: {}, runs: {}
+    wins: {}, seen: {}, structs: {}, runs: {},
+    course: { lessons: {}, stages: {} }, view: "course", lvOverride: 0
   };
   CHAPTERS.forEach(function (c) { S.wins[c.id] = 0; });
 
@@ -969,7 +1057,8 @@
    "runbar", "runname", "runcount", "btnQuit",
    "study", "qtitle", "qask", "opts", "why", "whytext", "btnNextQ", "btnPlayPlan",
    "linepanel", "lname", "lsetup", "lprompt", "lnote", "btnLineHint", "btnLineNext",
-   "summary", "sumtitle", "sumlist", "sumtime", "btnDone"]
+   "summary", "sumtitle", "sumlist", "sumtime", "btnDone",
+   "egmodes", "cnav", "cpanel", "btnSkip"]
     .forEach(function (k) { el[k] = document.getElementById(k); });
 
   /* ---------- progress ----------
@@ -988,6 +1077,8 @@
       if (data.seen) S.seen = data.seen;
       if (data.structs) S.structs = data.structs;
       if (data.runs) S.runs = data.runs;
+      if (data.course) S.course = { lessons: data.course.lessons || {}, stages: data.course.stages || {}, last: data.course.last };
+      if (data.view) S.view = data.view;
     } else {                                     // saved before levels existed
       S.wins = Object.assign(S.wins, data);
     }
@@ -1006,7 +1097,8 @@
 
   function saveProgress() {
     var blob = JSON.stringify({ wins: S.wins, level: S.level, reps: S.reps,
-                            freeAll: S.freeAll, seen: S.seen, structs: S.structs, runs: S.runs });
+                            freeAll: S.freeAll, seen: S.seen, structs: S.structs, runs: S.runs,
+                            course: S.course, view: S.view });
     if (window.storage) { window.storage.set(PKEY, blob).catch(function () {}); return; }
     try { window.localStorage.setItem(PKEY, blob); } catch (e) {}
   }
@@ -1059,6 +1151,14 @@
   }
 
   function findPosition(ch, gen) {
+    if (ch.fixed) {
+      // A lesson position: always the same board. The tablebase still grades it, and if
+      // its verdict ever disagrees with what the lesson expects, say so instead of playing on.
+      return probe(toFen(ch.fixed.slice(), ch.stm)).then(function (d) {
+        if (norm(d.category) !== ch.want) throw new Error("mismatch");
+        return { board: ch.fixed.slice(), data: d };
+      });
+    }
     var tries = 0, relax = 0, lv = currentLevel(), accept = acceptFor(ch, lv, 0);
     function attempt() {
       if (gen !== S.gen) throw new Error("superseded");   // don't keep hitting the API
@@ -1100,6 +1200,7 @@
     el.verdict.textContent = ""; el.verdict.className = "verdict";
     el.btnBack.hidden = true;
     el.prompt.textContent = ch.prompt;
+    el.btnNew.textContent = ch.fixed ? "Start again" : "New position";
     renderChapters(); renderSheet();
     veil(true, "Finding a position");
 
@@ -1112,7 +1213,10 @@
       var net = String(err.message).indexOf("tablebase ") !== 0 &&
                 String(err.message).indexOf("no position") !== 0;
       veil(true, "No position");
-      if (String(err.message).indexOf("no position") === 0) {
+      if (err.message === "mismatch") {
+        el.prompt.textContent = "The tablebase disagrees with this lesson.";
+        el.verdict.textContent = "Its result is not what the lesson expects, so it would teach the wrong thing. Skip it.";
+      } else if (String(err.message).indexOf("no position") === 0) {
         el.prompt.textContent = "Couldn't find a position for this chapter.";
         el.verdict.textContent = "The filter for \u201c" + ch.title +
           "\u201d is too strict. Press New position to try again.";
@@ -1185,6 +1289,7 @@
     // Throwing the result away ends the drill at every level. There is nothing
     // left to practise; the levels differ only in whether you may take it back.
     S.lostIt = (kind === "bad");
+    if (kind === "bad" && RUN && RUN.set.kind === "course") RUN.stepBad = true;
 
     el.verdict.textContent = note;
     el.verdict.className = "verdict " + kind;
@@ -1315,7 +1420,7 @@
     } else if (ch.goal === "stop" && !enemyThreatLeft()) {
       good = mine !== "loss";
       msg = good ? "Threat gone." : "Pawn stopped, but the position is lost.";
-    } else if (ch.goal === "draw" && S.history.length >= 28) {
+    } else if (ch.goal === "draw" && S.history.length >= (ch.plies || 28)) {
       good = mine !== "loss";
       msg = good ? "Held. There's nothing left for the other side." : "The position is lost.";
     }
@@ -1327,7 +1432,7 @@
     el.verdict.textContent = good ? "Press New position for another." : "Press New position to try again.";
     el.verdict.className = "verdict " + (good ? "done" : "bad");
     el.btnBack.hidden = true;
-    if (good) {
+    if (good && !ch.adhoc) {
       S.wins[ch.id] = (S.wins[ch.id] || 0) + 1;
       // Once a chapter is cleared, each new day's solve doubles the gap before it comes back.
       var sr = S.seen[ch.id] || {}, now = Date.now(); sr.lastWin = now; S.seen[ch.id] = sr;
@@ -2307,8 +2412,7 @@
   }
 
   function loadLine(idx) {
-    var id = RUN.set.lines[idx];
-    var line = LINES.filter(function (x) { return x.id === id; })[0];
+    var line = (idx && idx.moves) ? idx : LINES.filter(function (x) { return x.id === RUN.set.lines[idx]; })[0];
     S.gen++;
     setMode("line");
     L = { line: line, pos: parsePos(line.fen), i: 0, wrong: 0 };
@@ -2397,9 +2501,15 @@
     el.lnote.className = "lnote payoff";
     el.lnote.textContent = L.line.payoff;
     var clean = S.history.every(function (h) { return h.ann !== "slow"; });
-    RUN.results[RUN.i] = { label: L.line.title, good: clean, tally: null };
     el.btnLineHint.disabled = true;
     el.btnLineNext.hidden = false;
+    if (RUN.set.kind === "course") {
+      recordStep(true, clean);
+      el.btnLineNext.textContent = (RUN.i + 1 >= RUN.steps.length) ? "See how you did" : "Next";
+      render();
+      return;
+    }
+    RUN.results[RUN.i] = { label: L.line.title, good: clean, tally: null };
     el.btnLineNext.textContent =
       (RUN.i + 1 >= RUN.set.lines.length) ? "See how you did" : "Next line";
     render();
@@ -2407,6 +2517,7 @@
 
   function nextLine() {
     el.btnLineNext.hidden = true;
+    if (RUN && RUN.set.kind === "course") { advanceCourse(); return; }
     if (RUN.i + 1 >= RUN.set.lines.length) { showSummary(); return; }
     RUN.i++;
     loadLine(RUN.i);
@@ -2424,12 +2535,18 @@
   /* ---------- mode switching ---------- */
   function setMode(m) {
     S.mode = m;
-    el.boardwrap.hidden = (m === "summary");
+    el.boardwrap.hidden = (m === "summary" || m === "lesson");
     el.statusbar.hidden = (m !== "drill");
     el.controls.hidden = (m !== "drill");
     el.study.hidden = (m !== "study");
     el.linepanel.hidden = (m !== "line");
     el.summary.hidden = (m !== "summary");
+    el.cpanel.hidden = (m !== "lesson");
+    if (m !== "summary") {
+      if (el.sumNext) { el.sumNext.remove(); el.sumNext = null; }
+      el.btnDone.className = "btn"; el.btnDone.textContent = "Back to the ladder";
+    }
+    if (layoutEl) layoutEl.classList.toggle("reading", m === "lesson");
   }
 
   /* ---------- run state ---------- */
@@ -2446,8 +2563,15 @@
   }
 
   function renderRunbar() {
+    el.btnSkip.hidden = !(RUN && RUN.set.kind === "course");
     if (!RUN) { el.runbar.hidden = true; return; }
     el.runbar.hidden = false;
+    if (RUN.set.kind === "course") {
+      el.runname.textContent = RUN.set.name;
+      el.runcount.textContent = (RUN.i + 1) + " of " + RUN.steps.length;
+      el.btnQuit.textContent = "Leave";
+      return;
+    }
     el.runname.textContent = RUN.set.name;
     if (RUN.set.endless) {
       el.runcount.textContent = "position " + (RUN.i + 1);
@@ -2461,14 +2585,22 @@
     el.btnQuit.textContent = "Leave run";
   }
 
-  function quitRun() {
-    RUN = null; L = null;
+  function quitRun(silent) {
+    var back = RUN && RUN.set.kind === "course" ? RUN.set : null;
+    RUN = null; L = null; S.lvOverride = 0;
     S.gen++;                               // drop anything the run had in flight
-    el.runbar.hidden = true;
+    el.runbar.hidden = true; el.btnSkip.hidden = true;
     setMode("drill");
     S.ch = null; S.tb = null; S.board = new Array(64).fill(null);
     S.history = []; S.sel = null; S.lastFrom = S.lastTo = null;
     S.busy = false; S.over = false;
+    if (silent) { veil(false); return; }
+    if (S.view === "course") {
+      if (back && back.mode === "exam") openExam(back.target);
+      else if (back) openLesson(back.target);
+      else showHome();
+      return;
+    }
     el.prompt.textContent = "Pick a chapter or a run to begin.";
     el.verdict.textContent = ""; el.verdict.className = "verdict";
     el.btnBack.hidden = true;
@@ -2478,6 +2610,7 @@
 
   // Called by finished() once a drill resolves.
   function runRecord(good) {
+    if (RUN && RUN.set.kind === "course") { courseDrillDone(good); return; }
     if (!RUN || RUN.set.kind === "study" || RUN.set.kind === "line") return;
     var run = RUN;                         // so a mid-timeout run change can't advance the wrong one
     var solo = run.set.kind === "solo";
@@ -2611,6 +2744,7 @@
   }
 
   function nextQuestion() {
+    if (RUN && RUN.set.kind === "course") { advanceCourse(); return; }
     if (RUN.i + 1 >= RUN.queue.length) return showSummary();
     RUN.i++;
     showQuestion();
@@ -2963,6 +3097,526 @@
   }
 
 
+  /* ---------- the endgame course ----------
+     Eight stages, each a run of lessons and a checkpoint. A lesson is read, then
+     practised; passing it starts a spaced-review clock (box 1 to 5). Box 4 counts
+     as mastered. The next stage opens when the checkpoint is passed.           */
+  var COURSE = (typeof EG_COURSE !== "undefined") ? EG_COURSE : [];
+  var CLESSONS = [];
+  COURSE.forEach(function (st, si) {
+    st.si = si;
+    st.lessons.forEach(function (l, li) { l.stage = st; l.si = si; l.li = li; CLESSONS.push(l); });
+  });
+  var BOX_DAYS = [0, 2, 5, 12, 30, 60];
+  var MASTERED = 4;
+  var BOX_NAME = ["New", "Learned", "Reviewed", "Solid", "Mastered", "Mastered"];
+
+  function crec(id) { return (S.course.lessons || {})[id] || null; }
+  function cbox(l) { var r = crec(l.id); return r ? r.box || 0 : 0; }
+  function cstage(st) { return (S.course.stages || {})[st.id] || null; }
+  function stagePassed(st) { var r = cstage(st); return !!(r && r.passed); }
+  function stageOpen(st) { return S.freeAll || st.si === 0 || stagePassed(COURSE[st.si - 1]); }
+  function lessonOpen(l) {
+    if (!stageOpen(l.stage)) return false;
+    return S.freeAll || l.li === 0 || cbox(l.stage.lessons[l.li - 1]) >= 1 || cbox(l) >= 1;
+  }
+  function stageLearned(st) { return st.lessons.every(function (l) { return cbox(l) >= 1; }); }
+  function lessonDue(l, now) {
+    var r = crec(l.id); if (!r || !r.box) return false;
+    return (now || Date.now()) - r.last >= BOX_DAYS[Math.min(r.box, 5)] * DAY;
+  }
+  function dueLessons() {
+    var now = Date.now();
+    return CLESSONS.filter(function (l) { return lessonDue(l, now); })
+      .sort(function (a, b) { return crec(a.id).last - crec(b.id).last; });
+  }
+  function nextUp() {
+    for (var i = 0; i < COURSE.length; i++) {
+      var st = COURSE[i];
+      if (!stageOpen(st)) return null;
+      for (var j = 0; j < st.lessons.length; j++) if (cbox(st.lessons[j]) < 1) return { lesson: st.lessons[j] };
+      if (!stagePassed(st)) return { exam: st };
+    }
+    return null;
+  }
+  function masteryPct() {
+    if (!CLESSONS.length) return 0;
+    var pts = CLESSONS.reduce(function (a, l) { return a + Math.min(cbox(l), MASTERED); }, 0);
+    var exams = COURSE.filter(stagePassed).length;
+    return Math.round(100 * (pts + exams * 2) / (CLESSONS.length * MASTERED + COURSE.length * 2));
+  }
+  function daysUntil(l) {
+    var r = crec(l.id); if (!r || !r.box) return null;
+    return Math.max(0, Math.ceil((r.last + BOX_DAYS[Math.min(r.box, 5)] * DAY - Date.now()) / DAY));
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ---------- view switching ---------- */
+  var layoutEl = document.querySelector("#app .layout");
+  function setView(v) {
+    if (RUN) quitRun(true);
+    S.view = v; saveProgress();
+    renderView();
+  }
+  function renderView() {
+    var course = S.view === "course";
+    el.levels.hidden = course; el.repsbox.hidden = course;
+    el.chapters.hidden = course; el.runs.hidden = course;
+    el.cnav.hidden = !course; el.eghead.hidden = course;
+    renderModes(); renderChapters();
+    if (course) { renderCnav(); if (!RUN) showHome(); }
+    else if (!RUN) { setMode("drill"); if (!S.ch) startChapter(CHAPTERS[0], 1); }
+  }
+  function renderModes() {
+    el.egmodes.innerHTML = "";
+    [["course", "Endgame course"], ["ladder", "Practice ladder & runs"]].forEach(function (m) {
+      var b = document.createElement("button");
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", S.view === m[0] ? "true" : "false");
+      b.textContent = m[1];
+      b.addEventListener("click", function () { if (S.view !== m[0]) setView(m[0]); else if (m[0] === "course" && !RUN) showHome(); });
+      el.egmodes.appendChild(b);
+    });
+  }
+
+  /* ---------- the course map ---------- */
+  function pips(n) {
+    var s = '<span class="pips" title="' + BOX_NAME[Math.min(n, 5)] + '">';
+    for (var i = 1; i <= MASTERED; i++) s += '<i class="' + (n >= i ? "on" : "") + '"></i>';
+    return s + "</span>";
+  }
+  function renderCnav() {
+    el.cnav.innerHTML = "";
+    var top = document.createElement("div"); top.className = "ctools";
+    var home = document.createElement("button"); home.className = "btn quiet tiny"; home.textContent = "Course home";
+    home.addEventListener("click", function () { if (RUN) quitRun(true); showHome(); });
+    var book = document.createElement("button"); book.className = "btn quiet tiny"; book.textContent = "Read it as a book";
+    book.addEventListener("click", function () { if (RUN) quitRun(true); showBook(); });
+    top.appendChild(home); top.appendChild(book); el.cnav.appendChild(top);
+
+    COURSE.forEach(function (st) {
+      var open = stageOpen(st), learnedN = st.lessons.filter(function (l) { return cbox(l) >= 1; }).length;
+      var h = document.createElement("h2"); h.className = "grouphead";
+      h.textContent = "Stage " + (st.si + 1) + " · " + st.title;
+      el.cnav.appendChild(h);
+      st.lessons.forEach(function (l) {
+        var lo = lessonOpen(l), bx = cbox(l), due = lessonDue(l);
+        var b = document.createElement("button");
+        b.className = "chapter" + (lo ? "" : " locked") + (bx >= 1 ? " cleared" : "") + (CUR.lesson === l && CUR.view === "lesson" ? " on" : "");
+        b.disabled = !lo;
+        var chip = !lo ? '<span class="chip lock">Locked</span>'
+          : due ? '<span class="chip due">Review</span>'
+          : bx >= 1 ? pips(bx) : '<span class="chip">' + l.mins + " min</span>";
+        b.innerHTML = '<div class="crow"><span class="num">' + (st.si + 1) + "." + (l.li + 1) + '</span><span class="name">' + esc(l.title) + "</span>" + chip + "</div>";
+        if (lo) b.addEventListener("click", function () { if (RUN) quitRun(true); openLesson(l); });
+        el.cnav.appendChild(b);
+      });
+      var ex = document.createElement("button");
+      var ready = open && (stageLearned(st) || S.freeAll), passed = stagePassed(st);
+      ex.className = "chapter exam" + (ready ? "" : " locked") + (passed ? " cleared" : "") + (CUR.exam === st && CUR.view === "exam" ? " on" : "");
+      ex.disabled = !ready;
+      var last = st.si === COURSE.length - 1;
+      ex.innerHTML = '<div class="crow"><span class="num">★</span><span class="name">' + (last ? "Final exam" : "Checkpoint") + "</span>" +
+        (passed ? '<span class="chip ok">✓ Passed</span>' : ready ? '<span class="chip due">Ready</span>' : '<span class="chip lock">' + learnedN + " / " + st.lessons.length + "</span>") + "</div>";
+      if (ready) ex.addEventListener("click", function () { if (RUN) quitRun(true); openExam(st); });
+      el.cnav.appendChild(ex);
+    });
+    if (!S.freeAll) {
+      var free = document.createElement("button");
+      free.className = "unlockall"; free.textContent = "Unlock every lesson";
+      free.title = "Skip the order and study anything";
+      free.addEventListener("click", function () { unlockAll(); renderCnav(); if (CUR.view === "home") showHome(); });
+      el.cnav.appendChild(free);
+    }
+  }
+
+  /* ---------- course pages ---------- */
+  var CUR = { view: null, lesson: null, exam: null };
+
+  function miniBoard(d) {
+    var b = fromFen(d.fen), hl = {}, i;
+    (d.hl || []).forEach(function (s) { hl[sqIndex(s)] = 1; });
+    var h = '<figure class="dgm"><div class="mini">';
+    for (i = 0; i < 64; i++) {
+      var light = (((i >> 3) + (i % 8)) % 2) === 0, p = b[i];
+      h += '<div class="msq ' + (light ? "light" : "dark") + (hl[i] ? " hl" : "") + '">' +
+        (p ? '<div class="piece ' + (p === p.toUpperCase() ? "w" : "b") + '"><svg viewBox="0 0 100 100"><g>' + PIECE[p.toLowerCase()] + "</g></svg></div>" : "") + "</div>";
+    }
+    if (d.arrows && d.arrows.length) {
+      h += '<svg class="arrows" viewBox="0 0 8 8" aria-hidden="true"><defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>';
+      d.arrows.forEach(function (a) {
+        var f = sqIndex(a[0]), t = sqIndex(a[1]);
+        h += '<line x1="' + ((f % 8) + .5) + '" y1="' + ((f >> 3) + .5) + '" x2="' + ((t % 8) + .5) + '" y2="' + ((t >> 3) + .5) + '" marker-end="url(#ah)"/>';
+      });
+      h += "</svg>";
+    }
+    return h + '</div><figcaption>' + esc(d.cap || "") + "</figcaption></figure>";
+  }
+  function practiceSummary(l) {
+    var n = { drill: 0, tb: 0, line: 0, quiz: 0 };
+    l.practice.forEach(function (p) { n[p.t]++; });
+    var bits = [];
+    if (n.tb + n.drill) bits.push((n.tb + n.drill) + (n.tb + n.drill === 1 ? " position" : " positions") + " against the tablebase");
+    if (n.line) bits.push(n.line + (n.line === 1 ? " guided line" : " guided lines"));
+    if (n.quiz) bits.push(n.quiz + (n.quiz === 1 ? " question" : " questions"));
+    return bits.join(", ");
+  }
+  function showPanel(html) {
+    S.gen++; RUN = null; L = null; S.lvOverride = 0;
+    setMode("lesson");
+    el.cpanel.innerHTML = html;
+    el.cpanel.scrollTop = 0;
+    renderCnav();
+  }
+  function btn(label, cls, fn) {
+    var b = document.createElement("button"); b.className = "btn" + (cls ? " " + cls : ""); b.textContent = label;
+    b.addEventListener("click", fn); return b;
+  }
+
+  function showHome() {
+    CUR = { view: "home" };
+    var due = dueLessons(), nx = nextUp(), pct = masteryPct();
+    var learnedN = CLESSONS.filter(function (l) { return cbox(l) >= 1; }).length;
+    var masteredN = CLESSONS.filter(function (l) { return cbox(l) >= MASTERED; }).length;
+    var passedN = COURSE.filter(stagePassed).length;
+    var h = '<div class="chero"><p class="egeyebrow">Endgame course</p><h2 class="ctitle">From the first mate to master technique</h2>' +
+      '<p class="csub">' + COURSE.length + " stages and " + CLESSONS.length + " lessons. Read a short lesson, practise it against the tablebase, " +
+      "and it comes back for review after 2, 5, 12 and 30 days until it is yours. Pass each checkpoint to open the next stage.</p>" +
+      '<div class="cstats"><div><b>' + pct + '<small>%</small></b><span>mastery</span></div>' +
+      "<div><b>" + learnedN + "<small> / " + CLESSONS.length + "</small></b><span>lessons learned</span></div>" +
+      "<div><b>" + masteredN + "</b><span>mastered</span></div>" +
+      "<div><b>" + passedN + "<small> / " + COURSE.length + "</small></b><span>checkpoints</span></div></div></div>" +
+      '<div class="cnext" id="cnext"></div><h3 class="chead">The stages</h3><div class="cstages">';
+    COURSE.forEach(function (st) {
+      var n = st.lessons.filter(function (l) { return cbox(l) >= 1; }).length;
+      var m = st.lessons.reduce(function (a, l) { return a + Math.min(cbox(l), MASTERED); }, 0);
+      var open = stageOpen(st);
+      h += '<button class="cstage' + (open ? "" : " locked") + (stagePassed(st) ? " passed" : "") + '" data-si="' + st.si + '"' + (open ? "" : " disabled") + ">" +
+        '<span class="snum">' + (st.si + 1) + '</span><span class="sbody"><span class="stitle">' + esc(st.title) +
+        (stagePassed(st) ? ' <span class="chip ok">✓</span>' : open ? "" : ' <span class="chip lock">Locked</span>') + "</span>" +
+        '<span class="ssub">' + esc(st.sub) + "</span>" +
+        '<span class="pbar"><i style="width:' + Math.round(100 * m / (st.lessons.length * MASTERED)) + '%"></i></span>' +
+        '<span class="smeta">' + n + " of " + st.lessons.length + " learned</span></span></button>";
+    });
+    h += "</div>";
+    showPanel(h);
+    var nextBox = document.getElementById("cnext");
+    if (due.length) {
+      var c1 = document.createElement("div"); c1.className = "ccard due";
+      c1.innerHTML = '<p class="ck">Due for review</p><p class="cv">' + due.length + (due.length === 1 ? " lesson" : " lessons") + ": " +
+        due.slice(0, 4).map(function (l) { return esc(l.title); }).join(", ") + (due.length > 4 ? "…" : "") + "</p>";
+      c1.appendChild(btn("Review " + due[0].title, "", function () { startCourse("review", due[0]); }));
+      nextBox.appendChild(c1);
+    }
+    var c2 = document.createElement("div"); c2.className = "ccard";
+    if (nx && nx.lesson) {
+      c2.innerHTML = '<p class="ck">Next lesson</p><p class="cv">Stage ' + (nx.lesson.si + 1) + " · " + esc(nx.lesson.title) + ", about " + nx.lesson.mins + " minutes</p>";
+      c2.appendChild(btn(learnedN ? "Continue" : "Start the course", due.length ? "quiet" : "", function () { openLesson(nx.lesson); }));
+    } else if (nx && nx.exam) {
+      c2.innerHTML = '<p class="ck">Checkpoint</p><p class="cv">Every lesson in Stage ' + (nx.exam.si + 1) + " is learned. Pass the checkpoint to open the next stage.</p>";
+      c2.appendChild(btn("Take the checkpoint", "", function () { openExam(nx.exam); }));
+    } else {
+      c2.innerHTML = '<p class="ck">Course complete</p><p class="cv">Every stage is passed. Keep your reviews up to date and work toward mastering every lesson.</p>';
+    }
+    nextBox.appendChild(c2);
+    [].forEach.call(el.cpanel.querySelectorAll(".cstage"), function (b) {
+      b.addEventListener("click", function () {
+        var st = COURSE[+b.getAttribute("data-si")];
+        var l = st.lessons.filter(function (x) { return cbox(x) < 1 && lessonOpen(x); })[0] || st.lessons[0];
+        openLesson(l);
+      });
+    });
+  }
+
+  function lessonHtml(l, inBook) {
+    var r = crec(l.id), bx = cbox(l);
+    var h = (inBook ? '<h3 class="btitle">' : '<p class="egeyebrow">Stage ' + (l.si + 1) + " · " + esc(l.stage.title) + '</p><h2 class="ctitle">') +
+      (l.si + 1) + "." + (l.li + 1) + " " + esc(l.title) + (inBook ? "</h3>" : "</h2>");
+    if (!inBook) {
+      var status = !bx ? "Not started" : BOX_NAME[Math.min(bx, 5)] + (lessonDue(l) ? ", due for review" : ", next review in " + daysUntil(l) + (daysUntil(l) === 1 ? " day" : " days"));
+      h += '<p class="cmeta">About ' + l.mins + " minutes · " + status + (bx ? " " + pips(bx) : "") + "</p>";
+    }
+    h += '<div class="ctext">' + l.text.map(function (p) { return "<p>" + p + "</p>"; }).join("") + "</div>";
+    if (l.diagrams && l.diagrams.length) h += '<div class="dgms">' + l.diagrams.map(miniBoard).join("") + "</div>";
+    if (l.rules && l.rules.length) h += '<div class="crules"><p class="ck">Remember</p><ul>' + l.rules.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>";
+    return h;
+  }
+
+  function openLesson(l) {
+    CUR = { view: "lesson", lesson: l };
+    var bx = cbox(l);
+    showPanel(lessonHtml(l, false) + '<div class="cpractice"><p class="ck">Practice</p><p class="cv">' + practiceSummary(l) + ".</p>" +
+      '<p class="cnote">' + (bx ? "Reviews take three of these at a time, a little harder as the lesson gets more solid." :
+        "Solve every position and get at least half right first time to learn the lesson.") + '</p><div class="cbtns" id="cbtns"></div></div>' +
+      '<div class="cnav2" id="cnav2"></div>');
+    var bt = document.getElementById("cbtns");
+    if (!bx) bt.appendChild(btn("Start the practice", "", function () { startCourse("learn", l); }));
+    else {
+      bt.appendChild(btn("Review now", lessonDue(l) ? "" : "quiet", function () { startCourse("review", l); }));
+      bt.appendChild(btn("Practise everything again", "quiet", function () { startCourse("learn", l); }));
+    }
+    var nav = document.getElementById("cnav2");
+    var i = CLESSONS.indexOf(l), prev = CLESSONS[i - 1], next = CLESSONS[i + 1];
+    if (prev) nav.appendChild(btn("← " + prev.title, "quiet tiny", function () { openLesson(prev); }));
+    if (next && lessonOpen(next)) nav.appendChild(btn(next.title + " →", "quiet tiny", function () { openLesson(next); }));
+    else if (l.li === l.stage.lessons.length - 1 && (stageLearned(l.stage) || S.freeAll)) nav.appendChild(btn("Checkpoint →", "quiet tiny", function () { openExam(l.stage); }));
+    scrollToPanel();
+  }
+  function scrollToPanel() {
+    var top = el.cpanel.getBoundingClientRect().top;
+    if (top < 60 || top > window.innerHeight * 0.6) window.scrollTo({ top: Math.max(0, top + window.scrollY - 80) });
+  }
+
+  function openExam(st) {
+    CUR = { view: "exam", exam: st };
+    setTimeout(scrollToPanel, 0);
+    var last = st.si === COURSE.length - 1, r = cstage(st);
+    showPanel('<p class="egeyebrow">Stage ' + (st.si + 1) + " · " + esc(st.title) + '</p><h2 class="ctitle">' + (last ? "Final exam" : "Checkpoint") + "</h2>" +
+      '<div class="ctext"><p>' + (last
+        ? "Ten positions and questions drawn from the whole course, at a harder level, with no take-backs. Score 75% clean (solved first time, no hints) to complete the course."
+        : "One position or question from every lesson in this stage, a level harder than the lessons. Score 75% clean (solved first time, no hints) to open Stage " + (st.si + 2) + ".") + "</p>" +
+      (r && r.passed ? "<p>Passed with " + r.score + "%. You can take it again any time.</p>" : r && r.best != null ? "<p>Best so far: " + r.best + "%.</p>" : "") +
+      '</div><div class="cbtns" id="cbtns"></div>');
+    document.getElementById("cbtns").appendChild(btn(r && r.passed ? "Take it again" : "Start", "", function () { startCourse("exam", st); }));
+  }
+
+  function showBook() {
+    CUR = { view: "book" };
+    var h = '<p class="egeyebrow">Endgame course</p><h2 class="ctitle">The whole course as a book</h2>' +
+      '<p class="csub">Every lesson’s reading, diagrams and rules in order. Practise from the lesson pages.</p>';
+    COURSE.forEach(function (st) {
+      h += '<section class="bstage"><h2 class="bhead">Stage ' + (st.si + 1) + ": " + esc(st.title) + '</h2><p class="csub">' + esc(st.sub) + "</p>";
+      st.lessons.forEach(function (l) { h += '<article class="blesson">' + lessonHtml(l, true) + "</article>"; });
+      h += "</section>";
+    });
+    showPanel(h);
+  }
+
+  /* ---------- running practice ---------- */
+  function pickOne(items, prefer) {
+    var a = items.filter(function (p) { return prefer.indexOf(p.t) >= 0; });
+    if (!a.length) a = items;
+    return a[Math.floor(Math.random() * a.length)];
+  }
+  function stepsFor(mode, target) {
+    if (mode === "learn") return target.practice.slice();
+    if (mode === "review") {
+      var boards = target.practice.filter(function (p) { return p.t !== "quiz"; });
+      var quiz = target.practice.filter(function (p) { return p.t === "quiz"; });
+      var out = shuffled(boards).slice(0, quiz.length ? 2 : 3);
+      out = out.concat(shuffled(quiz).slice(0, 3 - out.length));
+      return out.map(function (p) { return { p: p, l: target }; });
+    }
+    // Exams: one item from each lesson of the stage; the final exam draws ten from everything.
+    var pool = target.si === COURSE.length - 1
+      ? shuffled(CLESSONS).slice(0, 10)
+      : target.lessons;
+    return pool.map(function (l) { return { p: pickOne(l.practice, ["tb", "line", "drill"]), l: l }; });
+  }
+  function startCourse(mode, target) {
+    var raw = stepsFor(mode, target);
+    var steps = raw.map(function (s) { return s.p ? s : { p: s, l: target }; });
+    var name = mode === "exam" ? (target.si === COURSE.length - 1 ? "Final exam" : "Stage " + (target.si + 1) + " checkpoint")
+             : (mode === "review" ? "Review: " : "") + target.title;
+    RUN = { set: { kind: "course", name: name, mode: mode, target: target }, steps: steps, i: 0, results: [], started: Date.now() };
+    CUR = { view: "run" };
+    renderCnav();
+    runStep();
+  }
+  function stepLevel(step) {
+    if (step.p.level) return step.p.level;
+    var base = step.l.stage.level || 3, mode = RUN.set.mode;
+    if (mode === "exam") base++;
+    else if (mode === "review" && cbox(step.l) >= 2) base++;
+    return Math.max(1, Math.min(5, base));
+  }
+  function fixedChapter(step) {
+    var p = step.p;
+    if (!p._ch) {
+      var stm = p.fen.split(" ")[1] || "w";
+      p._ch = { id: "fx-" + step.l.id, adhoc: true, fixed: fromFen(p.fen), title: step.l.title, material: "",
+                prompt: p.prompt, advice: p.advice || "", stm: stm, user: stm, goal: p.goal,
+                want: p.goal === "draw" ? "draw" : "win", plies: p.plies };
+    }
+    return p._ch;
+  }
+  function runStep() {
+    var step = RUN.steps[RUN.i], p = step.p;
+    RUN.tries = 0; RUN.stepBad = false;
+    S.lvOverride = stepLevel(step);
+    renderRunbar();
+    var top = el.runbar.getBoundingClientRect().top;
+    if (top < 60 || top > window.innerHeight * 0.6) window.scrollTo({ top: Math.max(0, top + window.scrollY - 80) });
+    if (p.t === "drill" || p.t === "tb") {
+      setMode("drill");
+      S.ch = p.t === "tb" ? fixedChapter(step) : chapterById(p.ch);
+      newPosition();
+    } else if (p.t === "quiz") courseQuiz(step);
+    else if (p.t === "line") courseLine(step);
+  }
+  function stepLabel(step) {
+    var p = step.p;
+    if (p.t === "drill") { var ch = chapterById(p.ch); return ch ? ch.title : p.ch; }
+    if (p.t === "line") return p.title;
+    if (p.t === "quiz") return "Question: " + step.l.title;
+    return step.l.title;
+  }
+  function recordStep(good, clean, skipped) {
+    var step = RUN.steps[RUN.i];
+    RUN.results[RUN.i] = { label: stepLabel(step), good: good, clean: clean, skipped: !!skipped };
+  }
+  function advanceCourse() {
+    if (!RUN || RUN.set.kind !== "course") return;
+    if (RUN.i + 1 >= RUN.steps.length) { courseSummary(); return; }
+    RUN.i++;
+    runStep();
+  }
+  function courseDrillDone(good) {
+    var run = RUN;
+    if (!good) { run.tries++; return; }              // stay on it: New position or Start again retries
+    var at = run.i;
+    recordStep(true, run.tries === 0 && !run.stepBad && S.hintsUsed === 0);
+    setTimeout(function () { if (RUN === run && run.i === at) advanceCourse(); }, 1400);
+  }
+  function skipStep() {
+    if (!RUN || RUN.set.kind !== "course") return;
+    S.gen++; veil(false);
+    if (!RUN.results[RUN.i]) recordStep(false, false, true);   // already solved: just move on
+    advanceCourse();
+  }
+
+  function courseQuiz(step) {
+    var p = step.p;
+    S.gen++;
+    setMode("study");
+    veil(false);
+    el.boardwrap.hidden = !p.fen;
+    S.board = p.fen ? fromFen(p.fen) : new Array(64).fill(null);
+    S.ch = null; S.sel = null; S.tb = null; S.lastFrom = S.lastTo = null; S.history = [];
+    render(); renderSheet();
+    el.qtitle.textContent = step.l.title;
+    el.qask.textContent = p.ask;
+    el.why.hidden = true; el.btnPlayPlan.hidden = true;
+    el.opts.innerHTML = "";
+    var order = shuffled(p.options.map(function (_, i) { return i; }));
+    RUN.order = order;
+    order.forEach(function (orig) {
+      var b = document.createElement("button");
+      b.className = "opt"; b.textContent = p.options[orig];
+      b.addEventListener("click", function () { courseAnswer(orig); });
+      el.opts.appendChild(b);
+    });
+  }
+  function courseAnswer(picked) {
+    var p = RUN.steps[RUN.i].p, order = RUN.order;
+    var buttons = el.opts.querySelectorAll(".opt");
+    for (var slot = 0; slot < buttons.length; slot++) {
+      buttons[slot].disabled = true;
+      if (order[slot] === 0) buttons[slot].className = "opt right";
+      else if (order[slot] === picked) buttons[slot].className = "opt wrong";
+    }
+    recordStep(true, picked === 0);
+    el.whytext.textContent = p.why;
+    el.why.hidden = false;
+    el.btnNextQ.textContent = RUN.i + 1 >= RUN.steps.length ? "See how you did" : "Next";
+  }
+
+  function courseLine(step) {
+    var p = step.p;
+    if (!p._line) {
+      var g = new Chess(p.fen), moves = [];
+      p.moves.forEach(function (m) {
+        var mv = g.move(m.san);
+        moves.push({ uci: mv.from + mv.to + (mv.promotion || ""), san: mv.san, note: m.note });
+      });
+      moves[moves.length - 1].last = true;
+      p._line = { id: "cl-" + step.l.id, title: p.title, setup: p.setup || "", fen: p.fen, moves: moves, payoff: p.payoff || "" };
+    }
+    loadLine(p._line);
+  }
+
+  function courseSummary() {
+    var run = RUN, mode = run.set.mode, target = run.set.target, now = Date.now();
+    var total = run.steps.length, solved = 0, clean = 0, skipped = 0;
+    run.results.forEach(function (r) { if (!r) return; if (r.good) solved++; if (r.clean) clean++; if (r.skipped) skipped++; });
+    var pct = Math.round(100 * clean / Math.max(1, total)), pass, verdict;
+    if (mode === "exam") {
+      pass = pct >= 75;
+      var sr = S.course.stages[target.id] || (S.course.stages[target.id] = {});
+      sr.last = now; sr.best = Math.max(sr.best || 0, pct);
+      if (pass) { sr.passed = sr.passed || now; sr.score = Math.max(sr.score || 0, pct); }
+      var lastStage = target.si === COURSE.length - 1;
+      verdict = pass ? (lastStage ? "Passed. You have completed the endgame course." : "Passed. Stage " + (target.si + 2) + " is open.")
+                     : "Not this time: you need 75% clean. Review the lessons you missed and try again.";
+    } else {
+      var r = S.course.lessons[target.id] || (S.course.lessons[target.id] = { box: 0, n: 0 });
+      r.n = (r.n || 0) + 1;
+      if (mode === "learn") {
+        pass = !skipped && solved === total && clean * 2 >= total;
+        if (pass) { r.box = Math.max(r.box || 0, 1); r.last = now; r.learned = r.learned || now; }
+        verdict = pass ? (r.box > 1 ? "Well done. The lesson stays on its review schedule." : "Lesson learned. It comes back for review in 2 days.")
+                       : skipped ? "Solve every item to learn the lesson. Skipped items do not count."
+                       : "Not yet: get at least half the items right first time. Read the lesson again and retry.";
+      } else {
+        pass = !skipped && clean * 3 >= total * 2;
+        var before = r.box || 1;
+        r.box = pass ? Math.min(5, before + 1) : Math.max(1, before - 1);
+        r.last = now;
+        verdict = pass ? (r.box >= MASTERED && before < MASTERED ? "Mastered. It will still come back now and then so it stays that way."
+                                                               : "Review passed. Next review in " + BOX_DAYS[r.box] + " days.")
+                       : "This one slipped. It comes back sooner: in " + BOX_DAYS[r.box] + (BOX_DAYS[r.box] === 1 ? " day." : " days.");
+      }
+    }
+    S.course.last = now;
+    saveProgress();
+    S.lvOverride = 0;
+    setMode("summary");
+    el.sumtitle.textContent = run.set.name + (pass ? " ✓" : "");
+    el.sumlist.innerHTML = "";
+    run.results.forEach(function (r) {
+      var li = document.createElement("li");
+      var a = document.createElement("span"); a.textContent = r.label;
+      var b = document.createElement("span");
+      b.innerHTML = r.skipped ? '<span class="dimmed">skipped</span>' : r.clean ? '<span class="ann best">clean</span>'
+                  : r.good ? '<span class="ann slow">solved</span>' : '<span class="ann bad">wrong</span>';
+      li.appendChild(a); li.appendChild(b); el.sumlist.appendChild(li);
+    });
+    var mins = Math.max(1, Math.round((now - run.started) / 60000));
+    el.sumtime.textContent = clean + " of " + total + " clean (" + pct + "%), in about " + mins + (mins === 1 ? " minute. " : " minutes. ") + verdict;
+    el.btnDone.textContent = "Back to the course";
+    if (el.sumNext) el.sumNext.remove();
+    var nx = nextUp(), due = dueLessons();
+    var go = null;
+    if (!pass) go = ["Try again", function () { startCourse(mode, target); }];
+    else if (due.length) go = ["Next review: " + due[0].title, function () { startCourse("review", due[0]); }];
+    else if (nx && nx.lesson) go = ["Next lesson: " + nx.lesson.title, function () { RUN = null; openLesson(nx.lesson); }];
+    else if (nx && nx.exam) go = ["Take the checkpoint", function () { RUN = null; openExam(nx.exam); }];
+    if (go) { el.sumNext = btn(go[0], "", go[1]); el.btnDone.parentNode.insertBefore(el.sumNext, el.btnDone); el.btnDone.className = "btn quiet"; }
+    else el.btnDone.className = "btn";
+    RUN.done = true;
+    renderCnav();
+  }
+
+  // Lets the Today plan open a lesson, a review or a checkpoint.
+  window.PawnCourse = {
+    ladder: function () {
+      if (S.view === "ladder") return;
+      if (RUN) quitRun(true);
+      S.view = "ladder"; saveProgress(); renderView();
+    },
+    open: function (o) {
+      if (S.view !== "course") { S.view = "course"; saveProgress(); renderView(); }
+      if (RUN) quitRun(true);
+      var l = o.lesson && CLESSONS.filter(function (x) { return x.id === o.lesson; })[0];
+      var st = o.exam && COURSE.filter(function (x) { return x.id === o.exam; })[0];
+      if (o.review && (l = CLESSONS.filter(function (x) { return x.id === o.review; })[0])) { startCourse("review", l); return; }
+      if (st) { openExam(st); return; }
+      if (l) { openLesson(l); return; }
+      showHome();
+    }
+  };
+
+  el.btnSkip.addEventListener("click", skipStep);
   el.btnNew.addEventListener("click", function () {
     if (!S.ch) S.ch = CHAPTERS[0];
     setMode("drill");
@@ -2974,7 +3628,7 @@
     if (RUN && RUN.set.endless && RUN.results.length) showSummary(); else quitRun();
   });
   el.btnNextQ.addEventListener("click", nextQuestion);
-  el.btnDone.addEventListener("click", quitRun);
+  el.btnDone.addEventListener("click", function () { quitRun(); });
   el.btnLineHint.addEventListener("click", lineHint);
   el.btnLineNext.addEventListener("click", nextLine);
   el.btnPlayPlan.addEventListener("click", function () {
@@ -2988,8 +3642,7 @@
 
   loadProgress().then(function () {
     renderLevels(); renderReps(); renderRuns(); renderChapters(); renderSheet(); render();
-    setMode("drill");
-    startChapter(CHAPTERS[0], 1);
+    renderView();
   });
 })();
 </script>
