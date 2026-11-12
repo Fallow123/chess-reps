@@ -1207,7 +1207,10 @@
     findPosition(ch, gen).then(function (res) {
       if (gen !== S.gen) return;                 // the user moved on while we searched
       S.board = res.board; S.stm = ch.stm; S.tb = res.data;
-      S.busy = false; veil(false); render();
+      S.busy = false; veil(false);
+      el.verdict.className = "verdict";
+      el.verdict.textContent = "Play it out against perfect defence. " + goalLine(ch);
+      render();
     }).catch(function (err) {
       if (gen !== S.gen) return;
       var net = String(err.message).indexOf("tablebase ") !== 0 &&
@@ -1257,6 +1260,15 @@
     var pool = moves.filter(function (m) { return norm(m.category) === norm(top.category); });
     if (!pool.length) return top;
     return pool.reduce(function (a, b) { return speed(b) < speed(a) ? b : a; }, pool[0]);
+  }
+
+  // What finishes a position: said after every good move so it is clear the drill goes on.
+  function goalLine(ch) {
+    if (ch.goal === "mate") return "Keep going until it is mate.";
+    if (ch.goal === "promote") return "Keep going until the pawn queens.";
+    if (ch.goal === "stop") return "Keep going until the pawn is gone.";
+    var left = Math.max(1, Math.ceil(((ch.plies || 28) - S.history.length) / 2));
+    return "Hold on for " + left + (left === 1 ? " more move." : " more moves.");
   }
 
   function play(mv) {
@@ -1388,6 +1400,9 @@
       if (finished(d2)) return;
       S.busy = false; S.hinted = false; S.hintLevel = 0;
       el.btnBack.hidden = true;
+      if (el.verdict.className.indexOf("bad") < 0) {
+        el.verdict.textContent = (el.verdict.textContent ? el.verdict.textContent + " " : "") + "Your move. " + goalLine(S.ch);
+      }
       render();
     }).catch(function (e) { if (gen === S.gen) fail(e); });
   }
