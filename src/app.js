@@ -666,6 +666,7 @@ function autoDone(t, rec) {
   if (t.id === 'threat') return thDoneToday() >= (t.target || 8);
   if (t.id === 'loose') return lpDoneToday() >= (t.target || 10);
   if (t.id === 'mp') return mpSolvedToday() >= (t.target || 1);
+  if (t.courseId || t.courseExam) { const c = egProgress().course || {}; const r = t.courseExam ? (c.stages || {})[t.courseExam] : (c.lessons || {})[t.courseId]; return !!(r && r.last >= start); }
   if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!(r && (r.lastWin || r.last) >= start); }
   if (t.id === 'drill') return Object.values(S.cards).filter(c => c.last >= +start).length >= (t.target || 1);
   if (t.id.startsWith('seed-')) return D.linesBoth[t.action.side] > 0;
@@ -705,6 +706,7 @@ function autoDonePast(t, k, rec) {
   if (t.id === 'loose') return ((lpLog()[k] || {}).n || 0) >= (t.target || 10);
   // Best effort from "last done" timestamps: these count when the last time was that day.
   if (t.action && t.action.type === 'run') return on((egProgress().runs || {})[t.action.name]);
+  if (t.courseId || t.courseExam) { const c = egProgress().course || {}; const r = t.courseExam ? (c.stages || {})[t.courseExam] : (c.lessons || {})[t.courseId]; return !!r && on(r.last); }
   if (t.egId && (t.id === 'eg' || t.id.startsWith('egrev'))) { const r = (egProgress().seen || {})[t.egId]; return !!r && (on(r.lastWin) || on(r.last)); }
   if (t.id === 'mp') return Object.values(mpCards()).filter(c => on(c.last)).length >= (t.target || 1);
   if (t.id === 'drill') return Object.values(S.cards).filter(c => on(c.last)).length >= (t.target || 1);
@@ -731,15 +733,17 @@ function runAction(t) {
   else if (a.type === 'loose') { S.tab = 'drill'; S.drillMode = 'loose'; S.drill = null; S.mp = null; S.lp = null; render(); startLoose(a.n || 10); }
   else if (a.type === 'mistakes') { S.tab = 'drill'; S.drillMode = 'mistakes'; S.drill = null; S.mp = null; render(); const due = mpDue(); if (due.length) startMp(due); }
   else if (a.type === 'seed') { S.tab = 'build'; goTo([]); render(); }
+  else if (a.type === 'course') { S.tab = 'endgames'; render(); if (window.PawnCourse) window.PawnCourse.open(a); window.scrollTo({ top: 0 }); }
   else if (a.type === 'endgame' || a.type === 'run') {
     S.tab = 'endgames'; render();
-    const sel = a.type === 'endgame' ? '#app .chapter' : '#app .run';
+    if (window.PawnCourse) window.PawnCourse.ladder();
+    const sel = a.type === 'endgame' ? '#app #chapters .chapter' : '#app #runs .run';
     const btn = [...document.querySelectorAll(sel)].find(b => (b.querySelector('.name') || {}).textContent === (a.title || a.name));
     if (btn && !btn.disabled) { btn.click(); btn.scrollIntoView({ block: 'nearest' }); }
     window.scrollTo({ top: 0 });
   }
 }
-const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', run: 'Start', mistakes: 'Start', threats: 'Start', loose: 'Start' };
+const ACTION_LABEL = { review: 'Review with engine', url: 'Open', tab: 'Go', gap: 'Open in Build', seed: 'Open Build', endgame: 'Start chapter', course: 'Open lesson', run: 'Start', mistakes: 'Start', threats: 'Start', loose: 'Start' };
 const KIND_LABEL = { tactics: 'Tactics', openings: 'Openings', endgames: 'Endgames', play: 'Play', review: 'Review', setup: 'Setup' };
 
 const onLichess = () => !!(S.settings && S.settings.lichessUser);

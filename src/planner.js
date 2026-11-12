@@ -118,6 +118,40 @@ function egDue(eg, date) {
     .map(([id, title]) => { const r = seen[id] || {}; return { id, title, over: r.last ? (now - r.last) / DAY_MS - (r.iv || 2) : 99, iv: r.iv || 0 }; })
     .filter(x => x.over >= 0).sort((a, b) => b.over - a.over);
 }
+// The endgame course (egcourse.js): the next lesson or checkpoint, and learned lessons due for review.
+const COURSE_BOX_DAYS = [0, 2, 5, 12, 30, 60];
+function courseNext(eg) {
+  if (typeof EG_COURSE === 'undefined') return null;
+  const c = (eg && eg.course) || {}, L = c.lessons || {}, St = c.stages || {};
+  for (let i = 0; i < EG_COURSE.length; i++) {
+    const st = EG_COURSE[i];
+    if (i > 0 && !(eg && eg.freeAll) && !(St[EG_COURSE[i - 1].id] || {}).passed) return null;
+    const l = st.lessons.find(x => !((L[x.id] || {}).box >= 1));
+    if (l) return { lesson: l, stage: st, n: i + 1 };
+    if (!(St[st.id] || {}).passed) return { exam: st, stage: st, n: i + 1 };
+  }
+  return null;
+}
+function courseDue(eg, date) {
+  if (typeof EG_COURSE === 'undefined') return [];
+  const L = ((eg && eg.course) || {}).lessons || {}, now = +date, out = [];
+  EG_COURSE.forEach(st => st.lessons.forEach(l => {
+    const r = L[l.id]; if (!r || !(r.box >= 1)) return;
+    const over = (now - r.last) / DAY_MS - COURSE_BOX_DAYS[Math.min(r.box, 5)];
+    if (over >= 0) out.push({ id: l.id, title: l.title, over, days: Math.max(1, Math.round((now - r.last) / DAY_MS)) });
+  }));
+  return out.sort((a, b) => b.over - a.over);
+}
+function courseTask(eg, lead) {
+  const nx = courseNext(eg);
+  if (!nx) return null;
+  if (nx.exam) return { id: 'eg', kind: 'endgames', courseExam: nx.exam.id, title: `Endgame course: Stage ${nx.n} checkpoint`, mins: 15,
+    why: (lead || '') + `Every lesson in ${nx.stage.title} is learned. Pass the checkpoint (75% clean) to open the next stage.`, action: { type: 'course', exam: nx.exam.id } };
+  return { id: 'eg', kind: 'endgames', courseId: nx.lesson.id, title: `Endgame course: ${nx.lesson.title}`, mins: nx.lesson.mins + 5,
+    why: (lead || '') + `Stage ${nx.n}, ${nx.stage.title}. Read the lesson, then solve its practice positions to learn it.`, action: { type: 'course', lesson: nx.lesson.id } };
+}
+const courseRevTask = (d, i) => ({ id: 'crev-' + i, kind: 'endgames', courseId: d.id, title: `Course review: ${d.title}`, mins: 6,
+  why: `You last practised this ${d.days} day${d.days === 1 ? '' : 's'} ago. Three quick positions and questions keep it automatic.`, action: { type: 'course', review: d.id } });
 const EG_CHAPTERS = [["queenmate","The queen mate",2],["rookmate","The rook mate",2],["twobishops","Two bishops",2],["square","The square of the pawn",2],["opposition","The opposition",2],["keysquares","Key squares",2],["pawnwin","Queening the pawn",3],["distant","Distant opposition",2],["holddraw","Holding the draw",3],["triangulation","Triangulation",2],["corresponding","Corresponding squares",2],["seventh","The seventh rank",2],["rookpawn","The rook pawn exception",2],["queenvspawn","Queen against a pawn",2],["rookvspawn","Rook against a pawn",2],["philidor","Philidor: the third rank",3],["lucena","Lucena: building the bridge",3],["rookpawngeneral","Rook and pawn, in general",3],["bishopknight","Bishop and knight",1]];
 // Monday first. 'focus' becomes whatever your games say needs the most work.
 const WEEK = ['openings', 'tactics', 'endgames', 'openings', 'focus', 'play', 'review'];
@@ -221,8 +255,10 @@ function buildPlan(ctx) {
   } else if (theme === 'endgames') {
     const wins = (ctx.eg && ctx.eg.wins) || {};
     const next = EG_CHAPTERS.find(([id, , need]) => (wins[id] || 0) < need) || EG_CHAPTERS[EG_CHAPTERS.length - 1];
-    egDue(ctx.eg, date).slice(0, 2).forEach((d, i) => add({ id: 'egrev-' + i, kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. Solve it twice more so it stays automatic.` : 'You cleared this chapter. Solve it twice more so the technique stays automatic.', action: { type: 'endgame', title: d.title } }));
-    add({ id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: (why('endgames') ? why('endgames') + ' ' : '') + `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } });
+    const cDue = courseDue(ctx.eg, date);
+    cDue.slice(0, 2).forEach((d, i) => add(courseRevTask(d, i)));
+    egDue(ctx.eg, date).slice(0, Math.max(0, 2 - cDue.length)).forEach((d, i) => add({ id: 'egrev-' + i, kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. Solve it twice more so it stays automatic.` : 'You cleared this chapter. Solve it twice more so the technique stays automatic.', action: { type: 'endgame', title: d.title } }));
+    add(courseTask(ctx.eg, why('endgames') ? why('endgames') + ' ' : '') || { id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: (why('endgames') ? why('endgames') + ' ' : '') + `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } });
     const learned = Object.keys((ctx.eg && ctx.eg.structs) || {}).length;
     if (room() >= 10) add(learned < 13
       ? { id: 'struct', kind: 'endgames', title: 'Pawn structures: learn the next two', mins: 10, why: `A short lesson on each structure's plans, then a quiz. ${learned ? learned + ' of 13 learned so far.' : 'Thirteen structures in all, from the Carlsbad to the Hedgehog.'}`, action: { type: 'run', name: 'Pawn structures' } }
@@ -242,7 +278,8 @@ function buildPlan(ctx) {
   }
 
   // A learned endgame that is due comes back on other days too, when there is room.
-  if (theme !== 'endgames' && theme !== 'play') { const d = egDue(ctx.eg, date)[0]; if (d && room() >= 8) add({ id: 'egrev-0', kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. A short review keeps the technique automatic.` : 'You cleared this chapter. A short review keeps the technique automatic.', action: { type: 'endgame', title: d.title } }); }
+  if (theme !== 'endgames' && theme !== 'play') { const cd = courseDue(ctx.eg, date)[0]; if (cd && room() >= 6) add(courseRevTask(cd, 0)); }
+  if (theme !== 'endgames' && theme !== 'play' && !tasks.some(t => t.id === 'crev-0')) { const d = egDue(ctx.eg, date)[0]; if (d && room() >= 8) add({ id: 'egrev-0', kind: 'endgames', title: `Review: ${d.title}`, mins: 8, egId: d.id, why: d.iv ? `You cleared this ${Math.round(d.iv + d.over)} days ago. A short review keeps the technique automatic.` : 'You cleared this chapter. A short review keeps the technique automatic.', action: { type: 'endgame', title: d.title } }); }
   // Long days (2 and 3 hours): deeper work on top of the day's theme, best first, while it fits.
   if (mins >= 120) {
     const has = id => tasks.some(t => t.id === id);
@@ -253,7 +290,7 @@ function buildPlan(ctx) {
     const extras = [
       { id: 'selfan', kind: 'review', title: 'Analyse a game of yours before the engine', mins: 20, why: 'Pick one of today’s or yesterday’s games. Write down where you think it turned and what you should have played, then check with Stockfish. Comparing your notes to the engine is how your own judgement improves.', action: { type: 'url', url: site.archive(st.lichessUser) } },
       { id: 'calc', kind: 'tactics', title: 'Three hard puzzles, slowly', mins: 15, target: 3, why: 'Calculate the whole line before you touch a piece: checks, captures and threats for both sides.', action: { type: 'url', url: site.puzzles } },
-      { id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } },
+      courseTask(ctx.eg, '') || { id: 'eg', kind: 'endgames', egId: next[0], title: `Endgame: ${next[1]}`, mins: 15, why: `Next on your ladder. Solve it ${next[2]} times to open the next chapter.`, action: { type: 'endgame', title: next[1] } },
       learned < 13 ? { id: 'struct', kind: 'endgames', title: 'Pawn structures: learn the next two', mins: 10, why: `A short lesson on each structure's plans, then a quiz. ${learned ? learned + ' of 13 learned so far.' : ''}`, action: { type: 'run', name: 'Pawn structures' } }
         : { id: 'struct', kind: 'endgames', title: 'Structures quiz', mins: 8, why: 'Eight mixed questions on the structures you have learned.', action: { type: 'run', name: 'Structures quiz' } },
       { id: 'model', kind: 'openings', title: `Model line: ${run}`, mins: 10, why: 'Learn what to do after the opening: the plan behind the structure your lines lead to.', action: { type: 'run', name: run } },

@@ -7,12 +7,13 @@ A personal chess training app that runs entirely in the browser.
 - **Gaps**: replies you have not prepared for, from your own games and from what players at your rating play on lichess, plus an engine check of your own moves.
 - **Drill**: spaced-repetition drills of your repertoire lines.
 - **Games**: import from chess.com and review any game with the engine.
-- **Endgames & structures**: the endgame trainer (tablebase-graded endgames, pawn structure quiz, model lines).
+- **Endgames & structures**: the endgame course (8 stages and 41 lessons from the basic mates to master technique: a reading with diagrams, practice positions graded by the lichess tablebase, spaced reviews and a checkpoint per stage, also readable as one long book), plus the practice ladder, pawn structure quiz and model lines. The Today plan schedules the next lesson and any reviews that are due.
 
 Your data stays in your browser (use Download a backup on the Games tab). Nothing about you is stored in this repository.
 
 ## Layout
 
+- `src/egcourse.js` holds the course content: lessons, diagrams and practice positions.
 - `index.html` is the built app. `src/` holds the parts it is built from: run `python3 src/site.py` to rebuild.
 - `engine/` is [Stockfish.js](https://github.com/nmrugg/stockfish.js) 18 (lite, single-threaded WebAssembly), GPLv3, see `engine/Copying.txt`.
 - `vendor/chess.js` is [chess.js](https://github.com/jhlywa/chess.js) 0.10.3, BSD-2-Clause.
