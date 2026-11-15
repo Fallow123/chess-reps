@@ -1699,7 +1699,7 @@ var EG_COURSE = [
           "A pawn move can change who has the opposition. A spare pawn tempo is often decisive: if the attacker can push a pawn instead of moving the king, the obligation to move passes to the defender."
         ],
         diagrams: [
-          { fen: "4k3/8/4K3/4P3/8/8/8/8", cap: "Kings in opposition. With Black to move, Black must give way and White wins. With White to move, it is a draw: White cannot make progress.", hl: ["e6", "e8"] },
+          { fen: "8/4k3/8/4K3/4P3/8/8/8", cap: "Kings in opposition on the e-file. With Black to move, Black must give way and White wins (Kd7 Kf6, or Kf7 Kd6). With White to move, Black keeps the opposition and draws.", hl: ["e5", "e7"] },
           { fen: "4k3/8/8/4K3/4P3/8/8/8", cap: "Black to move. Ke7! takes the opposition and holds. After Kd7 or Kf7 the white king goes to f6 or d6 and wins.", hl: ["e7"] }
         ],
         rules: [
@@ -1715,9 +1715,9 @@ var EG_COURSE = [
             prompt: "White to play. Only one move wins. Win it.",
             advice: "Take the opposition in front of your pawn. Your pawn has a spare tempo later if you need it." },
           { t: "drill", ch: "opposition" },
-          { t: "quiz", fen: "4k3/8/4K3/4P3/8/8/8/8", ask: "White to move. What is the result with best play?",
-            options: ["A draw: White has to give up the opposition", "White wins with Kd6", "White wins with Kf6"],
-            why: "The pawn is blocked by its own king, so White must move the king, and every king move lets Black take the opposition: Kd6 is met by Kd8, Kf6 by Kf8. Give Black the move instead and White wins." }
+          { t: "quiz", fen: "8/4k3/8/4K3/4P3/8/8/8", ask: "White to move. What is the result with best play?",
+            options: ["A draw: White has to give up the opposition", "White wins with Kd5", "White wins with Kf5"],
+            why: "The pawn is blocked by its own king, so White must move the king, and Black answers every king move by taking the opposition again: Kd5 Kd7, Kf5 Kf7. Give Black the move instead and he has to step aside, and White wins. (Compare the king on the sixth rank in front of its pawn, as in the next lessons: that wins whoever is to move.)" }
         ]
       },
       {
@@ -1841,7 +1841,7 @@ var EG_COURSE = [
           { t: "drill", ch: "seventh" },
           { t: "drill", ch: "seventh" },
           { t: "quiz", fen: "7k/5K1P/8/8/8/8/8/8", ask: "White to move. The pawn is on h7, Black's king on h8. What happens?",
-            options: ["It is a draw: Black's king is stalemated whatever White does", "White wins with Kg6", "White wins with Kf8"],
+            options: ["A draw, whatever White does", "White wins with Kg6", "White wins with Kf8"],
             why: "Black's king on h8 has no moves at all, so Kg6 is stalemate, and any king move that lets go of g7 or g8 (such as Kf8) just lets Black take the h7-pawn. A rook pawn with the defender in the corner is a draw." }
         ]
       }
