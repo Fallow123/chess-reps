@@ -54,7 +54,7 @@ var EG_COURSE = [
           "The one way to throw it away is <b>stalemate</b>. With the enemy king in a corner and your queen a knight's move away, he has no moves at all. If it is his turn and he is not in check, the game is drawn. Whenever his king has only one or two squares, count them before every move."
         ],
         diagrams: [
-          { fen: "8/8/8/3k4/8/8/2Q5/4K3", cap: "Qc3 puts the queen a knight's move from the king. Black is boxed into the d- to h-files above the third rank, and each time the king steps back, the queen follows and the box shrinks.", hl: ["c2"] },
+          { fen: "8/8/8/3k4/8/8/2Q5/4K3", cap: "Qc3 puts the queen a knight's move from the king. The king can no longer cross the c-file or the third rank, and each time it steps back, the queen follows and the box shrinks.", hl: ["c2"] },
           { fen: "k7/8/1Q6/8/8/8/8/6K1", cap: "Black's king has no squares. With Black to move it would be stalemate. With White to move, any king move is stalemate too: the queen must give the king air first.", hl: ["a8", "b6"] }
         ],
         rules: [
@@ -143,7 +143,7 @@ var EG_COURSE = [
           "A pawn move can change who has the opposition. A spare pawn tempo is often decisive: if the attacker can push a pawn instead of moving the king, the obligation to move passes to the defender."
         ],
         diagrams: [
-          { fen: "4k3/8/4K3/4P3/8/8/8/8", cap: "Kings in opposition. With Black to move, Black must give way and White wins. With White to move, it is a draw: White cannot make progress.", hl: ["e6", "e8"] },
+          { fen: "8/4k3/8/4K3/4P3/8/8/8", cap: "Kings in opposition on the e-file. With Black to move, Black must give way and White wins (Kd7 Kf6, or Kf7 Kd6). With White to move, Black keeps the opposition and draws.", hl: ["e5", "e7"] },
           { fen: "4k3/8/8/4K3/4P3/8/8/8", cap: "Black to move. Ke7! takes the opposition and holds. After Kd7 or Kf7 the white king goes to f6 or d6 and wins.", hl: ["e7"] }
         ],
         rules: [
@@ -159,9 +159,9 @@ var EG_COURSE = [
             prompt: "White to play. Only one move wins. Win it.",
             advice: "Take the opposition in front of your pawn. Your pawn has a spare tempo later if you need it." },
           { t: "drill", ch: "opposition" },
-          { t: "quiz", fen: "4k3/8/4K3/4P3/8/8/8/8", ask: "White to move. What is the result with best play?",
-            options: ["A draw: White has to give up the opposition", "White wins with Kd6", "White wins with Kf6"],
-            why: "The pawn is blocked by its own king, so White must move the king, and every king move lets Black take the opposition: Kd6 is met by Kd8, Kf6 by Kf8. Give Black the move instead and White wins." }
+          { t: "quiz", fen: "8/4k3/8/4K3/4P3/8/8/8", ask: "White to move. What is the result with best play?",
+            options: ["A draw: White has to give up the opposition", "White wins with Kd5", "White wins with Kf5"],
+            why: "The pawn is blocked by its own king, so White must move the king, and Black answers every king move by taking the opposition again: Kd5 Kd7, Kf5 Kf7. Give Black the move instead and he has to step aside, and White wins. (Compare the king on the sixth rank in front of its pawn, as in the next lessons: that wins whoever is to move.)" }
         ]
       },
       {
@@ -196,7 +196,7 @@ var EG_COURSE = [
         id: "c-kpwin", title: "Winning with king and pawn", mins: 10,
         text: [
           "Putting the last two lessons together gives the complete method for winning with king and pawn against king. Walk the king in front of the pawn, take the opposition, and reach a key square. Only then advance the pawn, keeping the king ahead of it.",
-          "Two rules save calculation. If your king stands on the <b>sixth rank in front of its pawn</b> (pawn anywhere behind it, not a rook pawn), the position is won whoever is to move. And if your king is two squares in front of the pawn, you also win whoever is to move.",
+          "Two rules save calculation. If your king stands on the <b>sixth rank in front of its pawn</b> (pawn anywhere behind it, not a rook pawn), the position is won whoever is to move. And if your king is two squares in front of the pawn, you also win whoever is to move (again, not with a rook pawn).",
           "The classic mistake is pushing the pawn too early. A pawn that runs ahead of its king becomes a target, and the defending king sits in front of it for a draw."
         ],
         diagrams: [
@@ -219,7 +219,7 @@ var EG_COURSE = [
         id: "c-kpdraw", title: "Holding king against king and pawn", mins: 10,
         text: [
           "The defender's recipe is the mirror image. Stand <b>in front of the pawn</b>. When the attacking king comes to the side, step back straight down the file, so that when he moves alongside, you can take the opposition.",
-          "If you are pushed back to your first rank, step back to the square directly in front of the pawn, not to the side. When the pawn reaches the seventh with check, the defending king must go to the square in front of it, and the result is stalemate or a lost pawn.",
+          "If you are pushed back to your first rank, stay on the pawn's file. When the pawn reaches the seventh with check, step to the square directly in front of it, never to the side: then the attacking king has to protect the pawn from the sixth rank, and that is stalemate. Step to the side instead and the pawn queens.",
           "Count: you want to meet his king face to face, so that he has to move aside. Moving your king diagonally away from the pawn is almost always the losing move."
         ],
         diagrams: [
@@ -250,7 +250,7 @@ var EG_COURSE = [
         ],
         diagrams: [
           { fen: "k7/8/PK6/8/8/8/8/8", cap: "White to move cannot win: a7 is stalemate, and every king move lets Black keep the corner.", hl: ["a8"] },
-          { fen: "8/k7/8/1PK5/8/8/8/8", cap: "Not a rook pawn, but the same defence of the corner area. Black to move holds with Kb7, taking the opposition in front of the pawn.", hl: ["b7"] }
+          { fen: "8/k7/8/1PK5/8/8/8/8", cap: "A knight pawn near the corner. Black to move holds only with Kb7, staying in front of the pawn. Ka8 or Kb8 lets the white king reach b6, and the pawn goes through.", hl: ["b7"] }
         ],
         rules: [
           "Defending king in the corner in front of a rook pawn: draw.",
@@ -260,7 +260,7 @@ var EG_COURSE = [
         practice: [
           { t: "tb", fen: "8/k7/8/1PK5/8/8/8/8 b - - 0 1", goal: "draw",
             prompt: "Black to play. One move holds. Find it.",
-            advice: "Stay in front of the pawn and face his king, so he has to move aside." },
+            advice: "Stay on the pawn's file, in front of it, and keep his king off b6." },
           { t: "quiz", fen: "k7/8/PK6/8/8/8/8/8", ask: "White to move. Can White win?",
             options: ["No: it is a draw whatever White does", "Yes, with a7", "Yes, with Kc7"],
             why: "a7 is stalemate at once. Kc7 lets Black play Ka7 and take the pawn or shuttle in the corner. Rook pawn against a king in the corner is a dead draw." },
@@ -285,7 +285,7 @@ var EG_COURSE = [
           { t: "drill", ch: "seventh" },
           { t: "drill", ch: "seventh" },
           { t: "quiz", fen: "7k/5K1P/8/8/8/8/8/8", ask: "White to move. The pawn is on h7, Black's king on h8. What happens?",
-            options: ["It is a draw: Black's king is stalemated whatever White does", "White wins with Kg6", "White wins with Kf8"],
+            options: ["A draw, whatever White does", "White wins with Kg6", "White wins with Kf8"],
             why: "Black's king on h8 has no moves at all, so Kg6 is stalemate, and any king move that lets go of g7 or g8 (such as Kf8) just lets Black take the h7-pawn. A rook pawn with the defender in the corner is a draw." }
         ]
       }
@@ -299,23 +299,23 @@ var EG_COURSE = [
       {
         id: "c-distant", title: "Distant opposition", mins: 10,
         text: [
-          "Opposition works at a distance. Kings on the same file with three or five squares between them are in <b>distant opposition</b>: the side not to move has it, because whatever the other king does, it can be met by stepping straight toward it and keeping an odd number of squares between them.",
-          "In practice: count the squares between the kings. If it is odd and it is your move, you are in trouble; step so that the count stays odd after his reply. When the kings are on different files, move to the file of his king, keeping the odd count. This is <b>diagonal</b> and <b>rectangular opposition</b>, and it all reduces to one rule: put the kings on the corners of a rectangle with odd sides."
+          "Opposition works at a distance. Kings on the same file with three or five squares between them are in <b>distant opposition</b>: the side not to move has it, because whatever the other king does, it can be answered by a move that again leaves an odd number of squares between them.",
+          "In practice: count the squares between the kings. If the count is odd and it is your move, he has the opposition. If he steps diagonally, to a new file and a new rank, follow him onto his new file and make sure the count between you is odd again. Kings on different files can be in opposition too (<b>diagonal</b> and <b>rectangular opposition</b>), and it all reduces to one rule: the kings are an even number of files apart and an even number of ranks apart, so they stand on squares of the same colour."
         ],
         diagrams: [
-          { fen: "4k3/8/8/8/4K3/8/8/8", cap: "Three squares between the kings: distant opposition. With Black to move, White keeps it by answering Kd7 with Kd4, Kf7 with Kf4, and so on.", hl: ["e4", "e8"] }
+          { fen: "4k3/8/8/8/4K3/8/8/8", cap: "Three squares between the kings: distant opposition. With Black to move, White keeps it by answering Kd7 with Kd3 or Kd5, Kf7 with Kf3 or Kf5, and Ke7 with Ke3 or Ke5.", hl: ["e4", "e8"] }
         ],
         rules: [
           "Odd number of squares between kings on a line: the side not to move has the opposition.",
-          "Keep the opposition by mirroring his king's moves.",
-          "Kings on different files and ranks: a rectangle with odd sides is still opposition."
+          "Keep the opposition by moving so the count between you is odd again.",
+          "Kings on different files and ranks: an even number of files and of ranks apart is still opposition."
         ],
         practice: [
           { t: "drill", ch: "distant" },
           { t: "drill", ch: "distant" },
           { t: "quiz", fen: "4k3/8/8/8/4K3/8/8/8", ask: "Black to move plays Kd7. How does White keep the opposition?",
-            options: ["Kd4, facing him again on the d-file", "Ke5, stepping closer", "Kd3"],
-            why: "After Kd7 Kd4 the kings are again on one file with three squares between them and Black to move. Ke5 gives the opposition away: the gap closes to an even count." }
+            options: ["Kd3, back on his file with three squares between", "Kd4, level with him on the d-file", "Ke5, stepping closer"],
+            why: "After Kd7 Kd3 the kings are again on one file with three squares between them (d4, d5, d6) and Black to move. Kd5 works too, with direct opposition. Kd4 looks natural but leaves two squares between, so Black takes the opposition with Kd6. Ke5 leaves the kings on neighbouring files, not in opposition." }
         ]
       },
       {
@@ -342,7 +342,7 @@ var EG_COURSE = [
           "You do not need to calculate long lines. Find one mutual zugzwang, label the squares, and look for a square of yours that has two neighbours he must answer with a single square. That is where he runs out."
         ],
         diagrams: [
-          { fen: "8/8/3k4/2p5/2P5/3K4/8/8", cap: "Locked pawns on c4 and c5. Each king tries to win the enemy pawn by reaching b4 or d4 (b5 or d5 for Black). Every square of one king has a matching square for the other: the side that runs out of matching squares loses.", hl: ["d3", "d6"] }
+          { fen: "8/8/3k4/2p5/2P5/3K4/8/8", cap: "Locked pawns on c4 and c5. White's king wants b5 or d5 to attack the c5-pawn; Black's wants b4 or d4 to attack c4. Here each king always has a matching square to answer the other (d3 with d6, e4 with e6, f4 with f6), so it is a draw whoever moves. Corresponding squares tell you when one side runs out of answers.", hl: ["d3", "d6"] }
         ],
         rules: [
           "Find one mutual zugzwang, then work backwards.",
@@ -362,7 +362,7 @@ var EG_COURSE = [
           "A <b>protected passed pawn</b> is the other big asset: the defending king can never take it, so it ties him down forever while your king is free. And a <b>pawn majority</b> on one wing is a passed pawn waiting to be made: push the pawn with no opposite number first."
         ],
         diagrams: [
-          { fen: "8/5p2/3k2p1/7p/P2K3P/6P1/8/8", cap: "White's a-pawn is an outside passer. After a5 the black king must go to the queenside to stop it, and the white king walks to f7 and eats.", arrows: [["a4", "a6"]], hl: ["a4"] }
+          { fen: "8/5p2/3k2p1/7p/P2K3P/6P1/8/8", cap: "White's a-pawn is an outside passer. After a5 the black king must go to the queenside to stop it, and the white king walks over to the kingside and eats the pawns there.", arrows: [["a4", "a6"]], hl: ["a4"] }
         ],
         rules: [
           "An outside passer decoys the enemy king: push it, then switch wings.",
@@ -389,7 +389,7 @@ var EG_COURSE = [
           "As a defender, keep your king near the pawns, or avoid letting enemy pawns reach your fourth rank in a group."
         ],
         diagrams: [
-          { fen: "8/ppp3k1/8/PPP5/8/8/8/6K1", cap: "White to move: b6! breaks through. Any other move lets Black's king come back and hold.", arrows: [["b5", "b6"]], hl: ["b5"] }
+          { fen: "8/ppp3k1/8/PPP5/8/8/8/6K1", cap: "White to move: b6! breaks through. Any other move at best draws, and most of them lose.", arrows: [["b5", "b6"]], hl: ["b5"] }
         ],
         rules: [
           "Three against three on the fifth: the middle pawn sacrifices first.",
@@ -408,7 +408,7 @@ var EG_COURSE = [
               { san: "Kf6" },
               { san: "c7", note: "Next move it queens. A pawn ahead against two scattered pawns and no king nearby." }
             ],
-            payoff: "One pawn always gets through. Black's king needed to be three squares closer." },
+            payoff: "One pawn always gets through, and Black's king is too far away to catch it." },
           { t: "quiz", fen: "8/ppp3k1/8/PPP5/8/8/8/6K1", ask: "After 1.b6, Black plays axb6. What does White play?",
             options: ["c6!, and the a-pawn goes through after bxc6 a6", "axb6", "cxb6"],
             why: "1.b6 axb6 2.c6! bxc6 3.a6 and the a-pawn queens. Recapturing only trades pawns and the breakthrough is gone." }
@@ -457,7 +457,7 @@ var EG_COURSE = [
         rules: [
           "Force his king in front of its pawn, then use the free move for your king.",
           "Repeat the cycle: check, block, king step.",
-          "Pawns on the knight, centre files usually lose. Rook and bishop pawns on the seventh can draw."
+          "Knight and centre pawns lose. Rook and bishop pawns on the seventh can draw."
         ],
         practice: [
           { t: "drill", ch: "queenvspawn" },
@@ -468,7 +468,7 @@ var EG_COURSE = [
         id: "c-qvp-draw", title: "The exceptions: rook and bishop pawns", mins: 10,
         text: [
           "The queen's method fails against a <b>rook pawn</b> or a <b>bishop pawn</b> on the seventh rank when the attacking king is far away. The reason is stalemate.",
-          "Against an a-pawn, the defending king goes to the corner a1: if the queen takes the move needed to block, Black is stalemated. Against a c-pawn, the king steps into the corner <b>a1</b> instead of protecting the pawn: Qxc2 is stalemate. So the queen never gets a free tempo.",
+          "Against an a-pawn, when the checks finally force the king in front of its pawn to a1, Black has no legal move: the queen has to give him room again instead of spending the tempo on her king. Against a c-pawn, the king steps into the corner <b>a1</b> instead of protecting the pawn: Qxc2 is stalemate. So the queen never gets a free tempo.",
           "These draws only work if the attacking king is too far to help. With the king close, the queen wins against everything."
         ],
         diagrams: [
@@ -519,7 +519,7 @@ var EG_COURSE = [
           "A knight with its king nearby holds most single pawns. The danger is a pawn supported by its king on the edge of the board."
         ],
         diagrams: [
-          { fen: "8/8/8/8/8/8/p1k5/2N1K3", cap: "Knight against a rook pawn on the seventh. Here Nxa2 wins it just in time. With the knight anywhere else, a1 queens.", hl: ["a1"] }
+          { fen: "8/8/8/8/8/8/p1k5/2N1K3", cap: "Knight against a rook pawn on the seventh. White to move: Nxa2 takes it just in time, and every other move loses. With Black to move, a1=Q comes at once, because a knight on c1 does not cover a1.", hl: ["a1"] }
         ],
         rules: [
           "A knight stops a pawn by reaching any square in front of it.",
@@ -615,12 +615,12 @@ var EG_COURSE = [
       {
         id: "c-cutoff", title: "Cutting the king off", mins: 10,
         text: [
-          "Most rook and pawn endings are decided before Lucena or Philidor: by whether the defending king can reach the front of the pawn. If the attacking rook cuts the king off along a file, the attacker usually wins. If the king is in front, it is usually a draw.",
-          "A king cut off by <b>one file</b> can often still hold, depending on how far the pawn has advanced and on which side the king stands. Cut off by <b>two or more files</b>, it usually loses. Rook pawns and knight pawns are harder to win.",
+          "Most rook and pawn endings are decided before Lucena or Philidor: by whether the defending king can reach the front of the pawn. If the king is in front, it is usually a draw. If the attacking rook cuts the king off along a file, the attacker gets real winning chances.",
+          "A king cut off by <b>one file</b> can often still hold, depending on how far the pawn has advanced and on which side the king stands. Cut off by <b>two or more files</b>, the defence gets much harder, above all once the pawn has advanced. Rook pawns are the hardest to win.",
           "So the first question in any rook ending: where is his king relative to the pawn, and can I cut it off with my rook?"
         ],
         diagrams: [
-          { fen: "8/8/8/5k2/8/8/3P4/3KR3", cap: "Re1 cuts Black's king off along the e-file. It cannot cross to the d-pawn's side, so White's king and pawn advance together.", hl: ["e1"] }
+          { fen: "7r/8/8/5k2/8/8/3P4/3KR3", cap: "The rook on e1 cuts Black's king off from the d-pawn by one file. It cannot cross to the pawn's side, so White's king and pawn can advance together. With the pawn still on d2 and Black's rook free to check, this is not yet a win: a one-file cut-off is a start, not the finish.", hl: ["e1"] }
         ],
         rules: [
           "First question: is the king in front of the pawn or cut off from it?",
@@ -632,7 +632,7 @@ var EG_COURSE = [
           { t: "drill", ch: "rookpawngeneral" },
           { t: "quiz", ask: "In a rook and pawn against rook ending, what usually decides the result?",
             options: ["Whether the defending king can get in front of the pawn", "Who has the more active rook on the seventh", "Which side moves first"],
-            why: "With the king in front of the pawn, most positions draw (Philidor and its relatives). With the king cut off, most win (Lucena is waiting at the end)." }
+            why: "With the king in front of the pawn, most positions draw (Philidor and its relatives). With the king cut off, the attacker has real winning chances, and Lucena is the position he aims for." }
         ]
       },
       {
@@ -680,7 +680,7 @@ var EG_COURSE = [
             why: "The rook needs distance to check effectively. With the king on the short side, the rook has the long side to itself." },
           { t: "quiz", ask: "Back-rank defence (king on the queening square, rook on the back rank) against a pawn on the sixth rank holds against which pawns?",
             options: ["Rook pawns and knight pawns", "Centre pawns", "Every pawn"],
-            why: "Against a centre or bishop pawn, the attacker has room to bring the rook to the back rank with check and wins. Against rook and knight pawns there is not enough room." }
+            why: "It is a well-known rule of rook endings: with the defending rook passive on the back rank, a centre or bishop pawn on the sixth wins, because the attacker has room on both sides of the pawn. Near the edge, against a knight or rook pawn, he runs out of room and the defence holds." }
         ]
       }
     ]
@@ -694,7 +694,7 @@ var EG_COURSE = [
         id: "c-ocb", title: "Opposite-coloured bishops", mins: 10,
         text: [
           "With only bishops of opposite colours left, even two extra pawns are often not enough to win. The defending bishop controls squares the attacking bishop never can: if the defender sets up a <b>blockade on squares of his bishop's colour</b>, the pawns are stuck.",
-          "The attacker wins only with two widely separated passed pawns (at least three files apart) or connected pawns far advanced with king support. The defender puts the king in front of one pawn and the bishop on a diagonal that stops the other.",
+          "The attacker usually needs two widely separated passed pawns (at least three files apart), or connected pawns far advanced with king support. The defender puts the king in front of one pawn and the bishop on a diagonal that stops the other.",
           "In the middlegame, opposite bishops favour the attacker, because one bishop cannot defend the other colour. In the endgame they favour the defender."
         ],
         diagrams: [
@@ -703,7 +703,7 @@ var EG_COURSE = [
         rules: [
           "Defender: blockade on your bishop's colour, king in front.",
           "Attacker needs passers far apart (three files or more).",
-          "One extra pawn with opposite bishops is almost always a draw."
+          "One extra pawn with opposite bishops is usually a draw."
         ],
         practice: [
           { t: "quiz", ask: "Bishops of opposite colours, White a pawn up. What is the most likely result?",
@@ -722,7 +722,7 @@ var EG_COURSE = [
           "<b>Bad bishop</b> warning: when your pawns stand on the same colour as your bishop, it is blocked by them, and the enemy king walks in on the other colour."
         ],
         diagrams: [
-          { fen: "8/3P4/4K3/b7/8/8/8/2B3k1", cap: "Black's bishop holds d8 from a5. White wins by contesting the diagonals: Bg5 covers d8 from the other side, the king heads for e8 or c7, and Bd8 or Bb6 blocks Black's diagonal.", hl: ["d8"] }
+          { fen: "8/3P4/4K3/b7/8/8/8/2B3k1", cap: "Black's bishop guards d8 from a5. White wins, but needs a plan: the king walks to e8 (Kf7, Ke8) to support the pawn, and the bishop fights for the diagonals leading to d8 until Black's bishop runs out of squares that guard it.", hl: ["d8"] }
         ],
         rules: [
           "Same-coloured bishops: one extra pawn often wins.",
@@ -770,7 +770,7 @@ var EG_COURSE = [
         text: [
           "Practical minor piece endings are won with a few recurring ideas. <b>Restrict the opposing piece</b>: a knight on the rim or a bishop staring at its own pawns is half a piece. <b>Create a second weakness</b>: one weakness can be defended, two cannot. <b>Use the king</b>: with fewer pieces on the board the king becomes the strongest attacker.",
           "When defending with a knight against a passed pawn, keep the knight in front of the pawn. With a bishop, defend from a distance along a long diagonal.",
-          "And never forget the wrong rook pawn from Stage 4: when defending, a trade into it can save half a point."
+          "And never forget the wrong bishop from Stage 4: when defending, a trade into it can save half a point."
         ],
         diagrams: [],
         rules: [
@@ -882,11 +882,11 @@ var EG_COURSE = [
         id: "c-bn", title: "Mate with bishop and knight", mins: 15,
         text: [
           "The hardest basic mate. Mate is only possible in a corner of the <b>bishop's colour</b>. The defender runs to the other corner; the attacker drives him to the edge, then along the edge to the right corner.",
-          "The drive along the edge uses the knight's <b>W manoeuvre</b>: knight hops in a W-shaped path (for example Nf7-e5-d7-c5-b7 in the classic case), while king and bishop take away the escape squares. It takes up to 33 moves, so efficiency matters under the fifty-move rule.",
+          "The drive along the edge uses the knight's <b>W manoeuvre</b>: the knight hops along the edge in a W-shaped path, while king and bishop take away the escape squares. It takes up to 33 moves, so efficiency matters under the fifty-move rule.",
           "Learn it once properly and it stays with you."
         ],
         diagrams: [
-          { fen: "7k/5K2/5NB1/8/8/8/8/8", cap: "Mate only happens in the bishop's corner. A light-squared bishop needs a8 or h1, so here the king is driven from h8 toward a8.", hl: ["h8", "a8"] }
+          { fen: "7k/8/5K2/5B2/8/8/8/6N1", cap: "Mate only happens in the bishop's corner. A light-squared bishop needs a8 or h1, so here the king is driven from h8 along the edge toward a8.", hl: ["h8", "a8"] }
         ],
         rules: [
           "Mate only in the corner of the bishop's colour.",
@@ -901,7 +901,7 @@ var EG_COURSE = [
         id: "c-queens", title: "Queen endings", mins: 8,
         text: [
           "Queen endings are about <b>the passed pawn and the king's shelter</b>. The most advanced passed pawn is usually worth more than an extra pawn elsewhere. The queen supports its pawn and checks the enemy king at the same time.",
-          "The defending side seeks <b>perpetual check</b>. The attacking king hides in front of its own pawn or near the enemy king (where checks run out). With queen and pawn against queen, a centre or knight pawn gives good winning chances; a rook pawn or bishop pawn is harder.",
+          "The defending side seeks <b>perpetual check</b>. The attacking king hides in front of its own pawn or near the enemy king (where checks run out). With queen and pawn against queen, the result depends mostly on how far the pawn has got and where the defending king stands: a defending king in front of the pawn draws easily, one that is far away gives the attacker real chances.",
           "Practical tip: centralise the queen. From the centre it reaches every check and every pawn."
         ],
         diagrams: [],
