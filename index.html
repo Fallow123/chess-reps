@@ -6397,6 +6397,38 @@ else { render(); load(); }
     runRecord(false);
   }
 
+  // How safe a drawing move leaves the mover's own men: a piece the enemy can
+  // take for free costs a lot, a pawn the enemy king reaches before its own king
+  // costs nearly as much, and a king far from its pawns costs a little per square.
+  function safety(g, m, stm) {
+    var mv = g.move({ from: m.uci.slice(0, 2), to: m.uci.slice(2, 4), promotion: m.uci[4] || "q" });
+    if (!mv) return 0;
+    var score = 0, me = stm, foe = stm === "w" ? "b" : "w";
+    g.moves({ verbose: true }).forEach(function (c) {
+      if (!c.captured || c.captured === "k") return;
+      g.move(c);
+      var back = g.moves({ verbose: true }).some(function (r) { return r.to === c.to; });
+      g.undo();
+      if (!back) score -= 100;
+    });
+    var own = null, theirs = null, pawns = [];
+    g.board().forEach(function (row, r) {
+      row.forEach(function (sq, f) {
+        if (!sq) return;
+        var i = r * 8 + f;
+        if (sq.type === "k") { if (sq.color === me) own = i; else theirs = i; }
+        else if (sq.type === "p" && sq.color === me) pawns.push(i);
+      });
+    });
+    if (own !== null) pawns.forEach(function (pw) {
+      var mine = cheb(own, pw), his = theirs === null ? 99 : cheb(theirs, pw);
+      if (his < mine) score -= 30;      // his king gets there first: the pawn is falling
+      score -= 2 * mine;
+    });
+    g.undo();
+    return score;
+  }
+
   /* ---------- how the opponent chooses ----------
      It is tablebase-perfect on the result and never blunders one away. But
      "perfect" usually leaves several moves tied, and how that tie is broken
@@ -6416,16 +6448,20 @@ else { render(); load(); }
       pool = pool.filter(function (m) { return speed(m) === speed(quickest); });
     } else if (pool.length > 1) {
       // Every move draws, so the tablebase has no opinion at all. Left to pick at
-      // random it just shuffles. Push the pawn and walk at the enemy king instead,
-      // so the defence actually gets tested.
+      // random it shuffles, or walks away from its pawn and hands it over, which
+      // makes the defence look easy. Play like someone still trying to win: keep
+      // every piece safe, keep the king next to its pawns, and press forward.
+      var g = null;
+      try { g = typeof Chess === "function" ? new Chess(toFen(board, stm)) : null; } catch (e) { g = null; }
       var foeKing = board.indexOf(stm === "w" ? "k" : "K");
       var top = [], bestScore = -Infinity;
       pool.forEach(function (m) {
         var from = sqIndex(m.uci.slice(0, 2)), to = sqIndex(m.uci.slice(2, 4));
         var piece = board[from] || "";
         var score = 0;
-        if (piece.toLowerCase() === "p") score += 10;      // progress
+        if (piece.toLowerCase() === "p") score += 3;       // progress
         if (m.zeroing) score += 4;
+        if (g) score += safety(g, m, stm);
         if (foeKing >= 0) score -= cheb(to, foeKing);      // close the distance
         if (score > bestScore) { bestScore = score; top = [m]; }
         else if (score === bestScore) top.push(m);
