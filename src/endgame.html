@@ -639,6 +639,26 @@
     return b;
   }
 
+  // King and pawn against king, set up as a real fight: a b- to g-pawn on the
+  // 2nd to 5th rank, the attacking king near it, and the defending king in front
+  // of it, inside its square, so the pawn can never simply run home.
+  function kpFight(minAhead) {
+    return function () {
+      var f = 1 + Math.floor(Math.random() * 6);
+      var r = 2 + Math.floor(Math.random() * 4);
+      var pawn = sqOf(f, r);
+      var wk = rnd(ALL.filter(function (i) {
+        return i !== pawn && cheb(i, pawn) <= 2 && (8 - (i >> 3)) >= r - 1;
+      }));
+      var bk = rnd(ALL.filter(function (i) {
+        var rank = 8 - (i >> 3), file = i % 8;
+        return rank >= r + minAhead && Math.abs(file - f) <= 2 && cheb(i, pawn) <= 4 &&
+               cheb(i, wk) >= 2 && !(rank === r + 1 && Math.abs(file - f) === 1);
+      }));
+      return build([["P", pawn], ["K", wk], ["k", bk]]);
+    };
+  }
+
   // Drop the men on the board at random. Pawns stay off the first and last ranks.
   function scatter(men) {
     return function () {
@@ -821,10 +841,10 @@
     {
       group: "King and pawn",
       id: "pawnwin", title: "Queening the pawn", material: "King and pawn against king",
-      prompt: "White to play. Take the opposition and promote.",
+      prompt: "White to play. Win it: king first, then the pawn.",
       advice: "The king leads and the pawn follows. Get your king in front of the pawn and take the " +
               "opposition — pushing the pawn too early usually throws the win away.",
-      place: scatter(["K", "P", "k"]), stm: "w", user: "w", goal: "promote",
+      place: kpFight(2), stm: "w", user: "w", goal: "promote",
       want: "win", sharp: true, depth: [19, 60], needed: 3
     },
     {
@@ -854,7 +874,7 @@
       prompt: "Black to play, a pawn down. Hold the draw.",
       advice: "Stay in front of the pawn. Reaching the queening square, or taking the opposition when " +
               "he advances, is what holds this.",
-      place: scatter(["K", "P", "k"]), stm: "b", user: "b", goal: "draw",
+      place: kpFight(1), stm: "b", user: "b", goal: "draw",
       want: "draw", safe: "P", needed: 3
     },
     {
