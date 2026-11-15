@@ -282,7 +282,15 @@ var EG_COURSE = [
           "Losing? Head for the stalemate corner and make him prove it."
         ],
         practice: [
-          { t: "drill", ch: "seventh" },
+          { t: "tb", fen: "6K1/5P2/6k1/6p1/6P1/8/8/8 w - - 0 1", goal: "promote",
+            prompt: "White to play. The pawn is one step from queening. Promote, but not to a queen.",
+            advice: "After f8=Q, count Black's king moves: every square is covered and he is not in check. Which piece on f8 still leaves him a move, or mates?" },
+          { t: "tb", fen: "8/5P1k/5K1p/7P/8/8/8/8 w - - 0 1", goal: "promote",
+            prompt: "White to play. Here even a rook on f8 is stalemate. Find the move that wins.",
+            advice: "Black's king has no moves at all right now. Give him a square first: step your king away, then promote with check." },
+          { t: "tb", fen: "8/5P1k/5p2/5P1K/8/8/8/8 w - - 0 1", goal: "promote",
+            prompt: "White to play. Blocked pawns box Black's king in. Promote without stalemating him.",
+            advice: "f8=Q takes g8, g7 and h8 together, and h6 is already covered by your king. Pick a piece that leaves him a square." },
           { t: "drill", ch: "seventh" },
           { t: "quiz", fen: "7k/5K1P/8/8/8/8/8/8", ask: "White to move. The pawn is on h7, Black's king on h8. What happens?",
             options: ["A draw, whatever White does", "White wins with Kg6", "White wins with Kf8"],
