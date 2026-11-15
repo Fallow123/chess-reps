@@ -28,6 +28,8 @@ function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = fal
 
 // ---------- Saving ----------
 const LS = { get(k) { try { return JSON.parse(localStorage.getItem('reps:' + k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem('reps:' + k, JSON.stringify(v)); } catch {} } };
+function applyTextSize(v) { document.documentElement.dataset.textsize = v || 'large'; }
+applyTextSize(LS.get('textsize'));
 const DOCS = { 'rep-w': 'rep/white', 'rep-b': 'rep/black', cards: 'drill/stats', settings: 'settings/main' };
 const timers = {};
 function save(what) {
@@ -482,6 +484,8 @@ function renderSettings() {
     setRow('Usual time', [[20, '20 min'], [40, '40 min'], [60, '1 hour'], [90, '90 min'], [120, '2 hours'], [180, '3 hours']], S.settings.mins, v => { S.settings.mins = v; changed(); }),
     setRow('Games to play', [['auto', 'Auto'], ['rapid', 'Rapid'], ['blitz', 'Blitz'], ['bullet', 'Bullet']], S.settings.cls, v => { S.settings.cls = v; changed(); }),
     setRow('Engine', [[true, 'On'], [false, 'Off']], S.settings.engine !== false, v => { S.settings.engine = v; save('settings'); render(); })));
+  box.append(h('section', { class: 'sec setsec' }, h('h2', {}, 'Reading'),
+    setRow('Text size', [['normal', 'Normal'], ['large', 'Large'], ['xl', 'Extra large']], LS.get('textsize') || 'large', v => { LS.set('textsize', v); applyTextSize(v); renderSettings(); })));
 
   // Data
   const restore = h('input', { type: 'file', id: 'rw-restore', accept: '.json', hidden: true });
@@ -572,7 +576,7 @@ function renderDrill(panel, bar) {
     for (const l of D.lines.slice(0, 40)) {
       const c = S.cards[lineId(l)];
       ul.append(h('li', { class: 'item' },
-        h('button', { class: 'go', onclick: () => startDrill([l]) }, h('span', { class: 'meta', style: 'color:var(--bone);font-size:15px' }, lineText(l))),
+        h('button', { class: 'go', onclick: () => startDrill([l]) }, h('span', { class: 'meta', style: 'color:var(--bone);font-size: calc(15px * var(--fs, 1))' }, lineText(l))),
         h('span', { class: 'tag ' + (!c ? 'dim' : c.due <= now ? 'warn' : 'ok') }, !c ? 'new' : c.due <= now ? 'due' : 'in ' + Math.max(1, Math.round((c.due - now) / 864e5)) + 'd')));
     }
     if (!D.lines.length) ul.append(h('li', { class: 'empty' }, `Your ${sn} repertoire is empty. Add moves in Build.`));

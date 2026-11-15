@@ -66,24 +66,24 @@ head = '''<title>Pawnstorm</title>
 }
 html, body { background: var(--walnut); }
 [hidden] { display: none !important; }
-body { color: var(--bone); font-family: var(--serif); font-size: 16px; line-height: 1.5; }
+body { color: var(--bone); font-family: var(--serif); font-size: calc(16px * var(--fs, 1)); line-height: 1.5; }
 .shell { max-width: 1260px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 48px; }
 .shell *, .shell *::before, .shell *::after { box-sizing: border-box; }
 .shell-top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 24px; margin-bottom: 18px; }
-.shell-top h1 { font-size: 34px; font-weight: 600; margin: 0 0 5px; letter-spacing: .005em; }
-.shell-top .tagline { margin: 0; color: var(--dim); font-size: 16.5px; font-style: italic; }
+.shell-top h1 { font-size: calc(34px * var(--fs, 1)); font-weight: 600; margin: 0 0 5px; letter-spacing: .005em; }
+.shell-top .tagline { margin: 0; color: var(--dim); font-size: calc(16.5px * var(--fs, 1)); font-style: italic; }
 .shell-top .grow { flex: 1; }
 .sidepick { display: flex; gap: 4px; }
-.sidepick button { font: inherit; font-size: 15px; padding: 7px 16px; cursor: pointer; background: var(--panel); color: var(--dim); border: 0; border-bottom: 2px solid var(--rule); }
+.sidepick button { font: inherit; font-size: calc(15px * var(--fs, 1)); padding: 7px 16px; cursor: pointer; background: var(--panel); color: var(--dim); border: 0; border-bottom: 2px solid var(--rule); }
 .sidepick button:hover { color: var(--bone); }
 .sidepick button[aria-pressed="true"] { background: var(--amber); color: #000; border-bottom-color: var(--amber); }
 .shell-tabs { display: flex; flex-wrap: wrap; gap: 2px 22px; border-bottom: 1px solid var(--rule); margin-bottom: 26px; }
-.shell-tabs button { font: inherit; font-size: 17px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--dim); padding: 8px 0; margin-bottom: -1px; cursor: pointer; }
+.shell-tabs button { font: inherit; font-size: calc(17px * var(--fs, 1)); background: none; border: 0; border-bottom: 2px solid transparent; color: var(--dim); padding: 8px 0; margin-bottom: -1px; cursor: pointer; }
 .shell-tabs button:hover { color: var(--bone); }
 .shell-tabs button[aria-selected="true"] { color: var(--bone); border-bottom-color: var(--amber); }
-.shell-tabs .count { font-size: 13px; color: var(--amber); margin-left: 5px; font-variant-numeric: tabular-nums; }
+.shell-tabs .count { font-size: calc(13px * var(--fs, 1)); color: var(--amber); margin-left: 5px; font-variant-numeric: tabular-nums; }
 .shell button:focus-visible, .shell a:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--panel-2); color: var(--bone); box-shadow: 0 0 0 1px var(--rule); padding: 10px 18px; font-family: var(--serif); font-size: 15px; z-index: 30; max-width: calc(100% - 32px); }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--panel-2); color: var(--bone); box-shadow: 0 0 0 1px var(--rule); padding: 10px 18px; font-family: var(--serif); font-size: calc(15px * var(--fs, 1)); z-index: 30; max-width: calc(100% - 32px); }
 #app { padding: 0 !important; min-height: 0 !important; background: none !important; }
 </style>
 <style>

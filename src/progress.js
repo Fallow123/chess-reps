@@ -87,7 +87,7 @@ function renderMistakes(panel, bar) {
       for (const p of due.concat(all.filter(x => !due.includes(x))).slice(0, 30)) {
         const c = cards[p.id];
         ul.append(h('li', { class: 'item' },
-          h('button', { class: 'go', onclick: () => startMp([p]) }, h('span', { class: 'meta', style: 'color:var(--bone);font-size:15px' }, `${moveLabel(p.i, p.san)} against ${p.g.opp}`), h('span', { class: 'meta' }, p.g.date)),
+          h('button', { class: 'go', onclick: () => startMp([p]) }, h('span', { class: 'meta', style: 'color:var(--bone);font-size: calc(15px * var(--fs, 1))' }, `${moveLabel(p.i, p.san)} against ${p.g.opp}`), h('span', { class: 'meta' }, p.g.date)),
           h('span', { class: 'tag ' + (!c ? 'dim' : c.due <= now ? 'warn' : 'ok') }, !c ? 'new' : c.due <= now ? 'due' : 'in ' + Math.max(1, Math.round((c.due - now) / 864e5)) + 'd')));
       }
       panel.append(h('section', { class: 'sec' }, h('h2', {}, 'Your positions'), ul));
