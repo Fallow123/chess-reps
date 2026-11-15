@@ -160,8 +160,8 @@ var EG_COURSE = [
             advice: "Take the opposition in front of your pawn. Your pawn has a spare tempo later if you need it." },
           { t: "drill", ch: "opposition" },
           { t: "quiz", fen: "4k3/8/4K3/4P3/8/8/8/8", ask: "White to move. What is the result with best play?",
-            options: ["A draw: White has to give up the opposition", "White wins with e6", "White wins with Kd6"],
-            why: "Every white king move lets Black take the opposition (Kd6 Kd8, Kf6 Kf8), and pushing e6 early ends in stalemate or a lost pawn. Give Black the move instead and White wins." }
+            options: ["A draw: White has to give up the opposition", "White wins with Kd6", "White wins with Kf6"],
+            why: "The pawn is blocked by its own king, so White must move the king, and every king move lets Black take the opposition: Kd6 is met by Kd8, Kf6 by Kf8. Give Black the move instead and White wins." }
         ]
       },
       {
@@ -285,8 +285,8 @@ var EG_COURSE = [
           { t: "drill", ch: "seventh" },
           { t: "drill", ch: "seventh" },
           { t: "quiz", fen: "7k/5K1P/8/8/8/8/8/8", ask: "White to move. The pawn is on h7, Black's king on h8. What happens?",
-            options: ["It is a draw: Black's king is stalemated whatever White does", "Kg6 and h8=Q mate follows", "White wins by underpromoting"],
-            why: "Black's king on h8 has no moves at all, so any White move that does not give check is stalemate, and nothing gives check. A rook pawn with the defender in the corner is a draw." }
+            options: ["It is a draw: Black's king is stalemated whatever White does", "White wins with Kg6", "White wins with Kf8"],
+            why: "Black's king on h8 has no moves at all, so Kg6 is stalemate, and any king move that lets go of g7 or g8 (such as Kf8) just lets Black take the h7-pawn. A rook pawn with the defender in the corner is a draw." }
         ]
       }
     ]
