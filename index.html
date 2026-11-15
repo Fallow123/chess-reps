@@ -1838,7 +1838,15 @@ var EG_COURSE = [
           "Losing? Head for the stalemate corner and make him prove it."
         ],
         practice: [
-          { t: "drill", ch: "seventh" },
+          { t: "tb", fen: "6K1/5P2/6k1/6p1/6P1/8/8/8 w - - 0 1", goal: "promote",
+            prompt: "White to play. The pawn is one step from queening. Promote, but not to a queen.",
+            advice: "After f8=Q, count Black's king moves: every square is covered and he is not in check. Which piece on f8 still leaves him a move, or mates?" },
+          { t: "tb", fen: "8/5P1k/5K1p/7P/8/8/8/8 w - - 0 1", goal: "promote",
+            prompt: "White to play. Here even a rook on f8 is stalemate. Find the move that wins.",
+            advice: "Black's king has no moves at all right now. Give him a square first: step your king away, then promote with check." },
+          { t: "tb", fen: "8/5P1k/5p2/5P1K/8/8/8/8 w - - 0 1", goal: "promote",
+            prompt: "White to play. Blocked pawns box Black's king in. Promote without stalemating him.",
+            advice: "f8=Q takes g8, g7 and h8 together, and h6 is already covered by your king. Pick a piece that leaves him a square." },
           { t: "drill", ch: "seventh" },
           { t: "quiz", fen: "7k/5K1P/8/8/8/8/8/8", ask: "White to move. The pawn is on h7, Black's king on h8. What happens?",
             options: ["A draw, whatever White does", "White wins with Kg6", "White wins with Kf8"],
@@ -5752,6 +5760,8 @@ else { render(); load(); }
         if (dtm < a || dtm > b) return false;
       }
 
+      if (ch.trap && !ch.trap(d, board)) return false;
+
       // A win-count cap is only meaningful where most moves DON'T win. In a basic
       // mate nearly every move keeps the win, so capping it there rejects every
       // position and the search starves. Those chapters get depth as their lever.
@@ -5969,13 +5979,29 @@ else { render(); load(); }
               "corner, promoting to a queen can be stalemate on the spot. Check what he has left " +
               "to move first: sometimes a rook wins where a queen only draws.",
       place: function () {
-        var f = 1 + Math.floor(Math.random() * 6);
-        var pawn = sqOf(f, 7);
-        var queens = sqOf(f, 8);
-        var wk = rnd(nearTo(pawn, 2));
-        var bk = rnd(ALL.filter(function (i) { return cheb(i, queens) <= 2; }));
-        return build([["P", pawn], ["K", wk], ["k", bk]]);
+        // Near a corner, where the stalemate traps live. Keep drawing until one of
+        // White's moves is stalemate (checked locally, so no tablebase calls wasted).
+        for (var n = 0; n < 300; n++) {
+          var f = rnd([1, 2, 5, 6]), corner = sqOf(f < 4 ? 0 : 7, 8);
+          var pawn = sqOf(f, 7);
+          var queens = sqOf(f, 8);
+          var wk = rnd(nearTo(pawn, 2));
+          var bk = rnd(ALL.filter(function (i) { return cheb(i, queens) <= 2 && cheb(i, corner) <= 2; }));
+          var b = build([["P", pawn], ["K", wk], ["k", bk]]);
+          if (!b || typeof Chess !== "function") return b;
+          var g = null;
+          try { g = new Chess(toFen(b, "w")); } catch (e) { g = null; }
+          if (!g || g.in_check() || g.game_over()) continue;
+          try { if (new Chess(toFen(b, "b")).in_check()) continue; } catch (e) { continue; }
+          var hasTrap = g.moves({ verbose: true }).some(function (m) {
+            g.move(m); var st = g.in_stalemate(); g.undo(); return st;
+          });
+          if (hasTrap) return b;
+        }
+        return null;
       },
+      // Only serve positions with a real trap: at least one move is stalemate.
+      trap: function (d) { return d.moves.some(function (m) { return m.stalemate; }); },
       stm: "w", user: "w", goal: "promote",
       want: "win", sharp: true, depth: [3, 19], needed: 2
     },
