@@ -397,7 +397,10 @@ var EG_COURSE = [
           "As a defender, keep your king near the pawns, or avoid letting enemy pawns reach your fourth rank in a group."
         ],
         diagrams: [
-          { fen: "8/ppp3k1/8/PPP5/8/8/8/6K1", cap: "White to move: b6! breaks through. Any other move at best draws, and most of them lose.", arrows: [["b5", "b6"]], hl: ["b5"] }
+          { fen: "8/ppp3k1/8/PPP5/8/8/8/6K1", cap: "White to move: b6! breaks through. Any other move at best draws, and most of them lose.", arrows: [["b5", "b6"]], hl: ["b5"] },
+          { fen: "8/p5k1/ppP5/8/8/8/8/6K1", cap: "After 1.b6 cxb6 2.a6 bxa6 3.c6, Black to move. The highlighted squares are the square of the c6-pawn (c6-e6-e8-c8). Black's king on g7 cannot step into it, so c7 and c8 follow: not safe, the pawn queens.", hl: ["c6", "d6", "e6", "c7", "d7", "e7", "c8", "d8", "e8"] },
+          { fen: "8/p4k2/ppP5/8/8/8/8/6K1", cap: "The same position with Black's king one square closer, on f7. With Black to move, Ke7 or Ke8 steps into the square and catches the pawn: safe, and Black is left three pawns up. With White to move instead, c7 comes first and the pawn queens. Whose move it is counts as one square.", hl: ["c6", "d6", "e6", "c7", "d7", "e7", "c8", "d8", "e8"] },
+          { fen: "8/ppp2k2/8/PPP5/8/8/8/6K1", cap: "So check the square before you sacrifice. With Black's king on f7 instead of g7, b6 no longer works: whichever pawn breaks through, the king is inside its square and catches it. Here White is lost.", hl: ["f7"] }
         ],
         rules: [
           "Three against three on the fifth: the middle pawn sacrifices first.",
@@ -419,7 +422,10 @@ var EG_COURSE = [
             payoff: "One pawn always gets through, and Black's king is too far away to catch it." },
           { t: "quiz", fen: "8/ppp3k1/8/PPP5/8/8/8/6K1", ask: "After 1.b6, Black plays axb6. What does White play?",
             options: ["c6!, and the a-pawn goes through after bxc6 a6", "axb6", "cxb6"],
-            why: "1.b6 axb6 2.c6! bxc6 3.a6 and the a-pawn queens. Recapturing only trades pawns and the breakthrough is gone." }
+            why: "1.b6 axb6 2.c6! bxc6 3.a6 and the a-pawn queens. Recapturing only trades pawns and the breakthrough is gone." },
+          { t: "quiz", fen: "8/p4k2/ppP5/8/8/8/8/6K1", ask: "The c-pawn has broken through. Black's king is on f7 and it is Black's move. Does the pawn queen?",
+            options: ["No: Ke7 or Ke8 steps into the square c6-e6-e8-c8 and catches it", "Yes: it is only two steps from c8", "Yes, unless Black can push a pawn to distract it"],
+            why: "The square of the c6-pawn runs c6-e6-e8-c8. From f7 the king steps inside with Ke7 or Ke8, and the pawn falls. If it were White's move, c7 would come first and the king would be one step too late." }
         ]
       },
       {
