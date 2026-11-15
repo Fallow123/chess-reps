@@ -5683,13 +5683,13 @@ else { render(); load(); }
   // King and pawn against king, set up as a real fight: a b- to g-pawn on the
   // 2nd to 5th rank, the attacking king near it, and the defending king in front
   // of it, inside its square, so the pawn can never simply run home.
-  function kpFight(minAhead) {
+  function kpFight(minAhead, wkDist) {
     return function () {
       var f = 1 + Math.floor(Math.random() * 6);
       var r = 2 + Math.floor(Math.random() * 4);
       var pawn = sqOf(f, r);
       var wk = rnd(ALL.filter(function (i) {
-        return i !== pawn && cheb(i, pawn) <= 2 && (8 - (i >> 3)) >= r - 1;
+        return i !== pawn && cheb(i, pawn) <= (wkDist || 2) && (8 - (i >> 3)) >= r - 1;
       }));
       var bk = rnd(ALL.filter(function (i) {
         var rank = 8 - (i >> 3), file = i % 8;
@@ -5901,8 +5901,8 @@ else { render(); load(); }
         var f = 1 + Math.floor(Math.random() * 6);
         var r = 2 + Math.floor(Math.random() * 2);       // pawn still low
         var pawn = sqOf(f, r);
-        // The white king stays within two files of its pawn, so it can defend it.
-        var kf = Math.max(0, Math.min(7, f + rnd([-2, -1, 0, 1, 2])));
+        // The white king stands next to its pawn, so it can always defend it.
+        var kf = Math.max(0, Math.min(7, f + rnd([-1, 0, 1])));
         var wr = 2 + Math.floor(Math.random() * 2);
         // Odd rank gap now, so Black has to step to make it even and seize the opposition.
         var wk = sqOf(kf, wr);
@@ -5918,7 +5918,7 @@ else { render(); load(); }
       prompt: "Black to play, a pawn down. Hold the draw.",
       advice: "Stay in front of the pawn. Reaching the queening square, or taking the opposition when " +
               "he advances, is what holds this.",
-      place: kpFight(1), stm: "b", user: "b", goal: "draw",
+      place: kpFight(1, 1), stm: "b", user: "b", goal: "draw",
       want: "draw", safe: "P", needed: 3
     },
     {
@@ -6018,7 +6018,7 @@ else { render(); load(); }
         var f = rnd([0, 7]), r = 4 + Math.floor(Math.random() * 3);
         var pawn = sqOf(f, r), queens = sqOf(f, 8);
         var wk = rnd(ALL.filter(function (i) {
-          return i !== pawn && cheb(i, pawn) <= 2 && (8 - (i >> 3)) >= r - 1;
+          return i !== pawn && cheb(i, pawn) <= 1 && (8 - (i >> 3)) >= r - 1;
         }));
         var bk = rnd(ALL.filter(function (i) {
           var rank = 8 - (i >> 3), file = i % 8;
@@ -6041,7 +6041,7 @@ else { render(); load(); }
         return build([["p", pawn], ["k", rnd(nearTo(pawn, 2))],
                       ["Q", rnd(ALL)], ["K", rnd(farFrom(pawn, 4))]]);
       },
-      stm: "w", user: "w", goal: "stop", want: "win", sharp: true, needed: 2
+      stm: "w", user: "w", goal: "stop", want: "win", sharp: true, needed: 2, noGrab: true
     },
     {
       group: "Stopping a pawn",
@@ -6054,7 +6054,7 @@ else { render(); load(); }
         return build([["p", pawn], ["k", rnd(nearTo(pawn, 2))],
                       ["R", rnd(ALL)], ["K", rnd(farFrom(pawn, 3))]]);
       },
-      stm: "w", user: "w", goal: "stop", want: "win", sharp: true, needed: 2
+      stm: "w", user: "w", goal: "stop", want: "win", sharp: true, needed: 2, noGrab: true
     },
 
     {
@@ -6264,6 +6264,7 @@ else { render(); load(); }
       var board = ch.place();
       if (!legalSetup(board, ch.stm)) return attempt();
       if (!quietPosition(board, ch.stm)) return attempt();
+      if (ch.noGrab && freeGrab(board, ch.stm)) return attempt();
       return probe(toFen(board, ch.stm)).then(function (d) {
         if (!accept(d, board)) return attempt();
         return { board: board, data: d };
@@ -6466,6 +6467,21 @@ else { render(); load(); }
     });
     g.undo();
     return score;
+  }
+
+  // Can the side to move take a pawn for nothing right now? Such a position
+  // needs no technique, so the drills that ask for one never serve it.
+  function freeGrab(board, stm) {
+    if (typeof Chess !== "function") return false;
+    var g;
+    try { g = new Chess(toFen(board, stm)); } catch (e) { return false; }
+    return g.moves({ verbose: true }).some(function (c) {
+      if (c.captured !== "p") return false;
+      g.move(c);
+      var back = g.moves({ verbose: true }).some(function (r) { return r.to === c.to; });
+      g.undo();
+      return !back;
+    });
   }
 
   /* ---------- how the opponent chooses ----------
