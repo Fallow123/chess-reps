@@ -5891,7 +5891,8 @@ else { render(); load(); }
         var f = 1 + Math.floor(Math.random() * 6);
         var r = 2 + Math.floor(Math.random() * 2);       // pawn still low
         var pawn = sqOf(f, r);
-        var kf = Math.floor(Math.random() * 8);
+        // The white king stays within two files of its pawn, so it can defend it.
+        var kf = Math.max(0, Math.min(7, f + rnd([-2, -1, 0, 1, 2])));
         var wr = 2 + Math.floor(Math.random() * 2);
         // Odd rank gap now, so Black has to step to make it even and seize the opposition.
         var wk = sqOf(kf, wr);
@@ -5985,8 +5986,20 @@ else { render(); load(); }
       advice: "Rook pawns break the usual rules. The defending king draws by sitting in the corner, " +
               "because the attacking king has no room on the edge to make progress.",
       place: function () {
-        var pawn = sqOf(rnd([0, 7]), 4 + Math.floor(Math.random() * 3));
-        return build([["P", pawn], ["K", rnd(ALL)], ["k", rnd(ALL)]]);
+        // The attacking king starts beside or just behind its pawn, so it can always
+        // protect it, and the defending king is ahead of the pawn but not yet in
+        // the corner: getting there, or shutting the white king in, is the task.
+        var f = rnd([0, 7]), r = 4 + Math.floor(Math.random() * 3);
+        var pawn = sqOf(f, r), queens = sqOf(f, 8);
+        var wk = rnd(ALL.filter(function (i) {
+          return i !== pawn && cheb(i, pawn) <= 2 && (8 - (i >> 3)) >= r - 1;
+        }));
+        var bk = rnd(ALL.filter(function (i) {
+          var rank = 8 - (i >> 3), file = i % 8;
+          return rank >= r + 1 && Math.abs(file - f) <= 4 && cheb(i, pawn) >= 2 &&
+                 cheb(i, queens) >= 2 && cheb(i, wk) >= 2;
+        }));
+        return build([["P", pawn], ["K", wk], ["k", bk]]);
       },
       stm: "b", user: "b", goal: "draw", want: "draw", safe: "P", needed: 2
     },
